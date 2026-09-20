@@ -16,7 +16,7 @@
 2. 首页/拍摄：/var/folders/rd/1qnr5vtn61d6d3099dxvfhc40000gn/T/codex-clipboard-eb122203-8b47-4720-b7f3-7e1b57ed79a5.png
 3. 附近：/var/folders/rd/1qnr5vtn61d6d3099dxvfhc40000gn/T/codex-clipboard-96e424d1-f9dd-4d78-8ee1-b4da09072cd9.png
 
-生成样稿 /Users/w/.codex/generated_images/01a08906-21de-7333-a5bf-f59ff4b75712/exec-6ba6456b-bc70-453e-bf8f-8d735e7ccf56.png 仅用于米白/墨绿/手绘卡背与层级，不替代正面母版。第二张参考对应当前native/pages/observe首页式拍摄入口，不把home图鉴偷偷替换掉，也不改默认路由。
+生成样稿仅用于米白/墨绿/手绘卡背与层级，不替代正面母版。第二张参考对应当前 `native/pages/observe` 首页式拍摄入口，不把 home 图鉴偷偷替换掉，也不改默认路由。
 
 首页、附近、我的分别采用用户前三张参考的页面层级、留白、分组和装饰语言；不复制图上的假用户名、距离、收藏数量、好友数据或宣传性认证。参考只约束外壳，不推翻以上正面卡母版。实施时将原参考和实际页面并排验收，不声称未核对的像素一致。
 

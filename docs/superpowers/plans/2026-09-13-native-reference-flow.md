@@ -8,7 +8,7 @@
 
 **Tech Stack:** WeChat WXML/WXSS/JavaScript. No Taro runtime.
 
-**Spec:** `/Users/w/WorkBuddy/2026-09-13-12-50-14/去大自然里/index.html`, including final material and square-card overrides; user-approved full native flow.
+**Spec:** the approved visual reference and native-flow design for this project, including final material and square-card overrides.
 
 ## Global Constraints
 

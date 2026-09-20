@@ -122,7 +122,7 @@ export default function Settings() {
       </View>
 
       <View className={styles.about}>
-        <Text>用 Taro 4 + React 重写自 WorkBuddy 发布页</Text>
+        <Text>用 Taro 4 + React 编写的历史实验页</Text>
         <Text>面向个人用户 · 原型期不接支付</Text>
       </View>
     </View>
