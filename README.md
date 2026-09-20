@@ -1,6 +1,6 @@
 # 去大自然里 · 原生微信小程序
 
-> Nature Dex is being prepared as a privacy-first open-source nature observation and species recognition project. The open-source baseline is local and has not yet been published to GitHub.
+> Nature Dex is a privacy-first open-source nature observation and species recognition project. The public repository is available at <https://github.com/srwang919-sudo/nature-dex>.
 
 活动入口为根目录 `app.js / app.json / app.wxss` 与 `native/`；`miniprogramRoot: ./`。旧 `src/`、`dist/` 是历史源码和产物，不运行 Taro 编译覆盖当前入口。七物种资料从 `src/data/species.ts` 文本同步并逐字段校验。
 
@@ -20,15 +20,13 @@
 
 ## 来源
 
-- 精确网页参考：`../去大自然里/index.html` 与 https://nature-card-app.app.workbuddy.host/
-- 历史工程：`/Users/w/WorkBuddy/2026-09-13-08-59-43/nature-dex` 与 `/Users/w/WorkBuddy/2026-09-09-22-23-54/nature-dex`。
-- 实施设计和三模块计划：`docs/plans/2026-09-13-local-parity-design.md`、`docs/superpowers/plans/2026-09-13-local-parity-{a,b,c}.md`。
+- 历史设计与实施记录保存在本仓库的 `docs/plans/` 和 `docs/superpowers/plans/`。
 
 ## 验证
 
-运行所有 `tests/native-*.cjs`：覆盖多草稿迁移、删除重试/共享引用、七格与筛选、双确认清除、分享隐私、打印尺寸、渲染指令、翻面/阅读、完整科学资料。官方编译必须逐文件：`wcc -d -o /tmp/check.js <file.wxml>`、`wcsc -o /tmp/check.js <file.wxss>`。
+运行 `node --test tests/*.cjs`：覆盖多草稿迁移、删除重试/共享引用、七格与筛选、双确认清除、分享隐私、打印尺寸、渲染指令、翻面/阅读、完整科学资料和公开识别契约。微信开发者工具可进一步逐文件编译 WXML/WXSS。
 
-本轮本地测试与静态编译通过；相机/相册权限、照片清理、Canvas真机内存/导出、相册保存、微信资料分享落地、字体与GPU手感仍需真实微信设备验收。测试不能替代真机，PNG像素尺寸也不代表纸张色彩已打样。
+本地自动化测试与原生源码检查通过；相机/相册权限、照片清理、Canvas真机内存/导出、相册保存、微信资料分享落地、字体与GPU手感仍需真实微信设备验收。测试不能替代真机，PNG像素尺寸也不代表纸张色彩已打样。
 # 2026-09-17 识别服务与发布入口（覆盖下方历史说明）
 
 唯一发布源是根目录 app.js/app.json/app.wxss 与 native/。导入本目录到微信开发者工具，不导入dist。npm run build:weapp 和 npm run dev:weapp仅验证原生源；npm run experiment:taro为旧Taro实验，不作为当前产品发布。packOptions排除src/dist/scripts/tests/cloudfunctions和开发依赖；云函数单独部署。
@@ -58,7 +56,7 @@ Before publishing, read [`docs/OPEN_SOURCE_SCOPE.md`](docs/OPEN_SOURCE_SCOPE.md)
 
 ## 本轮本地证据
 
-- node --test tests/*.cjs：22 tests / 22 pass / 0 fail。
+- node --test tests/*.cjs：44 tests / 44 pass / 0 fail。
 - npm run build:weapp：原生入口、JS/JSON与页面文件通过，无Taro发布产物。
 - 官方wcc/wcsc逐文件编译24个WXML/WXSS，全部exit 0，无stderr警告。
 - 云函数JS/JSON通过；扫描root/native/cloudfunctions/src源码凭据字面量命中0，不读取环境变量值。
