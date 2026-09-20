@@ -1,0 +1,16 @@
+const assert=require('node:assert/strict'),fs=require('fs'),vm=require('vm'),path=require('path');
+let page,chooses=0,uploads=0,save=0,choice;
+const app={finishes:[],globalData:{species:{}},getObservation:()=>null,getReadyCards:()=>[],getCards:()=>[],getDrafts:()=>[],discardObservation(){},saveCards(){save++}};
+const wx={getStorageSync:()=>false,chooseMedia:o=>{chooses++;choice=o},cloud:{callFunction(){uploads++;return Promise.resolve({})}}};
+vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../native/pages/observe/index.js'),'utf8'),{Page:p=>page=p,getApp:()=>app,wx,setTimeout,clearTimeout,require:require('module').createRequire(path.join(__dirname,'../native/pages/observe/index.js'))});
+page.setData=function(v){Object.assign(this.data,v)};page.persist=()=>save++;
+page.onLoad({source:'album'});page.onReady();page.onReady();assert.equal(chooses,1);assert.equal(uploads,0);assert.equal(save,0);
+page.onUnload();choice.success({tempFiles:[{tempFilePath:'late.jpg'}]});assert.equal(save,0,'late picker cannot persist after unloading');
+page.onLoad({source:'album'});page.onHide();page.onReady();assert.equal(chooses,1,'pending entry canceled when hidden before ready');
+const read=p=>fs.readFileSync(path.join(__dirname,'../native/pages',p),'utf8');
+assert.ok(!read('observe/index.wxml').includes('<navigation'));
+assert.ok(!read('reveal/index.wxml').includes('<navigation'));
+for(const handler of ['identify','confirmArt','useOriginal'])assert.ok(read('observe/index.wxml').includes('bindtap="'+handler+'"'));
+assert.ok(read('reveal/index.wxml').includes('bindtap="collect"'));
+assert.ok(read('observe/index.wxml').includes('探索生境'));
+console.log('PASS one-shot album routing, no automatic upload, unload protection and unchanged action handlers');

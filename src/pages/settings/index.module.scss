@@ -1,0 +1,150 @@
+.page {
+  min-height: 100vh;
+  background: var(--bg);
+  padding-bottom: 80rpx;
+}
+
+.profile {
+  padding: 56rpx 40rpx 24rpx;
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+}
+.avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  background: linear-gradient(158deg, #6E9479, #48655C);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFCF5;
+  font-size: 48rpx;
+  font-weight: 600;
+}
+.meta {
+  flex: 1;
+}
+.metaName {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: var(--ink);
+  display: block;
+}
+.metaSub {
+  font-size: 24rpx;
+  color: var(--ink-2);
+  display: block;
+  margin-top: 6rpx;
+}
+
+.section {
+  margin: 32rpx 40rpx 0;
+}
+.sectionTitle {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--ink-2);
+  letter-spacing: 2rpx;
+  margin-bottom: 16rpx;
+  display: block;
+}
+
+.plans {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+.plan {
+  background: var(--bg-card);
+  border-radius: var(--r-lg);
+  padding: 24rpx 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 4rpx 16rpx var(--shadow);
+  border: 2rpx solid transparent;
+}
+.planOn {
+  border-color: var(--brand);
+}
+.planLeft {
+  flex: 1;
+}
+.planName {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--ink);
+  display: block;
+  margin-bottom: 4rpx;
+}
+.planPrice {
+  font-size: 24rpx;
+  color: var(--ink-2);
+}
+.planTag {
+  padding: 6rpx 18rpx;
+  border-radius: 999rpx;
+  font-size: 22rpx;
+  background: var(--bg);
+  color: var(--brand-2);
+}
+.planTagOn {
+  background: var(--brand);
+  color: #FFFCF5;
+}
+
+.planNote {
+  font-size: 24rpx;
+  color: var(--ink-2);
+  line-height: 1.7;
+  margin-top: 16rpx;
+  display: block;
+}
+
+.list {
+  background: var(--bg-card);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  box-shadow: 0 4rpx 16rpx var(--shadow);
+}
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28rpx 32rpx;
+  border-bottom: 1rpx solid rgba(31, 42, 36, 0.06);
+}
+.row:last-child { border-bottom: none; }
+.rowLeft {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+.rowIcon {
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 8rpx;
+  background: rgba(110, 148, 121, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22rpx;
+  color: var(--brand-2);
+}
+.rowText {
+  font-size: 28rpx;
+  color: var(--ink);
+}
+.rowRight {
+  font-size: 22rpx;
+  color: var(--ink-2);
+}
+
+.about {
+  text-align: center;
+  font-size: 22rpx;
+  color: var(--ink-2);
+  margin: 64rpx 40rpx 0;
+  line-height: 1.7;
+}

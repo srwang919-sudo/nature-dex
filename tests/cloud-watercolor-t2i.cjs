@@ -1,0 +1,10 @@
+const assert=require('node:assert/strict'),{generate,safeSummary}=require('../cloudfunctions/speciesIllustration/provider');let input,downloads=0;
+const jpeg=Buffer.from([255,216,255,224,0,0,0,0,0]),api={ai:()=>({createImageModel:()=>({generateImage:async p=>{input=p;return {data:[{url:'https://example.invalid/art'}]}}})}),uploadFile:async()=>({fileID:'cloud://public/art'})};
+(async()=>{await generate(api,{prompt:'朱鹮全幅水彩',path:'public-species-watercolors/key.jpg'},{download:async()=>{downloads++;return jpeg}});assert.equal(input.model,'HY-Image-3.0-Plus-4090-Tob-v1.0');assert.equal(input.images,undefined);assert.equal(input.image_urls,undefined);assert.equal(downloads,1);
+await assert.rejects(generate({},{}),/^Error: watercolor_sdk_unavailable$/);
+const denied={ai:()=>({createImageModel:()=>({generateImage:async()=>{throw Error('Permission denied token=SECRET-MUST-NOT-LEAK')}})})};
+await assert.rejects(generate(denied,{}),/^Error: watercolor_model_permission$/);
+await assert.rejects(generate(api,{}, {download:async()=>{throw Error('private URL')}}),/^Error: watercolor_download_failed$/);
+const safe=safeSummary({code:'Denied',status:403,message:'api_key=example-secret token=another-secret https://example.invalid/private?a=secret '+'x'.repeat(300)});
+assert.equal(safe.httpStatus,403);assert.equal(safe.code,'Denied');assert.ok(safe.message.length<=200);assert.ok(!/example-secret|another-secret|example.invalid/.test(safe.message));
+console.log('PASS official T2I model contract, zero image input and safe stage errors')})().catch(e=>{console.error(e);process.exitCode=1});

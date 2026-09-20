@@ -1,0 +1,3 @@
+const allowed=new Set(['recognized','needs_confirmation','unknown','failed']);
+function classifyRecognition(result,available){if(!available)return {status:'unavailable',candidates:[]};const status=result&&allowed.has(result.status)?result.status:'failed',candidates=Array.isArray(result&&result.candidates)?result.candidates.filter(item=>item&&item.speciesId&&Number.isFinite(item.confidence)&&item.confidence>=0&&item.confidence<=1):[];const safe=require('./recognition-errors');return {status,candidates,...(status==='failed'?{code:safe.safeCode(result),providerCode:Number.isInteger(result&&result.providerCode)?result.providerCode:undefined}:{})};}
+module.exports={classifyRecognition};

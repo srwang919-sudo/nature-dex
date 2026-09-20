@@ -1,0 +1,19 @@
+<view class="page explore {{reduceMotion?'reduce-motion':''}}">
+  <view class="explore-top"><text class="brand">去大自然里</text><text class="sub">自然观察手册</text></view>
+  <view class="exploration-intro">
+    <view class="intro-copy"><view class="title"><view>今天去发现</view><view>一点新鲜事</view></view><text class="sub">拍照 · 鉴别 · 收藏这次遇见</text></view>
+    <view class="nature-shapes" aria-hidden="true"><view class="sun"></view><view class="stem"></view><view class="leaf leaf-a"></view><view class="leaf leaf-b"></view><view class="flower"><view></view></view><view class="hill"></view></view>
+  </view>
+  <view wx:if="{{task}}" class="task-paper">
+    <view class="row between"><text class="task-label">探索任务 · 本地建议</text><text class="task-count">{{task.complete?'已完成':task.current+' / '+task.total}}</text></view>
+    <view class="section task-title">{{task.title}}</view>
+    <text class="sub">{{task.complete?'七种相遇已收齐，新的观察依然值得记录。':'不必走很远，认真看看身边的花、鸟和小虫。'}}</text>
+    <button class="primary spaced" bindtap="observe">去拍摄</button>
+    <button class="album-entry" bindtap="album">从相册选择</button>
+  </view>
+  <view class="row between today-heading"><text class="section">今日收集</text><button class="link" bindtap="library">图鉴 {{found}} / {{total}}</button></view>
+  <scroll-view wx:if="{{today.length}}" class="today-scroll" scroll-x="true"><view class="today-strip"><view wx:for="{{today}}" wx:key="id" class="today-card" data-id="{{item.id}}" bindtap="openCard"><collectible card="{{item}}"/></view></view></scroll-view>
+  <view wx:else class="today-empty"><view class="empty-seed" aria-hidden="true"></view><text>拍下下一次遇见</text><text class="sub">成功收入图鉴的卡片，会出现在这里。</text></view>
+  <view class="habitat-entry" bindtap="nearby" aria-role="button" aria-label="探索生境"><view><view class="section">探索生境</view><text class="sub">水边、林间与街角，读一份观察指南</text></view><text class="habitat-arrow">去看看</text></view>
+</view>
+<navigation active="discover"/>

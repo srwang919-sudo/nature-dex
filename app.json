@@ -1,0 +1,26 @@
+{
+  "pages": [
+    "native/pages/home/index",
+    "native/pages/library/index",
+    "native/pages/profile/index",
+    "native/pages/observe/index",
+    "native/pages/reveal/index",
+    "native/pages/card/index",
+    "native/pages/nearby/index",
+    "native/pages/note/index",
+    "native/pages/settings/index",
+    "native/pages/setup/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "去大自然里",
+    "navigationBarBackgroundColor": "#FFFBF2",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#FFFBF2"
+  },
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents",
+  "usingComponents": {
+    "collectible": "/native/components/collectible/index",
+    "navigation": "/native/components/navigation/index"
+  }
+}

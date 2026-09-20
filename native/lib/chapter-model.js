@@ -1,0 +1,3 @@
+const cells=Object.freeze(['kingfisher','egret','ibis','pheasant','sparrow','moth','camellia'].map((speciesId,index)=>({id:'cell-'+index,speciesId})));const chapter=Object.freeze({id:'nature',title:'自然章节',cells});
+function computeChapterProgress(input,cards){if(cards.some(card=>card&&(card.kind==='example'||card.sample)))throw Error('owned cards only');const found=new Set(cards.filter(Boolean).map(card=>card.speciesId)),valid=input.cells.filter(cell=>cell.speciesId),total=valid.length;const n=valid.filter(cell=>found.has(cell.speciesId)).length;return {found:n,total,milestones:[3,6,7].filter(x=>x<=total&&n>=x),cells:valid.map(cell=>Object.assign({},cell,{lit:found.has(cell.speciesId)}))}}
+module.exports={chapter,computeChapterProgress};

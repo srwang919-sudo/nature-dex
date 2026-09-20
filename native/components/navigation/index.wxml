@@ -1,0 +1,8 @@
+<view wx:if="{{!hidden}}" class="dock">
+  <view class="tabs">
+    <view wx:for="{{navigationItems}}" wx:key="key" class="tab {{item.action==='capture'?'capture-action':''}} {{currentKey===item.key?'on':''}}" data-key="{{item.key}}" bindtap="go" aria-role="button" aria-label="{{item.label}}">
+      <view class="{{item.action==='capture'?'capture-disc':'icon-wrap'}}"><view class="icon {{item.icon}}"></view></view>
+      <text class="tab-label">{{item.label}}</text>
+    </view>
+  </view>
+</view>

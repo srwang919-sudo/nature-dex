@@ -1,0 +1,17 @@
+.wrap { width: 100%; }
+.scene { width: 100%; perspective: 1200px; }
+.card { width: 100%; aspect-ratio: 5 / 7; border-radius: 20rpx; overflow: hidden; position: relative; box-shadow: 0 22rpx 48rpx rgba(25, 39, 34, .28); transition: transform .28s ease; }
+.frontFace, .backFace { width: 100%; height: 100%; position: relative; overflow: hidden; }
+.photo { width: 100%; height: 100%; }
+.scrim { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(14,25,22,.3), transparent 45%, rgba(10,22,20,.9)); }
+.top { position: absolute; top: 18rpx; left: 20rpx; right: 20rpx; color: #ecf0d8; font-size: 20rpx; display: flex; justify-content: space-between; letter-spacing: 1rpx; }
+.frontInfo { position: absolute; left: 24rpx; right: 24rpx; bottom: 24rpx; color: #fffdf1; }
+.name { font-size: 48rpx; font-weight: 600; display: block; line-height: 1.2; }
+.latin { display: block; font-size: 22rpx; margin-top: 6rpx; font-style: italic; opacity: .9; }
+.meta { display: block; font-size: 20rpx; margin-top: 12rpx; opacity: .82; }
+.shine { position: absolute; inset: -40%; background: linear-gradient(115deg, transparent 40%, rgba(218,255,233,.22) 48%, rgba(243,218,114,.18) 53%, transparent 61%); transform: translateX(-18%) rotate(-12deg); pointer-events: none; }
+.holo { border: 4rpx solid #e7b62f; }.alt { border: 4rpx solid #74a991; }.numbered { border: 4rpx solid #c8b15d; }.standard { border: 4rpx solid #b9cbb9; }
+.backFace { background: linear-gradient(145deg, #19312b, #314d42); color: #edf1db; padding: 44rpx 34rpx; display: flex; flex-direction: column; gap: 20rpx; }
+.backBrand { font-size: 20rpx; color: #bfceb9; letter-spacing: 2rpx; }.backName { font-size: 46rpx; font-weight: 600; margin-top: 24rpx; }.backText { font-size: 26rpx; line-height: 1.7; color: #d7e1d6; }.backRule { margin-top: auto; font-size: 20rpx; color: #afbfaf; line-height: 1.5; }
+.control { height: 72rpx; display: flex; align-items: center; justify-content: center; font-size: 24rpx; color: var(--brand-2); }
+.compact .card { border-radius: 14rpx; }.compact .top { font-size: 14rpx; top: 10rpx; left: 12rpx; right: 12rpx; }.compact .name { font-size: 28rpx; }.compact .latin, .compact .meta { font-size: 14rpx; }.compact .frontInfo { left: 14rpx; right: 14rpx; bottom: 14rpx; }

@@ -1,0 +1,10 @@
+const assert=require('node:assert/strict'),{chapter,computeChapterProgress}=require('../native/lib/chapter-model');
+assert.equal(chapter.cells.length,7);
+const cards=chapter.cells.map((x,i)=>({id:String(i),speciesId:x.speciesId}));
+assert.equal(computeChapterProgress(chapter,cards).total,7);
+assert.equal(computeChapterProgress(chapter,cards.concat(cards)).found,7);
+assert.deepEqual(computeChapterProgress(chapter,cards).milestones,[3,6,7]);
+assert.throws(()=>computeChapterProgress(chapter,[{kind:'example',speciesId:'kingfisher'}]));
+assert.throws(()=>computeChapterProgress(chapter,[{sample:true,speciesId:'kingfisher'}]));
+assert.equal(computeChapterProgress(chapter,[{speciesId:'unlisted'}]).found,0);
+console.log('PASS seven achievable species and duplicate-safe chapter milestones');

@@ -1,0 +1,4 @@
+const assert=require('node:assert/strict'),{generate,MODEL}=require('../cloudfunctions/createArtCard/provider');
+const jpeg=Buffer.from([255,216,255,224,0,0,0,0,0]);let called=0,input;
+const cloud={ai:()=>({createImageModel:name=>{assert.equal(name,'hunyuan-image');return {generateImage:async p=>{called++;input=p;return {data:[{url:'https://example.invalid/image'}]}}}}}),uploadFile:async p=>{assert.equal(p.cloudPath,'private/u1/a.jpg');return {fileID:'cloud://private'}}};
+(async()=>{assert.equal(await generate(cloud,{reference:jpeg,prompt:'保留物种形态',path:'private/u1/a.jpg'},{download:async()=>jpeg}),'cloud://private');assert.equal(input.model,MODEL);assert.deepEqual(Buffer.from(input.images[0],'base64'),jpeg);await assert.rejects(generate(cloud,{reference:Buffer.from('bad')},{}));assert.equal(called,1);console.log('PASS verified HY generateImage contract, binary reference and output checks')})().catch(e=>{console.error(e);process.exitCode=1});

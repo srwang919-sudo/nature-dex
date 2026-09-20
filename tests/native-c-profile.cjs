@@ -1,0 +1,10 @@
+const assert=require('node:assert/strict'),{buildProfile}=require('../native/lib/profile-model'),fs=require('fs'),vm=require('vm'),path=require('path');
+assert.equal(buildProfile([{speciesId:'new-species'}]).xp,0);
+const x=buildProfile([{speciesId:'kingfisher'},{speciesId:'kingfisher'},{speciesId:'camellia',sample:true}]);
+assert.equal(x.xp,1);assert.equal(x.nextXp,7);assert.equal(x.stats.count,2);
+assert.equal(buildProfile([{speciesId:'kingfisher',createdAt:'invalid'}]).stats.days,0);
+let page;const app={getCards:()=>[],decorate:c=>c,getBadges:()=>({badges:[{earned:false},{earned:true}]})},wx={getStorageSync:()=>null};
+vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../native/pages/profile/index.js'),'utf8'),{Page:p=>page=p,getApp:()=>app,wx,require:require('module').createRequire(path.join(__dirname,'../native/pages/profile/index.js'))});
+page.setData=function(v){Object.assign(this.data,v)};page.refresh();
+assert.equal(page.data.profile.stats.badges,1);assert.equal(page.data.notes.length,0);
+console.log('PASS chapter experience, distinct global counts, actual earned badges and no sample notes');

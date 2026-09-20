@@ -1,0 +1,30 @@
+name: quality
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run quality
+      - run: git diff --check
+      - name: Scan for credential patterns
+        run: |
+          if rg -n --hidden --glob '!node_modules/**' --glob '!.git/**' \
+            -e 'sk-[A-Za-z0-9]{20,}' -e 'AKIA[0-9A-Z]{16}' -e 'BEGIN [A-Z ]+ PRIVATE KEY' \
+            -e 'DASHSCOPE_API_KEY=[^$<[:space:]]{12,}' -e 'BAIDU_SECRET_KEY=[^$<[:space:]]{12,}' \
+            app.js app.json config native cloudfunctions scripts; then
+            echo 'Potential credential pattern found'
+            exit 1
+          fi

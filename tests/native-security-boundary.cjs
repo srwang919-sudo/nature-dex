@@ -1,0 +1,11 @@
+const fs=require('fs'),assert=require('node:assert/strict'),path=require('path');
+const root=path.join(__dirname,'..'),read=p=>fs.readFileSync(path.join(root,p),'utf8');
+for(const p of ['cloudfunctions/natureAI2/index.js','cloudfunctions/recognizeObservation/index.js'])assert.ok(!/['"]sk-[^'"]+['"]/.test(read(p)),'no credential literals');
+assert.equal(JSON.parse(read('package.json')).scripts['build:weapp'],'node scripts/verify-native.cjs');
+assert.ok(read('native/pages/observe/index.js').includes("name:'recognizeObservation'"));
+assert.ok(!read('native/pages/reveal/index.js').includes('consent:true'));
+assert.ok(!read('app.js').includes('consent: true'));
+const {buildProfile}=require('../native/lib/profile-model');
+assert.equal(buildProfile([]).stats.count,0);
+assert.equal(buildProfile([{id:'demo',sample:true,speciesId:'ibis'}]).stats.species,0);
+console.log('PASS credentials, sole release source, explicit consent and truthful profile');

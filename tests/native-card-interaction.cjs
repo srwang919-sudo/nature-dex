@@ -1,0 +1,27 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),path=require('node:path');
+let now=1000,id=0,page;const timers=new Map();
+const context={require:require('node:module').createRequire(path.join(__dirname,'../native/pages/card/index.js')),getApp:()=>({}),Page:p=>page=p,wx:{},Math,Date:{now:()=>now},setTimeout:(fn,ms)=>{const key=++id;timers.set(key,{fn,time:now+ms});return key},clearTimeout:key=>timers.delete(key)};
+vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../native/pages/card/index.js'),'utf8'),context);
+let writes=0;page.setData=function(p,callback){Object.assign(this.data,p);writes++;if(callback)callback()};
+assert.equal(page.data.viewer,false,'viewer is opt-in and never overlays detail by default');
+page.view();assert.equal(page.data.viewer,true);page.details();assert.equal(page.data.viewer,false,'details only hides viewer');
+function advance(ms){const limit=now+ms;for(;;){const next=[...timers.entries()].filter(([,v])=>v.time<=limit).sort((a,b)=>a[1].time-b[1].time)[0];if(!next)break;now=next[1].time;timers.delete(next[0]);next[1].fn()}now=limit}
+const touch=(x,y)=>({touches:[{clientX:x,clientY:y}]});
+page.flip();assert.equal(page.data.flipStage,'out');assert.equal(page.data.back,false);assert.equal(page.data.turn,90);
+const count=timers.size;page.flip();assert.equal(timers.size,count,'repeat click must not queue another flip');
+advance(179);assert.equal(page.data.back,false);
+advance(1);assert.equal(page.data.back,true);assert.equal(page.data.flipStage,'edge');assert.equal(page.data.turn,-90);
+advance(32);assert.equal(page.data.flipStage,'in');assert.equal(page.data.turn,0);
+advance(220);assert.equal(page.data.flipping,false);
+page.flip();advance(180);assert.equal(page.data.back,false);page.onHide();advance(1000);assert.equal(page.data.flipStage,'idle');assert.equal(page.data.turn,0);assert.equal(timers.size,0);
+page.data.reduce=true;page.flip();assert.equal(page.data.back,true);assert.equal(page.data.turn,0);assert.equal(timers.size,0);
+page.data.reduce=false;page.start(touch(0,0));page.move(touch(60,30));assert.equal(page.data.dragging,true);assert.equal(page.data.ry,10);assert.equal(page.data.rx,-5);
+const before=writes;page.move(touch(61,30));page.move(touch(62,30));assert.equal(writes,before,'move should be frame throttled');advance(16);assert.equal(writes,before+1);
+page.move(touch(62.1,30.1));advance(16);assert.equal(writes,before+1,'quantized insignificant motion must not write');
+page.end();assert.equal(page.data.dragging,false);assert.equal(page.data.rx,0);assert.equal(page.data.ry,0);page.tap();assert.equal(page.data.flipping,false,'drag release cannot become flip');
+page.start(touch(0,0));page.move(touch(3,3));page.end();page.tap();assert.equal(page.data.flipping,true,'small jitter retains tap');page.settle();
+page.start(touch(0,0));page.move(touch(20,10));page.cancel();advance(100);assert.equal(page.data.dragging,false);assert.equal(page.data.ry,0);assert.equal(timers.size,0);page.tap();assert.equal(page.data.flipping,false,'cancel cannot become tap');
+const wxml=fs.readFileSync(path.join(__dirname,'../native/pages/card/index.wxml'),'utf8');const modal=wxml.slice(wxml.indexOf('<view wx:if="{{viewer'));
+assert.equal((modal.match(/<collectible /g)||[]).length,1,'one physical face in modal');assert.ok(!/backface-visibility|rotateY\(180deg\)/.test(fs.readFileSync(path.join(__dirname,'../native/pages/card/index.wxss'),'utf8')));
+assert.ok(modal.includes('catchtouchmove')&&modal.includes('bindtap="details"'),'viewer owns the screen and can hide without navigation');
+console.log('PASS: edge-on face swap, repeat lock, reduced motion, background cleanup, frame throttle, quantization, drag threshold and cancel/rebound');

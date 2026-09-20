@@ -1,0 +1,18 @@
+const assert=require('node:assert/strict'),fs=require('fs'),vm=require('vm'),path=require('path');
+const model=require('../native/lib/tab-model');
+assert.deepEqual(model.tabs.map(x=>x.key),['discover','collection','me']);
+assert.deepEqual(model.navigationItems.map(x=>x.key),['discover','collection','capture','me']);
+assert.equal(model.navigationItems[2].action,'capture');
+let component;const calls=[];
+vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../native/components/navigation/index.js'),'utf8'),{require:()=>model,Component:x=>component=x,wx:{navigateTo:x=>calls.push(['push',x.url]),reLaunch:x=>calls.push(['tab',x.url])}});
+const ctx={data:{currentKey:'discover'},setData(x){Object.assign(this.data,x)}};
+const tap=key=>component.methods.go.call(ctx,{currentTarget:{dataset:{key}}});
+tap('capture');assert.deepEqual(calls,[['push','/native/pages/observe/index']]);
+tap('discover');tap('invalid');assert.equal(calls.length,1);
+tap('collection');assert.deepEqual(calls[1],['tab','/native/pages/library/index']);
+component.observers.active.call(ctx,'observe');assert.equal(ctx.data.hidden,true);
+component.observers.active.call(ctx,'reveal');assert.equal(ctx.data.hidden,true);
+component.observers.active.call(ctx,'me');assert.equal(ctx.data.hidden,false);
+const css=fs.readFileSync(path.join(__dirname,'../native/components/navigation/index.wxss'),'utf8');
+assert.ok(css.includes('safe-area-inset-bottom'));assert.ok(css.includes('translateY(-16rpx)'));
+console.log('PASS capture action, persistent tabs, hidden flow dock and safe area');

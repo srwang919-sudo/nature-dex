@@ -1,0 +1,13 @@
+<view class="physical {{presentation.front.finishKey}} {{large?'large':''}} {{motion?'moving':''}}">
+  <view wx:if="{{!back}}" class="inner">
+    <image wx:if="{{!imageUnavailable && presentation.front.photo}}" class="photo" src="{{presentation.front.photo}}" mode="aspectFill" binderror="imageError"/>
+    <view wx:else class="photo photo-fallback"><text>原图不可用</text><text>请重新选择</text></view>
+    <view class="anchor"><text class="number">{{presentation.front.no}}</text><text class="badge">{{presentation.front.finish}}</text></view><view class="shine"></view>
+    <view class="metadata"><view class="name-row"><text class="name">{{presentation.front.name}}</text><text class="stars">{{presentation.front.starText}}</text></view><text class="latin">{{presentation.front.latin}}</text></view>
+    <view wx:if="{{card.sample}}" class="sample">示例</view>
+  </view>
+  <view wx:else class="back">
+    <view class="back-art"><image wx:if="{{!backUnavailable}}" class="back-illustration-full" src="{{presentation.back.illustration}}" binderror="artError" mode="aspectFill"/><text wx:else>水彩插画暂时无法读取，请稍后重试</text></view>
+    <view class="back-bottom" wx:if="{{presentation.back.no || presentation.back.date}}"><view class="record-footer-line"><text wx:if="{{presentation.back.no}}">{{presentation.back.no}}</text><text wx:if="{{presentation.back.date}}">{{presentation.back.date}}</text></view></view>
+  </view>
+</view>

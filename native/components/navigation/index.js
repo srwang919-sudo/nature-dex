@@ -1,0 +1,3 @@
+const {navigationItems}=require('../../lib/tab-model')
+const parentTab=active=>({home:'discover',observe:'discover',reveal:'discover',note:'discover',nearby:'discover',library:'collection',settings:'me'})[active]||active
+Component({properties:{active:String},data:{navigationItems,currentKey:'',hidden:false},observers:{active(value){this.setData({currentKey:parentTab(value),hidden:value==='observe'||value==='reveal'})}},methods:{go(e){const item=navigationItems.find(x=>x.key===e.currentTarget.dataset.key);if(!item)return;if(item.action==='capture'){wx.navigateTo({url:item.url});return}if(item.key===this.data.currentKey)return;wx.reLaunch({url:item.url})}}})

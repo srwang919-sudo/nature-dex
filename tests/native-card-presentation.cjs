@@ -1,0 +1,23 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs'),path=require('node:path');
+const {presentCard,getCraftPresentation}=require('../native/lib/card-presentation');
+const {lineArtFor}=require('../native/lib/species-line-art');
+const {illustrationFor}=require('../native/lib/species-illustration');
+assert.equal(presentCard({finishKey:'standard'}).starText,'★☆☆☆☆');
+assert.equal(getCraftPresentation('numbered').stars,5);
+const egret=presentCard({speciesId:'egret',finishKey:'alt',stars:4,factTitle:'长颈长腿',habitat:'湿地',season:'全年'});
+assert.equal(egret.front.starText,'★★★★☆');
+assert.ok(egret.back.illustration.endsWith('/home-ink-hero.jpg'));
+assert.equal(egret.back.shortFact,'长颈长腿');
+assert.equal(egret.back.habitatSeason,'湿地 · 全年');
+const ids=['kingfisher','egret','ibis','pheasant','sparrow','moth','camellia'];
+assert.equal(new Set(ids.map(id=>JSON.stringify(lineArtFor(id)))).size,7);
+assert.deepEqual(lineArtFor('unknown'),[]);
+for(const id of ids){const asset=new URL(illustrationFor(id),'https://local').pathname;assert.ok(asset.endsWith('/home-ink-hero.jpg'),'curated landscape is shared and independent of private photos');}
+const component=fs.readFileSync(path.join(__dirname,'../native/components/collectible/index.js'),'utf8');
+const markup=fs.readFileSync(path.join(__dirname,'../native/components/collectible/index.wxml'),'utf8');
+assert.ok(markup.includes('back-illustration-full')&&markup.includes('presentation.back.illustration'),'screen uses shared local illustration mapping');
+assert.ok(markup.includes('presentation.back.no')&&markup.includes('presentation.back.date'),'back retains truthful observation provenance');
+assert.ok(markup.includes('binderror="imageError"')&&markup.includes('原图不可用')&&markup.includes('请重新选择'),'broken local photos have a safe fallback');
+assert.ok(component.includes('imageError')&&component.includes('imageUnavailable'));
+console.log('PASS: presentation five-star slots and seven distinct line arts');

@@ -1,0 +1,29 @@
+<view class="page notes-page">
+  <view class="notes-header">
+    <text class="title">观察笔记</text>
+    <text class="sub">记录你与自然相遇时的天气、动作或一点发现</text>
+  </view>
+
+  <view wx:if="{{!count}}" class="empty-state">
+    <view class="empty-icon note-pencil" aria-hidden="true"></view>
+    <text class="empty-title">还没有笔记</text>
+    <text class="sub">在卡片完整资料里写下观察，这里会自动汇总。</text>
+    <button class="primary" bindtap="shoot">去拍一张</button>
+  </view>
+
+  <view wx:else class="notes-list">
+    <view wx:for="{{notes}}" wx:key="id" class="note-card" data-id="{{item.id}}" bindtap="open">
+      <image class="note-thumb" src="{{item.photoPath || item.image}}" mode="aspectFill"/>
+      <view class="note-body">
+        <view class="note-title-row">
+          <text class="section">{{item.zh}}</text>
+          <text class="sub">{{item.date}}</text>
+        </view>
+        <text class="sub latin">{{item.latin}}</text>
+        <text class="note-text">{{item.text}}</text>
+      </view>
+      <text class="chevron">›</text>
+    </view>
+  </view>
+</view>
+<navigation active="note"/>

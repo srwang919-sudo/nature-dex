@@ -1,0 +1,4 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const source=fs.readFileSync(require('node:path').join(__dirname,'../cloudfunctions/initCollections/index.js'),'utf8');
+async function run(owner,fail){const calls=[],exports={};const cloud={init(){},getWXContext:()=>({OPENID:owner}),database:()=>({createCollection:async name=>{calls.push(name);if(fail)throw Error(fail)}})};vm.runInNewContext(source,{require:()=>cloud,exports});return {result:await exports.main(),calls};}
+(async()=>{assert.equal((await run('')).calls.length,0);const ok=await run('u1');assert.deepEqual(ok.calls,['assets','artOperations','speciesWatercolors']);assert.equal(ok.result.ok,true);assert.equal((await run('u1','permission denied')).result.ok,false);assert.equal((await run('u1','collection already exists')).result.existed.length,3);console.log('PASS fixed authenticated collection setup and non-swallowed failures');})();

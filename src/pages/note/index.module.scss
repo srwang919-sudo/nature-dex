@@ -1,0 +1,119 @@
+.page {
+  min-height: 100vh;
+  background: var(--bg);
+  padding-bottom: 240rpx;
+}
+
+.intro {
+  padding: 48rpx 40rpx 24rpx;
+}
+.introTitle {
+  font-size: 56rpx;
+  font-weight: 600;
+  color: var(--ink);
+  display: block;
+  margin-bottom: 12rpx;
+}
+.introHint {
+  font-size: 26rpx;
+  color: var(--ink-2);
+  line-height: 1.7;
+  display: block;
+}
+
+.list {
+  margin: 24rpx 40rpx 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+.empty {
+  margin: 96rpx 0;
+  text-align: center;
+  font-size: 26rpx;
+  color: var(--ink-2);
+}
+
+.item {
+  background: var(--bg-card);
+  border-radius: var(--r-lg);
+  padding: 24rpx;
+  box-shadow: 0 4rpx 16rpx var(--shadow);
+}
+.itemHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+.itemDate {
+  font-size: 24rpx;
+  color: var(--ink-2);
+}
+.itemDur {
+  font-size: 22rpx;
+  color: var(--brand-2);
+}
+.itemWave {
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+.bar {
+  width: 4rpx;
+  margin-right: 4rpx;
+  background: var(--brand-2);
+  border-radius: 2rpx;
+  opacity: 0.5;
+}
+.itemFoot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12rpx;
+}
+.playBtn {
+  padding: 8rpx 24rpx;
+  border-radius: 999rpx;
+  background: var(--brand);
+  color: #FFFCF5;
+  font-size: 22rpx;
+}
+.delBtn {
+  font-size: 22rpx;
+  color: var(--ink-2);
+}
+
+.recordBar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 40rpx 40rpx 80rpx;
+  background: linear-gradient(180deg, rgba(244, 239, 227, 0), var(--bg) 30%);
+}
+.recordBtn {
+  height: 120rpx;
+  border-radius: 999rpx;
+  background: var(--bg-card);
+  border: 2rpx solid var(--shadow-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  color: var(--ink-2);
+  box-shadow: 0 8rpx 24rpx var(--shadow);
+}
+.recording {
+  background: var(--danger);
+  color: #FFFCF5;
+  border-color: transparent;
+  transform: scale(1.04);
+}
+.hint {
+  margin-top: 16rpx;
+  text-align: center;
+  font-size: 22rpx;
+  color: var(--ink-2);
+}

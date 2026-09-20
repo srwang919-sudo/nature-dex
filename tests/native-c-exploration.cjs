@@ -1,0 +1,11 @@
+const assert=require('node:assert/strict'),{buildExploration}=require('../native/lib/exploration-model');
+const now=new Date(2026,8,20,12).getTime(),ids=['kingfisher','camellia'];
+assert.equal(buildExploration([],ids,now).task.kind,'first');
+const cards=[{id:'a',speciesId:'kingfisher',createdAt:now},{id:'b',speciesId:'kingfisher',createdAt:now},{id:'s',speciesId:'camellia',kind:'example',createdAt:now},{id:'t',speciesId:'camellia',sample:true,createdAt:now}];
+const x=buildExploration(cards,ids,now);assert.equal(x.found,1);assert.equal(x.today.length,2);assert.equal(x.today[0].id,'b');assert.equal(x.task.kind,'next');
+assert.equal(buildExploration(cards.concat({id:'c',speciesId:'camellia',createdAt:now}),ids,now).task.kind,'complete');
+const dates=[{id:'old',speciesId:'kingfisher',createdAt:new Date(2026,8,19,23,59).getTime()},{id:'new',speciesId:'kingfisher',createdAt:new Date(2026,8,20,0,1).getTime()},{id:'bad',speciesId:'kingfisher',createdAt:'bad'},null];
+assert.deepEqual(buildExploration(dates,ids,now).today.map(x=>x.id),['new']);
+assert.equal(buildExploration([{id:'external',speciesId:'unlisted'}],ids,now).found,0);
+assert.equal(buildExploration(cards,[],now).total,0);
+console.log('PASS truthful exploration, dedup, sample exclusion and local date boundary');

@@ -1,0 +1,23 @@
+const fs=require('fs'),vm=require('vm'),assert=require('node:assert/strict'),path=require('path'),root=path.join(__dirname,'..');
+let page,modal,calls=0,epoch=0,draft={id:'d1',photoPath:'wxfile://saved'};
+const app={finishes:[],globalData:{species:{}},getDraft:()=>draft,getDataEpoch:()=>epoch,getSpecies:()=>null,saveDraft:d=>draft=d};
+let consent=null;
+const wx={getStorageSync:()=>consent,showModal:o=>modal=o,showToast(){},cloud:{callFunction:async()=>{calls++;return {result:{status:'unknown',candidates:[],contractVersion:2}}}}};
+vm.runInNewContext(fs.readFileSync(path.join(root,'native/pages/observe/index.js'),'utf8'),{Page:p=>page=p,getApp:()=>app,wx,require:require('module').createRequire(path.join(root,'native/pages/observe/index.js')),setTimeout,clearTimeout,Date,Math,Object});
+page.setData=function(p){Object.assign(this.data,p)};page.setData({photoPath:draft.photoPath});
+(async()=>{
+ page.identify();assert.equal(calls,0);await page.identifyConsented();assert.equal(calls,0);
+ consent={version:1,provider:'baidu',acceptedAt:1};
+ let release;page.uploadPhoto=()=>new Promise(r=>release=r);
+ const pending=page.identifyConsented();draft={id:'d2',photoPath:'wxfile://new'};page._token++;release('cloud://late');await pending;
+ assert.equal(calls,0,'late upload cannot trigger provider for a different draft');assert.equal(draft.id,'d2');
+ draft={id:'d3',photoPath:'wxfile://saved',photoFileId:'cloud://owned',photoUploadVersion:2};
+ page.setData({aiBusy:false});await page.identifyConsented();assert.equal(calls,1);assert.equal(page.data.mode,'unknown');assert.equal(page.data.species,null);assert.equal(page.data.showDemo,false,'unknown cannot bypass strict recognition');
+ draft={id:'legacy',photoPath:'wxfile://saved',photoFileId:'cloud://legacy-path'};
+ let reuploads=0;page.uploadPhoto=async()=>{reuploads++;return 'cloud://private-version2'};
+ wx.cloud.callFunction=async()=>({result:{status:'failed',contractVersion:2,code:'not_configured',candidates:[]}});
+ await page.identifyConsented();assert.equal(reuploads,1,'legacy unversioned upload is not silently reused');assert.equal(draft.photoUploadVersion,2);
+ assert.ok(page.data.identifyError.includes('BAIDU_API_KEY'));assert.ok(page.data.identifyError.includes('not_configured'));assert.equal(page.data.showDemo,false,'failure cannot bypass strict recognition');
+ await page.identifyConsented();assert.equal(reuploads,1,'retry reuses an owned versioned upload');
+ console.log('PASS denied consent has zero cloud calls, stale result isolation, and unknown keeps no selected species');
+})().catch(e=>{console.error(e);process.exitCode=1});

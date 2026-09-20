@@ -1,0 +1,44 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+yarn-error.log
+.npmrc
+.taro/
+.cache/
+
+# 编辑器
+.idea/
+.vscode/
+*.iml
+
+# 资源备份
+*.bak
+
+# 微信开发者工具本地配置（保留 project.config.json 的公共部分）
+miniprogram_npm/
+
+# Private runtime and deployment configuration
+.env
+.env.*
+!.env.example
+project.private.config.json
+*.private.json
+
+# Generated or deploy-only artifacts
+.swc/
+cloudfunction-packages/
+*.zip
+*.apk
+*.ipa
+*.dSYM/
+coverage/
+test-results/
+
+# Local photos, exports, and backups
+local-photos/
+private-photos/
+user-exports/
+*.heic
+*.backup
+*.sqlite

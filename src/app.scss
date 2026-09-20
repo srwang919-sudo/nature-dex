@@ -1,0 +1,52 @@
+/* ============================================================
+   全局样式 —— 把 Web 版关键色板搬过来，rpx 适配（750rpx = 屏宽）
+   - 主色 #6E9479（山林绿）· 辅 #FFFCF5（米白）· 强调 #E9B93C（金）
+   - 字体兜底链：先尝试自定义子集 -> 系统楷体
+   ============================================================ */
+
+page {
+  --brand:    #6E9479;
+  --brand-2:  #577A70;
+  --brand-3:  #48655C;
+  --ink:      #1f2a24;
+  --ink-2:    #5b6b62;
+  --bg:       #F4EFE3;
+  --bg-card:  #FFFCF5;
+  --accent:   #E9B93C;
+  --danger:   #C0392B;
+  --warn:     #D68910;
+  --leaf:     #57B840;
+  --shadow:   rgba(31, 42, 36, 0.08);
+  --shadow-2: rgba(31, 42, 36, 0.18);
+
+  --fz-xs: 22rpx;
+  --fz-sm: 26rpx;
+  --fz-md: 30rpx;
+  --fz-lg: 36rpx;
+  --fz-xl: 44rpx;
+  --fz-xxl: 56rpx;
+
+  --r-sm: 8rpx;
+  --r-md: 16rpx;
+  --r-lg: 24rpx;
+  --r-xl: 36rpx;
+
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'DaziranliNum', 'PingFang SC', 'STKaiti', 'KaiTi', serif;
+  font-size: var(--fz-md);
+  line-height: 1.55;
+}
+
+view, text, image, button, input, scroll-view {
+  box-sizing: border-box;
+}
+
+.f-num {
+  font-family: 'DaziranliNum', -apple-system, 'SF Pro Rounded', 'Avenir Next Rounded', sans-serif;
+  font-feature-settings: 'tnum' 1;
+}
+
+.f-kai {
+  font-family: 'DaziranliNum', 'STKaiti', 'KaiTi', serif;
+}

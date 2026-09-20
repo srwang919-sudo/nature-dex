@@ -1,0 +1,12 @@
+const assert=require('node:assert/strict'),fs=require('fs'),vm=require('vm'),path=require('path'),root=path.join(__dirname,'..');
+let page,accepted=0,saved=null,fail=false;
+const wx={getStorageSync:()=>saved,setStorageSync:(k,v)=>{if(fail)throw Error('quota');saved=v},showToast(){},showModal(){throw Error('no recurring modal')}};
+vm.runInNewContext(fs.readFileSync(path.join(root,'native/pages/observe/index.js'),'utf8'),{Page:p=>page=p,getApp:()=>({finishes:[]}),wx,require:require('module').createRequire(path.join(root,'native/pages/observe/index.js')),setTimeout,clearTimeout});
+page.setData=function(v){Object.assign(this.data,v)};page.setData({photoPath:'saved'});
+page.identifyConsented=()=>accepted++;
+page.identify();assert.equal(accepted,0);assert.equal(page.data.needsRecognitionConsent,true);
+fail=true;page.acceptRecognition();assert.equal(accepted,0);
+fail=false;page.acceptRecognition();assert.equal(accepted,1);
+page.identify();assert.equal(accepted,2);
+saved=null;page.identify();assert.equal(accepted,2);
+console.log('PASS explicit consent, repeated direct identify, withdrawal and failed storage');

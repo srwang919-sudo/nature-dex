@@ -1,0 +1,1 @@
+.setup-page{padding-top:40rpx}.log{margin-top:24rpx;padding:24rpx;background:#f2f1eb;border-radius:20rpx;min-height:500rpx;font-size:22rpx;line-height:1.8;color:#3d4944;display:flex;flex-direction:column;gap:6rpx;word-break:break-all}

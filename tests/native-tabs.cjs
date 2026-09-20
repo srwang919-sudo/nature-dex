@@ -1,0 +1,17 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs'),path=require('node:path');
+const root=path.join(__dirname,'..');
+const {tabs}=require('../native/lib/tab-model');
+assert.deepEqual(tabs.map(tab=>tab.key),['discover','collection','me']);
+assert.equal(tabs.some(tab=>tab.url.includes('/observe/')),false);
+const app=JSON.parse(fs.readFileSync(path.join(root,'app.json'),'utf8'));
+assert.ok(app.pages.includes('native/pages/library/index'));
+assert.ok(app.pages.includes('native/pages/profile/index'));
+const nav=fs.readFileSync(path.join(root,'native/components/navigation/index.wxml'),'utf8');
+assert.ok(nav.includes('wx:for="{{navigationItems}}"')&&nav.includes('currentKey'));
+assert.ok(!nav.includes('>拍摄<')&&!nav.includes('>附近<'));
+const home=fs.readFileSync(path.join(root,'native/pages/home/index.wxml'),'utf8');
+assert.ok(home.includes('探索任务')&&home.includes('去拍摄')&&home.includes('今日收集')&&home.includes('bindtap="nearby"'));
+const library=fs.readFileSync(path.join(root,'native/pages/library/index.wxml'),'utf8');
+assert.ok(library.includes('我的图鉴')&&library.includes('博物志案例')&&library.includes('openExample'));
+console.log('PASS: three-tab navigation and exploration hierarchy');

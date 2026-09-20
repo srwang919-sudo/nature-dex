@@ -1,0 +1,6 @@
+<view class="page setup-page">
+  <view class="title">资产上云工具</view>
+  <view class="sub">一次性运行：把包内 {{total}} 个文件（插画/物种照片/字体）上传到云存储，并记录 fileID。上传成功后这些文件将从代码包中移出。</view>
+  <button class="primary spaced" bindtap="start" disabled="{{running||doneCount>=total}}">{{running?'上传中 '+doneCount+'/'+total:(doneCount>=total?'已完成':'开始上传')}}</button>
+  <view class="log spaced"><text wx:for="{{logs}}" wx:key="index">{{item}}</text></view>
+</view>

@@ -1,0 +1,17 @@
+<view class="page library-page {{reduceMotion?'reduce-motion':''}}">
+  <view class="library-heading"><text class="eyebrow">我的自然观察手册</text><view class="title">我的图鉴</view><text class="sub">{{speciesCount}} 种相遇 · {{ownedCount}} 次记录</text></view>
+  <view wx:if="{{chapter}}" class="chapter-panel">
+    <view class="row between"><text class="section">自然章节</text><text>{{chapter.found}} / {{chapter.total}} 种</text></view>
+    <view class="track"><view class="fill" style="width:{{chapter.total?chapter.found/chapter.total*100:0}}%"></view></view>
+    <view class="chapter-grid"><view wx:for="{{chapter.cells}}" wx:key="id" class="chapter-cell {{item.lit?'lit':''}}"><image wx:if="{{item.lit&&item.image}}" src="{{item.image}}" mode="aspectFill"/><view wx:else class="chapter-placeholder">待发现</view></view></view>
+    <view class="chapter-stamps"><view wx:for="{{milestoneLabels}}" wx:key="need" class="chapter-stamp {{item.earned?'earned':''}}"><text>{{item.need}} 种相遇</text><text class="stamp-state">{{item.earned?'已达成':'待达成'}}</text></view></view>
+    <text class="sub">同一种再次遇见，会增加观察记录，不重复计算物种。</text>
+  </view>
+  <view class="filter-group"><text class="filter-label">物种</text><scroll-view class="filter-scroll" scroll-x="true"><view class="filter-row"><view wx:for="{{categories}}" wx:key="0" class="filter-pill {{category===item[0]?'on':''}}" data-value="{{item[0]}}" bindtap="category" aria-role="button" aria-label="{{item[1]+(category===item[0]?'，已选':'')}}"><text wx:if="{{category===item[0]}}" class="selected-dot"></text>{{item[1]}}</view></view></scroll-view></view>
+  <view class="filter-group compact"><text class="filter-label">工艺</text><scroll-view class="filter-scroll" scroll-x="true"><view class="filter-row"><view wx:for="{{finishes}}" wx:key="0" class="filter-pill {{finish===item[0]?'on':''}}" data-value="{{item[0]}}" bindtap="finish" aria-role="button" aria-label="{{item[1]+(finish===item[0]?'，已选':'')}}"><text wx:if="{{finish===item[0]}}" class="selected-dot"></text>{{item[1]}}</view></view></scroll-view></view>
+  <view wx:if="{{cards.length}}" class="card-grid"><view wx:for="{{cards}}" wx:key="id" class="collection-card" data-id="{{item.id}}" bindtap="open"><collectible card="{{item}}"/></view></view>
+  <view wx:elif="{{ownedCount}}" class="library-empty"><view class="section">这个组合暂时没有卡片</view><text class="sub">已收藏的记录还在，换个筛选看看。</text><button class="secondary" bindtap="resetFilters">查看全部收藏</button></view>
+  <view wx:else class="library-empty"><view class="section">拍下下一次遇见</view><text class="sub">你的第一张收藏卡，会从一次真实观察开始。</text><button class="primary" bindtap="explore">去拍一张</button></view>
+  <view class="example-section"><view class="row between"><text class="section">博物志案例</text><text class="sub">7 张参考卡</text></view><text class="example-note">案例，不计入收藏 · 非本人拍摄。可阅读资料、翻面与查看 3D。</text><scroll-view class="example-scroll" scroll-x="true"><view class="example-strip"><view wx:for="{{examples}}" wx:key="id" class="example-item" data-id="{{item.id}}" bindtap="openExample"><collectible card="{{item}}"/></view></view></scroll-view></view>
+</view>
+<navigation active="collection"/>

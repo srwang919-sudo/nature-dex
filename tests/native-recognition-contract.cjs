@@ -1,0 +1,10 @@
+const assert=require('node:assert/strict');
+const {classifyRecognition}=require('../native/lib/recognition-result');
+assert.equal(classifyRecognition(null,false).status,'unavailable');
+assert.equal(classifyRecognition({status:'unknown',candidates:[]},true).status,'unknown');
+assert.equal(classifyRecognition({status:'needs_confirmation',candidates:[{speciesId:'ibis',confidence:.4}]},true).status,'needs_confirmation');
+assert.equal(classifyRecognition({status:'recognized',candidates:[{speciesId:'ibis',confidence:.9}]},true).candidates[0].confidence,.9);
+const services=require('../native/contracts/services');
+assert.equal(services.recognition.available,true);
+assert.equal(services.illustration.available,true);
+console.log('PASS: recognition reports only explicit service states');

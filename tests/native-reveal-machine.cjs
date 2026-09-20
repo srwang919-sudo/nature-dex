@@ -1,0 +1,15 @@
+const assert=require('node:assert/strict');
+const {createRevealMachine}=require('../native/lib/reveal-machine');
+const states=[];
+const reduced=createRevealMachine({reducedMotion:true,onStage:stage=>states.push(stage)});
+reduced.start();
+assert.deepEqual(states,['sealed','split','lift','settled']);
+assert.equal(reduced.state(),'settled');
+const timers=[];let timerId=0;
+const machine=createRevealMachine({reducedMotion:false,onStage:stage=>states.push(stage),setTimeout:(fn,ms)=>{timers.push({id:++timerId,fn,ms});return timerId},clearTimeout:id=>{const index=timers.findIndex(t=>t.id===id);if(index>=0)timers.splice(index,1)}});
+machine.start();
+assert.equal(machine.state(),'sealed');
+machine.cancel();
+assert.equal(machine.state(),'sealed');
+assert.equal(timers.length,0);
+console.log('PASS: reveal stages, reduced motion, and cancellation');

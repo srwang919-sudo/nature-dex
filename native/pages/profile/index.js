@@ -1,0 +1,8 @@
+const app=getApp(),{buildProfile,checkIn}=require('../../lib/profile-model')
+Page({
+  data:{profile:null,notes:[],showLocation:false,reduce:false},onShow(){this.refresh()},
+  refresh(){const cards=app.getCards().filter(card=>card&&card.kind!=='example'&&!card.sample).map(card=>app.decorate(card)).filter(Boolean),state=wx.getStorageSync('nature.profile.v1')||{},profile=buildProfile(cards,state),notes=cards.map(card=>({id:card.id,zh:card.zh,text:wx.getStorageSync('nature.note.'+card.id)||'',image:card.photoPath||card.image})).filter(note=>note.text).slice().reverse().slice(0,3),savedLocation=wx.getStorageSync('nature.showLocation');const badges=app.getBadges?app.getBadges().badges:[];profile.stats.badges=badges.filter(b=>b.earned).length;this.setData({profile,notes,showLocation:savedLocation!==false,reduce:!!wx.getStorageSync('nature.reduceMotion'),badges})},
+  chooseNote(){wx.reLaunch({url:'/native/pages/library/index'})},
+  checkin(){const state=wx.getStorageSync('nature.profile.v1')||{},result=checkIn(state,new Date().toDateString());wx.setStorageSync('nature.profile.v1',result.state);this.refresh();wx.showToast({title:result.pointsAdded?'打卡 +2':'今天已打卡'})},
+  toggleLocation(){const next=!this.data.showLocation;wx.setStorageSync('nature.showLocation',next);this.setData({showLocation:next})},toggleMotion(){const next=!this.data.reduce;wx.setStorageSync('nature.reduceMotion',next);this.setData({reduce:next})},settings(){wx.navigateTo({url:'/native/pages/settings/index'})},openNote(e){const id=e.currentTarget.dataset.id;if(id.indexOf('-note')===-1&&id!=='red-bellied-pheasant')wx.navigateTo({url:'/native/pages/card/index?id='+id})}
+})
