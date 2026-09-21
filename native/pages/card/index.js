@@ -1,11 +1,13 @@
 const app=getApp()
 const cardExport=require('../../lib/card-export')
 const {decodeAsset}=require('../../lib/asset-decode')
+const {readableImage,readableFront}=require('../../lib/card-image')
+const {exportFailure}=require('../../lib/export-error')
 const {localIllustrationFor}=require('../../lib/species-illustration')
 async function decodeBack(canvas,card,current){
+ if(card.schemaVersion===2){const original=card.originalPhotoAsset||{};let info;try{info=await readableImage(wx,original.localPath||original.fileId)}catch(e){if(!original.fileId||original.fileId===original.localPath)throw e;info=await readableImage(wx,original.fileId)}return decodeAsset(canvas,info.path,current)}
  let src=card.backAssetFileId||cardExport.illustrationFor(card.speciesId);
- if(src.startsWith('cloud://')){const r=await wx.cloud.getTempFileURL({fileList:[src]});src=r.fileList?.[0]?.tempFileURL;if(!src)throw Error('watercolor unavailable')}
- try{return await decodeAsset(canvas,src,current)}catch(e){if(card.backAssetFileId)throw e;return decodeAsset(canvas,localIllustrationFor(card.speciesId),current).catch(()=>({image:null}))}
+ try{const info=await readableImage(wx,src);return await decodeAsset(canvas,info.path,current)}catch(e){if(card.backAssetFileId)throw e;return decodeAsset(canvas,localIllustrationFor(card.speciesId),current).catch(()=>({image:null}))}
 }
 Page({
  data:{card:null,back:false,rx:0,ry:0,turn:0,viewer:false,reduce:false,note:'',isSample:false,dragging:false,flipping:false,flipStage:'idle',exporting:false,exportPath:'',exportWidth:821,exportHeight:1121,exportMode:'',printQuality:'',saveDenied:false},
@@ -31,8 +33,35 @@ Page({
  enrich(){this.setData({back:true,viewer:true})},
  checkArt(){this.setData({back:true,viewer:true})},
  exportMenu(){if(this.data.exporting)return;wx.showActionSheet({itemList:['生成含照片分享图（保护物种含卡背）','打印模式：正面 PNG','打印模式：卡背 PNG'],success:r=>this.exportImage(['share','printFront','printBack'][r.tapIndex])})},
- exportImage(mode){if(this.data.isSample){wx.showToast({title:'示例卡不可导出为我的卡',icon:'none'});return}if(this.data.exporting||!this.data.card)return;const card=this.data.card,plan=cardExport.exportPlan(card,mode),epoch=app.getDataEpoch(),token=this._exportToken=(this._exportToken||0)+1,current=()=>token===this._exportToken&&epoch===app.getDataEpoch()&&!this._unloaded;this.settle();this.setData({exporting:true,exportPath:'',exportWidth:plan.width,exportHeight:plan.height,exportMode:mode,printQuality:''},()=>wx.createSelectorQuery().in(this).select('#exportCanvas').fields({node:true,size:true}).exec(async result=>{try{const canvas=result&&result[0]&&result[0].node;if(!canvas||!current())throw Error('stale export');canvas.width=plan.width;canvas.height=plan.height;const illustrationResult=await decodeBack(canvas,card,current);let photo={width:1,height:1};if(mode!=='printBack'){let photoSrc=card.artPhotoPath||card.photoPath||card.image;if(photoSrc.indexOf('cloud://')===0){const t=await wx.cloud.getTempFileURL({fileList:[photoSrc]});if(!t.fileList||!t.fileList[0]||!t.fileList[0].tempFileURL)throw Error('asset url failed');photoSrc=t.fileList[0].tempFileURL}const info=await new Promise((resolve,reject)=>wx.getImageInfo({src:photoSrc,success:resolve,fail:reject}));const photoResult=await decodeAsset(canvas,photoSrc,current);photo=Object.assign(photoResult.image,{width:info.width,height:info.height});this.setData({printQuality:plan.print?cardExport.printQuality(info,mode).message:''})}if(!current())throw Error('stale export');cardExport.render(canvas.getContext('2d'),card,plan,photo,illustrationResult.image);wx.canvasToTempFilePath({canvas,x:0,y:0,width:plan.width,height:plan.height,destWidth:plan.width,destHeight:plan.height,fileType:'png',success:result=>current()?this.setData({exporting:false,exportPath:result.tempFilePath}):this.exportFailed(),fail:()=>this.exportFailed()},this)}catch(error){this.exportFailed()}}))},
- exportFailed(){this.setData({exporting:false,exportPath:''});wx.showModal({title:'图片未导出',content:'照片无法读取。请重新选择照片，或在原设备恢复这张旧照片后重试。',confirmText:'重新选择',cancelText:'稍后再试',success:result=>{if(result.confirm)wx.reLaunch({url:'/native/pages/observe/index'})}})},
+ exportImage(mode){
+  if(this.data.isSample){wx.showToast({title:'示例卡不可导出为我的卡',icon:'none'});return}
+  if(this.data.exporting||!this.data.card)return;
+  const card=this.data.card,plan=cardExport.exportPlan(card,mode),epoch=app.getDataEpoch(),token=this._exportToken=(this._exportToken||0)+1,current=()=>token===this._exportToken&&epoch===app.getDataEpoch()&&!this._unloaded;
+  this.settle();
+  this.setData({exporting:true,exportPath:'',exportWidth:plan.width,exportHeight:plan.height,exportMode:mode,printQuality:''},()=>wx.createSelectorQuery().in(this).select('#exportCanvas').fields({node:true,size:true}).exec(async result=>{
+   let stage='canvas';
+   try{
+    const canvas=result&&result[0]&&result[0].node;if(!current())return;if(!canvas)throw Error('canvas unavailable');
+    canvas.width=plan.width;canvas.height=plan.height;
+    stage='back';const illustrationResult=mode==='printBack'||plan.backs?await decodeBack(canvas,card,current):{image:null};
+    let photo={width:1,height:1};
+    if(mode!=='printBack'){
+     stage='front';const info=await readableFront(wx,card);const decoded=await decodeAsset(canvas,info.path,current);photo=decoded.image;
+     if(!current())return;
+     this.setData({printQuality:plan.print?cardExport.printQuality(info,mode).message:''});
+    }
+    if(!current())return;
+    if(mode==='printBack'&&card.schemaVersion===2)this.setData({printQuality:cardExport.printQuality(illustrationResult.image,mode,card).message});
+    stage='draw';cardExport.render(canvas.getContext('2d'),card,plan,photo,illustrationResult.image);
+    wx.canvasToTempFilePath({canvas,x:0,y:0,width:plan.width,height:plan.height,destWidth:plan.width,destHeight:plan.height,fileType:'png',success:r=>{if(current())this.setData({exporting:false,exportPath:r.tempFilePath})},fail:()=>{if(current())this.exportFailed('draw',{code:'canvas_export'})}},this);
+   }catch(error){if(current())this.exportFailed(stage,error)}
+  }))
+ },
+ exportFailed(stage='front',error={}){
+  this.setData({exporting:false,exportPath:''});
+  const content=exportFailure(stage,error).message;
+  wx.showModal({title:'图片未导出',content,showCancel:false,confirmText:'知道了'});
+ },
  removeCard(){
   wx.showModal({title:'删除这张卡？',content:'卡片、笔记和云端照片都会删除，无法恢复。',confirmText:'删除',confirmColor:'#b03a26',success:r=>{
     if(!r.confirm)return;

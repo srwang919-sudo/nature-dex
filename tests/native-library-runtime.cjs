@@ -3,7 +3,7 @@ const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const store=new Map([['nature.cards.v2',[{id:'legacy-example',kind:'example',sample:true,speciesId:'ibis'},{id:'owned-card',speciesId:'kingfisher',finishKey:'alt',createdAt:1,photoPath:'wxfile://kingfisher.jpg'}]]]);
 const wx={getStorageSync:key=>store.get(key),setStorageSync:(key,value)=>store.set(key,value),getStorageInfoSync:()=>({keys:[...store.keys()]}),removeStorageSync:key=>store.delete(key),removeSavedFile:({success})=>success&&success()};
 let app,page;
-vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../app.js'),'utf8'),{App:value=>app=value,wx,Date,Math,Set,Promise});
+vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../app.js'),'utf8'),{require:require("node:module").createRequire(path.join(__dirname,"../app.js")),App:value=>app=value,wx,Date,Math,Set,Promise});
 vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../native/pages/library/index.js'),'utf8'),{Page:value=>page=value,getApp:()=>app,wx,Date,Math,Set,Object,require:require('node:module').createRequire(path.join(__dirname,'../native/pages/library/index.js'))});
 page.setData=function(value,done){Object.assign(this.data,value);if(done)done()};
 assert.doesNotThrow(()=>page.onShow(),'legacy samples must not make chapter progress throw during library initialization');

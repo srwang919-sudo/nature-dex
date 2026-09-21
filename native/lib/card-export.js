@@ -5,9 +5,9 @@ const PRINT_SPEC=Object.freeze({width:821,height:1121,trimWidth:750,trimHeight:1
 function publicShare(card){const id=card.speciesId||card.id;return {title:'去大自然里 · '+card.zh+'的自然档案',path:'/native/pages/card/index?id=sample_'+encodeURIComponent(id),imageUrl:'https://nature-card-app.app.workbuddy.host/assets/images/'+id+'.jpg'};}
 function exportPlan(card,mode){const backs=mode==='share'&&!!card.protection;return {mode,width:821,height:backs?2282:1121,backs,print:mode.indexOf('print')===0};}
 const COLORS={standard:'#FFFFFF',holo:'#DEF0FC',alt:'#FCE3DE',numbered:'#FFF3D6'};
-function printQuality(image,mode){
- if(mode==='printBack')return {qualified:true,effectiveDpi:null,message:'卡背为文字绘制，按目标 300dpi 像素规格导出'};
- const dpi=Math.floor(Math.min(Number(image.width)/821,Number(image.height)/855)*300);
+function printQuality(image,mode,card={}){
+ if(mode==='printBack'&&card.schemaVersion!==2)return {qualified:true,effectiveDpi:null,message:'卡背为文字绘制，按目标 300dpi 像素规格导出'};
+ const dpi=Math.floor(Math.min(Number(image.width)/(mode==='printBack'?750:821),Number(image.height)/(mode==='printBack'?970:855))*300);
  const qualified=Number.isFinite(dpi)&&dpi>=300;
  return {qualified,effectiveDpi:Number.isFinite(dpi)?dpi:0,message:qualified?'照片有效分辨率约 '+dpi+'dpi，达到目标 300dpi':'清晰度提醒：照片有效分辨率约 '+(Number.isFinite(dpi)?dpi:0)+'dpi，低于目标 300dpi；导出像素不能补回细节'};
 }
@@ -21,7 +21,7 @@ function text(ctx,value,x,y,width,size,lineHeight,maxLines,color){
 function front(ctx,card,offset,image){
  ctx.setFillStyle(COLORS[card.finishKey]||'#fff');ctx.fillRect(0,offset,821,1121);
  const h=855,w=821;const ratio=Math.max(w/image.width,h/image.height),dw=image.width*ratio,dh=image.height*ratio;
- ctx.save();ctx.beginPath();ctx.rect(0,offset,w,h);ctx.clip();ctx.drawImage(image.path||image.src,(w-dw)/2,offset+(h-dh)/2,dw,dh);ctx.restore();
+ ctx.save();ctx.beginPath();ctx.rect(0,offset,w,h);ctx.clip();ctx.drawImage(image,(w-dw)/2,offset+(h-dh)/2,dw,dh);ctx.restore();
  ctx.setFillStyle('#FFFBF2');ctx.fillRect(71,offset+71,170,48);text(ctx,card.no,83,offset+104,146,23,28,1);
  ctx.setFillStyle('#FFFBF2');ctx.fillRect(540,offset+71,210,48);text(ctx,card.finish,552,offset+104,186,26,30,1);
  text(ctx,card.zh,71,offset+927,679,49,59,1);text(ctx,card.latin,71,offset+974,679,27,35,1);
@@ -29,11 +29,18 @@ function front(ctx,card,offset,image){
  text(ctx,card.sample?'参考资料卡':card.date,71,offset+1040,679,25,30,1,'#58655D');
 }
 function back(ctx,card,offset,illustration){
+ if(card.schemaVersion===2){
+  if(!illustration)throw Object.assign(Error('original_missing'),{code:'image_missing'});
+  ctx.setFillStyle('#FFFBF2');ctx.fillRect(0,offset,821,1121);
+  const ratio=Math.max(750/illustration.width,970/illustration.height),dw=illustration.width*ratio,dh=illustration.height*ratio;
+  ctx.save();ctx.beginPath();ctx.rect(36,offset+36,750,970);ctx.clip();ctx.drawImage(illustration,36+(750-dw)/2,offset+36+(970-dh)/2,dw,dh);ctx.restore();
+  text(ctx,'实拍原照 · 地点未公开',71,offset+1042,679,24,30,1,'#58655D');text(ctx,card.date,71,offset+1080,679,20,24,1,'#58655D');return;
+ }
  ctx.setFillStyle('#FFFBF2');ctx.fillRect(0,offset,821,1121);
  text(ctx,'去大自然里 · 自然博物志',71,offset+100,679,27,35,1);
  ctx.setStrokeStyle('#D9D7C9');ctx.beginPath();ctx.moveTo(71,offset+125);ctx.lineTo(750,offset+125);ctx.stroke();
  let y=text(ctx,card.zh,71,offset+185,679,48,58,2);y=text(ctx,card.latin,71,y+9,679,26,33,2,'#58655D')+15;
- if(illustration)ctx.drawImage(illustration.path||illustration.src,610,offset+142,120,120);else drawLineArt(ctx,card.speciesId||card.id,620,offset+145,1.1);
+ if(illustration)ctx.drawImage(illustration,610,offset+142,120,120);else drawLineArt(ctx,card.speciesId||card.id,620,offset+145,1.1);
  const field=(label,value,max=2)=>{const available=Math.min(max,Math.floor((offset+800-y-51)/35));if(value&&available>0){y=text(ctx,label,71,y+18,679,22,28,1,'#58655D');y=text(ctx,value,71,y+5,679,27,35,available)}};
  field('分类',card.family,1);field('IUCN 评估',card.iucn,1);field('观察札记',card.tagline,2);field('识别与行为',card.factTitle,2);field('栖息环境 / 可见季节',[card.habitat,card.season].filter(Boolean).join(' · '),2);
  // Protection uses its own reserved area; long science never overwrites it.

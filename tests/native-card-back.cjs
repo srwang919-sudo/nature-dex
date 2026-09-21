@@ -3,4 +3,8 @@ const markup=fs.readFileSync(require('path').join(__dirname,'../native/component
 assert.ok(!back.includes('presentation.front.photo')&&!back.includes('card.photoPath'));
 assert.ok(!back.includes('scroll-view'));assert.ok(back.includes('presentation.back.illustration'));
 assert.ok(back.includes('presentation.back.no')&&back.includes('presentation.back.date'));
-console.log('PASS current illustration card back is separate from observation photo and preserves provenance');
+const {presentCard}=require('../native/lib/card-presentation');
+const modern=presentCard({schemaVersion:2,originalPhotoAsset:{localPath:'original'},artAsset:{localPath:'watercolor'}});
+assert.equal(modern.front.photo,'watercolor');assert.equal(modern.back.illustration,'original');assert.equal(modern.back.kind,'original');assert.ok(back.includes('实拍原照'));
+assert.notEqual(presentCard({speciesId:'ibis',photoPath:'private-original'}).back.illustration,'private-original','legacy presentation unchanged');
+console.log('PASS v2 original back and legacy illustration remain separate and preserve provenance');

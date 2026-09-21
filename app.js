@@ -172,7 +172,7 @@ App({
   },
   prepareCard(speciesId, options = {}) {
     const draft = this.getDraft();
-    if(this._observation&&draft===this._observation&&(!draft.backAssetFileId||!['recognized','needs_confirmation'].includes(draft.recognition?.status)||!draft.recognition.candidates.some(c=>c.speciesId===speciesId)))throw Error('请先完成识别和水彩卡背');
+    if(this._observation&&draft===this._observation&&(!draft.resourcesVerified||draft.artWork?.artStatus!=='ready'||!draft.artWork.artPhotoPath||!draft.scienceSnapshot||!['recognized','needs_confirmation'].includes(draft.recognition?.status)||!draft.recognition.candidates.some(c=>c.speciesId===speciesId)))throw Error('请先完成识别、彩绘和原照片核验');
     if (!draft || !draft.photoPath || !this.getSpecies(speciesId)) throw new Error('请先保存照片并确认物种');
     if (draft.pendingCard) {
       if (draft.pendingCard.speciesId !== speciesId) {
@@ -190,7 +190,7 @@ App({
     return card;
   },
   getReadyCards(){const cards=wx.getStorageSync('nature.readyCards.v1'),old=wx.getStorageSync('nature.readyCard.v1');return Array.isArray(cards)?cards:old?[old]:[]},
-  commitObservationCard(card){if(!card.backAssetFileId||!card.photoPath)throw Error('卡片资源未完成');wx.setStorageSync('nature.readyCards.v1',this.getReadyCards().filter(c=>c.id!==card.id).concat([card]));this._observation=null;return card},
+  commitObservationCard(card){if(card.schemaVersion===2?card.artStatus!=='ready'||!card.artAsset?.localPath||!card.originalPhotoAsset?.localPath||!card.scienceSnapshot:!card.backAssetFileId||!card.photoPath)throw Error('卡片资源未完成');wx.setStorageSync('nature.readyCards.v1',this.getReadyCards().filter(c=>c.id!==card.id).concat([card]));this._observation=null;return card},
   findCard(id) { const saved = this.getCards().find(c => c.id === id),ready=this.getReadyCards().find(c=>c.id===id);if(ready)return saved||ready; const draft = this.getDrafts().find(d=>d.pendingCard && d.pendingCard.id===id); return saved || (draft ? draft.pendingCard : null) },
   updateCard(card) { const ready=this.getReadyCards();if(ready.some(c=>c.id===card.id)){wx.setStorageSync('nature.readyCards.v1',ready.map(c=>c.id===card.id?card:c));return} const draft = this.getDrafts().find(d=>d.pendingCard && d.pendingCard.id===card.id); if(draft)this.saveDraft(Object.assign({},draft,{pendingCard:card})); else this.saveCards(this.getCards().map(c=>c.id===card.id?card:c)); },
   clearFiledDraft(cardId) { wx.setStorageSync('nature.readyCards.v1',this.getReadyCards().filter(c=>c.id!==cardId)); const draft=this.getDrafts().find(d=>d.pendingCard && d.pendingCard.id===cardId);if(draft)this.clearDraft(draft.id); }

@@ -7,7 +7,8 @@
     <view wx:if="{{card.sample}}" class="sample">示例</view>
   </view>
   <view wx:else class="back">
-    <view class="back-art"><image wx:if="{{!backUnavailable}}" class="back-illustration-full" src="{{presentation.back.illustration}}" binderror="artError" mode="aspectFill"/><text wx:else>水彩插画暂时无法读取，请稍后重试</text></view>
+    <view class="back-art"><image wx:if="{{!backUnavailable && presentation.back.illustration}}" class="back-illustration-full" src="{{presentation.back.illustration}}" binderror="artError" mode="aspectFill"/><text wx:else>{{presentation.back.kind==='original'?'原照片暂时无法读取，请稍后重试':'水彩插画暂时无法读取，请稍后重试'}}</text></view>
+    <text wx:if="{{presentation.back.kind==='original'}}" class="original-label">实拍原照 · {{presentation.back.locationLabel}}</text>
     <view class="back-bottom" wx:if="{{presentation.back.no || presentation.back.date}}"><view class="record-footer-line"><text wx:if="{{presentation.back.no}}">{{presentation.back.no}}</text><text wx:if="{{presentation.back.date}}">{{presentation.back.date}}</text></view></view>
   </view>
 </view>

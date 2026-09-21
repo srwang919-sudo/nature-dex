@@ -10,7 +10,8 @@ page.onLoad({source:'album'});page.onHide();page.onReady();assert.equal(chooses,
 const read=p=>fs.readFileSync(path.join(__dirname,'../native/pages',p),'utf8');
 assert.ok(!read('observe/index.wxml').includes('<navigation'));
 assert.ok(!read('reveal/index.wxml').includes('<navigation'));
-for(const handler of ['identify','confirmArt','useOriginal'])assert.ok(read('observe/index.wxml').includes('bindtap="'+handler+'"'));
+for(const handler of ['identify','confirm'])assert.ok(read('observe/index.wxml').includes('bindtap="'+handler+'"'));
+assert.ok(!read('observe/index.wxml').includes('bindtap="useOriginal"')&&!read('observe/index.wxml').includes('bindtap="confirmArt"'));
 assert.ok(read('reveal/index.wxml').includes('bindtap="collect"'));
 assert.ok(read('observe/index.wxml').includes('探索生境'));
 console.log('PASS one-shot album routing, no automatic upload, unload protection and unchanged action handlers');
