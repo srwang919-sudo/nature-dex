@@ -70,7 +70,7 @@ App({
       if (fileID) wx.cloud.deleteFile({ fileList: [fileID] }).catch(e => console.warn('[cloud remove file]', e))
     }
   },
-  achievementContext() {const cards=this.getCards(),notesByCard={};cards.forEach(c=>{notesByCard[c.id]=wx.getStorageSync('nature.note.'+c.id)||''});return {notesByCard,events:{puzzleUsed:!!(wx.getStorageSync('nature.collection.v1')||{}).puzzleUsed,scienceReadSpecies:wx.getStorageSync('nature.scienceReads.v1')||[]}}},
+  achievementContext() {const cards=this.getCards(),notesByCard={};cards.forEach(c=>{notesByCard[c.id]=wx.getStorageSync('nature.note.'+c.id)||''});return {notesByCard,events:{shelfUsed:!!(wx.getStorageSync('nature.collection.v1')||{}).shelfUsed,puzzleUsed:!!(wx.getStorageSync('nature.collection.v1')||{}).puzzleUsed,scienceReadSpecies:wx.getStorageSync('nature.scienceReads.v1')||[]}}},
   getBadges() { return {badges:require('./native/lib/badge-model').buildAchievements(this.getCards(),this.achievementContext())} },
   recordScienceRead(speciesId) {const {realCards}=require('./native/lib/collection-model'),{keyOf}=require('./native/lib/badge-model');if(!realCards(this.getCards()).some(c=>keyOf(c)===speciesId&&(c.scienceSnapshot?.status==='available'||(!c.scienceSnapshot&&this.globalData.species[speciesId]))))return false;const previous=wx.getStorageSync('nature.scienceReads.v1'),reads=Array.isArray(previous)?previous:[];if(!reads.includes(speciesId))wx.setStorageSync('nature.scienceReads.v1',reads.concat([speciesId]));return true},
   getSpeciesInfo(name) { try { return wx.getStorageSync('nature.species.' + name) || null } catch (e) { return null } },

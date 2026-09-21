@@ -12,6 +12,6 @@ assert.equal(page.data.cards[0].id,'owned-card');
 assert.equal(page.data.chapter,undefined);assert.equal(page.data.examples,undefined);assert.equal(page.data.speciesCount,1);
 store.set('nature.cards.v2',[{id:'a',speciesId:'kingfisher'},{id:'b',speciesId:'kingfisher'},{id:'failed',speciesId:'ibis',artStatus:'failed'}]);page.refresh();
 assert.equal(page.data.cards.length,2);assert.equal(page.data.speciesCount,1);assert.equal(page.data.ownedCount,2);
-page.setCollectionLayout({currentTarget:{dataset:{layout:'puzzle'}}});assert.equal(page.data.layout,'puzzle');assert.equal(page.data.cards.length,2);
+page.setCollectionLayout({currentTarget:{dataset:{layout:'shelf'}}});assert.equal(page.data.layout,'shelf');assert.equal(page.data.cards.length,2);
 page.setCollectionLayout({currentTarget:{dataset:{layout:'neat'}}});assert.equal(page.data.layout,'neat');assert.equal(page.data.cards.length,2);
 console.log('PASS real-only library ignores sample/failed cards and preserves observations across layouts');
