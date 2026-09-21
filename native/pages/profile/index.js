@@ -1,5 +1,9 @@
 const app=getApp(),{buildProfile,checkIn}=require('../../lib/profile-model')
 Page({
+  openBadge(e){const id=e.currentTarget.dataset.id,badge=(app.getBadges().badges||[]).find(b=>b.id===id);if(!badge)return;this.setData({badgePreviewOpen:true,selectedBadge:Object.assign({},badge),previewImageFailed:false})},
+  closeBadge(){this.setData({badgePreviewOpen:false,selectedBadge:null,previewImageFailed:false})},
+  previewContent(){},
+  previewBadgeError(){this.setData({previewImageFailed:true})},
   badgeError(e){this.setData({['badgeErrors.'+e.currentTarget.dataset.key]:true})},
   data:{profile:null,notes:[],showLocation:false,reduce:false},onShow(){this.refresh()},
   refresh(){const {realCards,locationFreeCard}=require('../../lib/collection-model'),cards=realCards(app.getCards()).map(c=>app.decorate(locationFreeCard(c))).filter(Boolean),state=wx.getStorageSync('nature.profile.v1')||{},preferences=wx.getStorageSync('nature.profile.v2')||{},profile=buildProfile(cards,Object.assign({},state,{name:preferences.nickname||state.name})),notes=cards.map(card=>({id:card.id,zh:card.zh,text:wx.getStorageSync('nature.note.'+card.id)||'',image:card.photoPath||card.image})).filter(n=>n.text.trim()).slice().reverse().slice(0,3),savedLocation=wx.getStorageSync('nature.showLocation'),badges=app.getBadges?app.getBadges().badges||[]:[];profile.stats.badges=badges.filter(b=>b.earned).length;profile.stats.notes=cards.filter(c=>String(wx.getStorageSync('nature.note.'+c.id)||'').trim()).length;this.setData({profile,notes,avatarPath:preferences.avatarPath||'',showLocation:savedLocation===true,reduce:!!wx.getStorageSync('nature.reduceMotion'),badges})},
