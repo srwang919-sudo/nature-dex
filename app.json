@@ -20,7 +20,7 @@
   "sitemapLocation": "sitemap.json",
   "permission": {
     "scope.userLocation": {
-      "desc": "仅在你主动选择地点时，用于保存本机私有观察足迹；也可直接输入名称。"
+      "desc": "仅在主动选地点时保存私密足迹。"
     }
   },
   "requiredPrivateInfos": ["chooseLocation"],
