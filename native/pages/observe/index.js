@@ -4,7 +4,7 @@ const {recognition}=require('../../contracts/services')
 const {classifyRecognition}=require('../../lib/recognition-result')
 const {recognitionError}=require('../../lib/recognition-errors')
 const {createArtCard}=require('../../lib/art-card')
-const {buildScience,normalizeCard}=require('../../lib/observation-card')
+const {buildScience,normalizeCard,scienceForConfirmedCandidate}=require('../../lib/observation-card')
 const {hasConsent,setConsent}=require('../../lib/recognition-consent')
 Page({
  data:{photoPath:'',mode:'empty',cameraOpen:false,cameraReady:false,cameraError:'',flash:'off',busy:false,aiBusy:false,recognition:{status:'',candidates:[]},showDemo:false,species:null,speciesList:[],probabilities:app.finishes,showOdds:false,recent:[],today:[],undiscovered:[],recognitionStatus:'unavailable'},
@@ -90,7 +90,7 @@ acceptRecognition(){try{setConsent(true,wx);this.setData({needsRecognitionConsen
    stage='local_save';app.saveDraft(Object.assign({},app.getDraft(),{recognition,mode:result.status}));
    this.setData({mode:result.status,recognitionStatus:result.status,recognition,species:null,aiBusy:false,showDemo:false});
    if(result.status==='failed'||result.status==='unavailable')this.setData({identifyError:recognitionError(result)});
-   else if(raw&&Array.isArray(raw.warnings)&&raw.warnings.length)this.setData({identifyError:'部分接口未完成，以下候选不完整。'+recognitionError(raw.warnings[0])});
+   else if(raw&&Array.isArray(raw.warnings)&&raw.warnings.length)this.setData({identifyError:raw.warnings.some(w=>w.code==='route_disagreement')?'不同识别路线结果不一致，请仔细确认；分类标签不一定是具体物种。':'部分接口未完成，候选不完整，请确认后继续。'+recognitionError(raw.warnings[0])});
   }catch(e){if(current())this.setData({mode:'ready',aiBusy:false,showDemo:false,identifyError:recognitionError(e&&e.code?e:{code:stage})})}
  },
  demo(){this.setData({showDemo:!this.data.showDemo})},
@@ -109,7 +109,8 @@ acceptRecognition(){try{setConsent(true,wx);this.setData({needsRecognitionConsen
     if(!current())return;
     if(card.artStatus!=='ready'){this.setData({artFailed:true,identifyError:card.artMessage});return}
    this.setData({artProgress:'正在核验彩绘、原照片与博物资料…'});
-   const scienceSnapshot=buildScience(app.globalData.species[sp.id]||{});
+   const selected=session.recognition.candidates.find(c=>c.speciesId===sp.id);
+   const scienceSnapshot=scienceForConfirmedCandidate(selected,sp.id,buildScience(app.globalData.species[sp.id]||{}));
    await Promise.all([card.artPhotoPath,session.photoPath].map(async src=>{if(!src)throw Error('image_missing');if(src.startsWith('cloud://')){const urls=await wx.cloud.getTempFileURL({fileList:[src]});src=urls.fileList?.[0]?.tempFileURL;if(!src)throw Error('image_url')}return new Promise((resolve,reject)=>wx.getImageInfo({src,success:resolve,fail:reject}))}));
    if(!current())return;
    const saved=session.photoSaved?{savedFilePath:session.photoPath}:await new Promise((resolve,reject)=>wx.saveFile({tempFilePath:session.photoPath,success:resolve,fail:reject}));
@@ -117,7 +118,7 @@ acceptRecognition(){try{setConsent(true,wx);this.setData({needsRecognitionConsen
    if(!app.getSpecies(sp.id))wx.setStorageSync('nature.species.'+sp.id,{id:sp.id,zh:sp.zh||sp.id,latin:sp.latin||'',stars:1,facts:[],stats:[],knowledge:'资料尚未补充'});
    app.saveDraft(Object.assign({},app.getObservation(),{photoPath:saved.savedFilePath,photoSaved:true,artWork:card,scienceSnapshot,resourcesVerified:true}));
    const prepared=app.prepareCard(sp.id);
-   const complete=normalizeCard(Object.assign({},prepared,{schemaVersion:2,photoPath:saved.savedFilePath,artPhotoPath:card.artPhotoPath,artStatus:'ready',scienceSnapshot,frontMode:'art',observedAt:session.createdAt,localDate:new Date(session.createdAt).toLocaleDateString()}));
+   const complete=normalizeCard(Object.assign({},prepared,scienceSnapshot.fields,{category:selected.category||prepared.category,schemaVersion:2,photoPath:saved.savedFilePath,artPhotoPath:card.artPhotoPath,artStatus:'ready',scienceSnapshot,frontMode:'art',observedAt:session.createdAt,localDate:new Date(session.createdAt).toLocaleDateString()}));
    app.commitObservationCard(complete);
    wx.navigateTo({url:'/native/pages/reveal/index?id='+complete.id});
   }catch(e){if(current())this.setData({identifyError:'制卡未完成，未加入收藏。请检查网络后重试。'})}

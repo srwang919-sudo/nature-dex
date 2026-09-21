@@ -13,7 +13,7 @@ const api={getWXContext:()=>({OPENID:'u1'}),downloadFile:async()=>({fileContent:
  const input={consent:true,observationId:'o1',idempotencyKey:'o1',photoFileId:'cloud://env.bucket/observations/u1/o1.jpg'};
  const request=async(url,opts)=>{calls.push({url,opts});return {status:200,json:()=>url.includes('oauth')?{access_token:'fake-token'}:{result:url.includes('animal')?[{name:'白鹭',score:.7}]:[]}}};
  const result=await main(input,{cloud:api,request});assert.equal(result.status,'needs_confirmation');assert.equal(result.candidates[0].source,'baidu');
- assert.equal(calls.length,3);assert.ok(calls[0].opts.body.includes('grant_type=client_credentials'));
+ assert.equal(calls.length,4);assert.ok(calls[0].opts.body.includes('grant_type=client_credentials'));
  assert.ok(calls[1].opts.body.includes('image='));
  const responseRequest=error=>async(url)=>({status:200,json:()=>url.includes('oauth')?{access_token:'mock'}:url.includes('animal')?{error_code:error,error_msg:'DO_NOT_EXPOSE'}:{result:[{name:'山茶',score:.95}]}});
  const partial=await main(input,{cloud:api,request:responseRequest(6)});

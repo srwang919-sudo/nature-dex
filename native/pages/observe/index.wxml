@@ -6,7 +6,7 @@
 <view wx:if="{{aiBusy}}" class="notice spaced">正在识别这张照片<view>照片会交给识别服务判断它是什么物种，大约需要几秒钟。</view></view>
 <view wx:if="{{!aiBusy&&(mode==='recognized'||mode==='needs_confirmation')}}" class="panel spaced">
 <view class="section">{{mode==='recognized'?'看起来是它':'认出了几个可能，你来确认'}}</view>
-<view class="candidates"><view wx:for="{{recognition.candidates}}" wx:key="speciesId" class="candidate {{species.id===item.speciesId?'selected':''}}" data-id="{{item.speciesId}}" bindtap="candidate"><image src="{{item.thumb||photoPath}}" mode="aspectFill"/><text>{{item.zh||item.speciesId}}</text><text class="sub">{{item.confidenceText}}</text></view></view>
+<view class="sub">候选仅供参考，通用标签不等于具体物种；请点选并确认后制卡。</view><view class="candidates"><view wx:for="{{recognition.candidates}}" wx:key="speciesId" class="candidate {{species.id===item.speciesId?'selected':''}}" data-id="{{item.speciesId}}" bindtap="candidate"><image src="{{item.thumb||photoPath}}" mode="aspectFill"/><text>{{item.zh||item.speciesId}}</text><text class="sub">{{item.confidenceText}}</text></view></view>
 <button class="primary" disabled="{{!species||busy}}" bindtap="confirm">确认物种并生成彩绘卡</button><view class="hint">确认即同意将本张照片上传至私有云生成彩绘正面，背面保留实拍原照。艺术图不作为鉴别依据；失败不会保存，可重试。</view><view wx:if="{{artProgress}}" class="notice">{{artProgress}}</view>
 <view class="hint spaced">置信度仅供参考，认对了再确认。无法确认时请重拍。</view>
 </view>
