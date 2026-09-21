@@ -20,6 +20,13 @@ App({
   },
   getCards() { let cards = wx.getStorageSync('nature.cards.v2'); if (!Array.isArray(cards)) cards = []; const clean = cards.filter(c => c && c.id); if (clean.length !== cards.length) { try { wx.setStorageSync('nature.cards.v2', clean) } catch (e) {} } return clean },
   saveCards(cards) { wx.setStorageSync('nature.cards.v2', cards) },
+  updateCardLocation(id, input) {
+    const cards=this.getCards(),card=require('./native/lib/collection-model').realCards(cards).find(c=>c.id===id);
+    if(!card)throw Error('仅可修改已收藏的真实记录');
+    const location=input===null?null:require('./native/lib/location-privacy').normalizeLocation(input,input&&input.consentAt);
+    if(input!==null&&!location)throw Error('地点尚未确认');
+    const next=Object.assign({},card,{location});this.saveCards(cards.map(c=>c.id===id?next:c));return next;
+  },
   addCard(card) {
     const cards = this.getCards()
     if (cards.some(item => item.id === card.id)) return cards.find(item => item.id === card.id)

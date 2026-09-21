@@ -17,9 +17,10 @@ const libraryJs=fs.readFileSync(path.join(root,'native/pages/library/index.js'),
 const cardJs=fs.readFileSync(path.join(root,'native/pages/card/index.js'),'utf8');
 const cardWxml=fs.readFileSync(path.join(root,'native/pages/card/index.wxml'),'utf8');
 assert.ok(!homeJs.includes('getExampleCards'),'home personal progress does not inject examples');
-assert.ok(library.includes('博物志案例')&&library.includes('不计入收藏')&&library.includes('bindtap="openExample"'));
-assert.ok(libraryJs.includes("id=sample_"),'cases remain routed as examples only');
+assert.ok(!library.includes('博物志案例')&&!library.includes('bindtap="openExample"'),'collection is real only');
+assert.ok(!libraryJs.includes('getExampleCards'),'example data remains available but is not injected into collection');
 assert.ok(cardJs.includes("this.data.isSample")&&cardJs.includes('示例卡不可导出为我的卡'));
 assert.ok(cardWxml.includes('不计入你的真实收藏'));
-for(const file of ['native/pages/library/index.js','native/pages/profile/index.js','native/pages/settings/index.js'])assert.match(fs.readFileSync(path.join(root,file),'utf8'),/kind!==['"]example['"]&&![a-z]+\.sample/,'legacy samples are excluded from '+file);
+assert.ok(libraryJs.includes('realCards(app.getCards())'),'library uses shared real-only model');
+for(const file of ['native/pages/profile/index.js','native/pages/settings/index.js'])assert.match(fs.readFileSync(path.join(root,file),'utf8'),/kind!==['"]example['"]&&![a-z]+\.sample/,'legacy samples are excluded from '+file);
 console.log('PASS: seven launch examples are browsable but excluded from personal collection and export');

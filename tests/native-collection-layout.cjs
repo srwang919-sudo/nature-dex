@@ -1,0 +1,13 @@
+const assert=require('node:assert/strict'),fs=require('fs'),vm=require('vm'),path=require('path');
+const {realCards,footprints}=require('../native/lib/collection-model');
+const cards=[null,{sample:true,id:'sample'},{kind:'example',id:'example'},{id:'failed',artStatus:'failed'},{id:'pending',status:'processing'},{id:'ok',speciesId:'ibis'},{id:'ok',speciesId:'ibis'}];
+assert.deepEqual(realCards(cards).map(c=>c.id),['ok']);assert.deepEqual(realCards(null),[]);
+for(const status of ['failed','cancelled','processing','generating','fallback'])assert.equal(realCards([{id:'x',artStatus:status}]).length,0);
+assert.deepEqual(footprints([{id:'a',location:{placeId:'x',label:'花园',visibility:'private',consentAt:1,latitude:30,longitude:120}},{id:'b',location:{placeId:'x',label:'花园',visibility:'private',consentAt:1}}]),[{placeId:'x',label:'花园',count:2}]);
+assert.equal(footprints([{id:'a',location:{placeId:'x',label:'假地点'}}]).length,0);
+let page;const store=new Map(),wx={getStorageSync:k=>store.get(k),setStorageSync:(k,v)=>store.set(k,v),showToast(){}};
+vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../native/pages/library/index.js'),'utf8'),{Page:p=>page=p,getApp:()=>({getCards:()=>cards,decorate:c=>c}),wx,require:require('module').createRequire(path.join(__dirname,'../native/pages/library/index.js'))});
+page.setData=function(v,cb){Object.assign(this.data,v);if(cb)cb()};page.onShow();assert.equal(page.data.cards.length,1);assert.equal(page.data.layout,'neat');page.setCollectionLayout({currentTarget:{dataset:{layout:'puzzle'}}});assert.equal(page.data.layout,'puzzle');assert.equal(page.data.cards[0].id,'ok');assert.equal(store.get('nature.collection.v1').puzzleUsed,true);
+wx.setStorageSync=()=>{throw Error('quota')};page.setCollectionLayout({currentTarget:{dataset:{layout:'neat'}}});assert.equal(page.data.layout,'puzzle','failed preference write does not mutate selected layout');
+const markup=fs.readFileSync(path.join(__dirname,'../native/pages/library/index.wxml'),'utf8');for(const forbidden of ['chapter-panel','species-badge','filter-group','example-section'])assert.ok(!markup.includes(forbidden));
+console.log('PASS real-only collection, deterministic layouts, consented coordinate-free footprints');

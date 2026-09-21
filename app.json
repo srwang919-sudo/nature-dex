@@ -18,6 +18,12 @@
     "backgroundColor": "#FFFBF2"
   },
   "sitemapLocation": "sitemap.json",
+  "permission": {
+    "scope.userLocation": {
+      "desc": "仅在你主动选择地点时，用于保存本机私有观察足迹；也可直接输入名称。"
+    }
+  },
+  "requiredPrivateInfos": ["chooseLocation"],
   "lazyCodeLoading": "requiredComponents",
   "usingComponents": {
     "collectible": "/native/components/collectible/index",
