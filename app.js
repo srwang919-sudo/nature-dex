@@ -28,7 +28,7 @@ App({
     const next=Object.assign({},card,{location});this.saveCards(cards.map(c=>c.id===id?next:c));return next;
   },
   addCard(card) {
-    const cards = this.getCards()
+    const cards = this.getCards().slice()
     if (cards.some(item => item.id === card.id)) return cards.find(item => item.id === card.id)
     cards.push(card)
     this.saveCards(cards)
@@ -70,24 +70,9 @@ App({
       if (fileID) wx.cloud.deleteFile({ fileList: [fileID] }).catch(e => console.warn('[cloud remove file]', e))
     }
   },
-  getBadges() {
-    const presetCat = { kingfisher: 'bird', egret: 'bird', ibis: 'bird', pheasant: 'bird', sparrow: 'bird', camellia: 'plant', moth: 'insect' }
-    const defs = { plant: { need: 10, name: '植物学家', icon: '🌿', desc: '收集 10 种不同植物' }, bird: { need: 10, name: '观鸟人', icon: '🐦', desc: '收集 10 种不同鸟类' }, insect: { need: 10, name: '昆虫学家', icon: '🦋', desc: '收集 10 种不同昆虫' }, mammal: { need: 5, name: '野兽踪迹', icon: '🦌', desc: '收集 5 种不同哺乳动物' } }
-    const cards = this.getCards().filter(c => c && c.kind !== 'example' && !c.sample)
-    const byCat = {}
-    cards.forEach(c => {
-      let cat = c.category || presetCat[c.speciesId] || ''
-      if (cat === 'fungi') cat = 'plant'
-      if (!cat) return
-      byCat[cat] = byCat[cat] || new Set()
-      byCat[cat].add(c.speciesId)
-    })
-    const badges = Object.keys(defs).map(key => {
-      const def = defs[key], got = byCat[key] ? byCat[key].size : 0
-      return { key: key, name: def.name, icon: def.icon, desc: def.desc, got: got, need: def.need, earned: got >= def.need, percent: Math.min(100, Math.round(got / def.need * 100)) }
-    })
-    return { badges: badges, other: byCat['other'] ? byCat['other'].size : 0 }
-  },
+  achievementContext() {const cards=this.getCards(),notesByCard={};cards.forEach(c=>{notesByCard[c.id]=wx.getStorageSync('nature.note.'+c.id)||''});return {notesByCard,events:{puzzleUsed:!!(wx.getStorageSync('nature.collection.v1')||{}).puzzleUsed,scienceReadSpecies:wx.getStorageSync('nature.scienceReads.v1')||[]}}},
+  getBadges() { return {badges:require('./native/lib/badge-model').buildAchievements(this.getCards(),this.achievementContext())} },
+  recordScienceRead(speciesId) {const {realCards}=require('./native/lib/collection-model'),{keyOf}=require('./native/lib/badge-model');if(!realCards(this.getCards()).some(c=>keyOf(c)===speciesId&&(c.scienceSnapshot?.status==='available'||(!c.scienceSnapshot&&this.globalData.species[speciesId]))))return false;const previous=wx.getStorageSync('nature.scienceReads.v1'),reads=Array.isArray(previous)?previous:[];if(!reads.includes(speciesId))wx.setStorageSync('nature.scienceReads.v1',reads.concat([speciesId]));return true},
   getSpeciesInfo(name) { try { return wx.getStorageSync('nature.species.' + name) || null } catch (e) { return null } },
   ensureSpeciesInfo() { return Promise.resolve(null) },
   async generateSubmitFor() { return {status:'disabled',code:'explicit_consent_required'} },

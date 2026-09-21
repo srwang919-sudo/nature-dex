@@ -1,5 +1,5 @@
 const assert=require('node:assert/strict'),{buildProfile,checkIn}=require('../native/lib/profile-model'),fs=require('fs'),path=require('path');
-const empty=buildProfile([]);assert.deepEqual(empty.stats,{species:0,count:0,days:0,badges:0});assert.equal(empty.name,'本地收藏');assert.equal(empty.isDemo,false);
+const empty=buildProfile([]);assert.deepEqual(empty.stats,{species:0,count:0,days:0,badges:0,repeat:0,notes:0});assert.equal(empty.name,'本地收藏');assert.equal(empty.isDemo,false);
 assert.equal(buildProfile([{sample:true,speciesId:'ibis'},{id:'r',speciesId:'egret',createdAt:1}]).stats.count,1);
 assert.equal(checkIn({},'today').pointsAdded,0);
 const html=fs.readFileSync(path.join(__dirname,'../native/pages/profile/index.wxml'),'utf8');

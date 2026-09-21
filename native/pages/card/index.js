@@ -28,6 +28,7 @@ Page({
  onHide(){this.settle()},
  onUnload(){this._unloaded=true;this._exportToken=(this._exportToken||0)+1;this.settle()},
  details(){this.settle();this.setData({viewer:false})},
+ openScience(){if(!this.data.card)return;this.setData({scienceOpen:true},()=>{try{if(!this.data.isSample)app.recordScienceRead(this.data.card.canonicalSpeciesId||this.data.card.speciesId)}catch(e){wx.showToast({title:'资料已打开，阅读记录未保存',icon:'none'})}})},
  noop(){},
  view(){this.setData({viewer:true})},
  close(){this.details()},

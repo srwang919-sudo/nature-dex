@@ -22,5 +22,6 @@ assert.ok(!libraryJs.includes('getExampleCards'),'example data remains available
 assert.ok(cardJs.includes("this.data.isSample")&&cardJs.includes('示例卡不可导出为我的卡'));
 assert.ok(cardWxml.includes('不计入你的真实收藏'));
 assert.ok(libraryJs.includes('realCards(app.getCards())'),'library uses shared real-only model');
-for(const file of ['native/pages/profile/index.js','native/pages/settings/index.js'])assert.match(fs.readFileSync(path.join(root,file),'utf8'),/kind!==['"]example['"]&&![a-z]+\.sample/,'legacy samples are excluded from '+file);
+assert.ok(fs.readFileSync(path.join(root,'native/pages/profile/index.js'),'utf8').includes('realCards(app.getCards())'),'profile uses shared real-only model');
+assert.match(fs.readFileSync(path.join(root,'native/pages/settings/index.js'),'utf8'),/kind!==['"]example['"]&&![a-z]+\.sample/,'legacy samples are excluded from settings');
 console.log('PASS: seven launch examples are browsable but excluded from personal collection and export');
