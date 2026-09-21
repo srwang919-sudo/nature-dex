@@ -110,7 +110,7 @@ App({
   clearDraft(id) { const s = this.draftState(), target = id || s.activeId; const items = s.items.filter(d => d.id !== target); wx.setStorageSync('nature.drafts.v4', {version:4,activeId:items.length ? items[items.length-1].id : null,items}); },
   getCleanup() { return wx.getStorageSync('nature.cleanup.v1') || [] },
   async cleanupPaths(paths) {
-    const refs = new Set(this.getCards().map(c => c.photoPath).concat(this.getReadyCards().map(c=>c.photoPath),this.getDrafts().map(d => d.photoPath)));
+    const refs = new Set(this.getCards().map(c => c.photoPath).concat(this.getReadyCards().map(c=>c.photoPath),this.getDrafts().map(d => d.photoPath),[(wx.getStorageSync('nature.profile.v2')||{}).avatarPath]));
     const pending = [...new Set(this.getCleanup().concat(paths))].filter(p => p && !refs.has(p) && !p.startsWith('/assets/'));
     wx.setStorageSync('nature.cleanup.v1', pending);
     const failed = [];
@@ -130,10 +130,25 @@ App({
     this.clearDraft(id); return this.retryCleanup();
   },
   getDataEpoch() { return this._dataEpoch || 0 },
+  saveAvatar(tempPath) {
+    if(!tempPath)return Promise.reject(Error('未选择头像'));
+    const epoch=this.getDataEpoch(),token=this._avatarToken=(this._avatarToken||0)+1;
+    const discard=filePath=>wx.removeSavedFile({filePath,fail:()=>{try{wx.setStorageSync('nature.cleanup.v1',[...new Set(this.getCleanup().concat(filePath))])}catch(e){}}});
+    return new Promise((resolve,reject)=>wx.saveFile({tempFilePath:tempPath,fail:()=>reject(Error('头像保存失败，请重试')),success:async r=>{
+      const filePath=r.savedFilePath;
+      if(!filePath)return reject(Error('头像保存失败，请重试'));
+      if(epoch!==this.getDataEpoch()||token!==this._avatarToken){discard(filePath);return reject(Error('头像保存已取消'))}
+      const previous=wx.getStorageSync('nature.profile.v2')||{};
+      const next=Object.assign({},previous,{avatarPath:filePath});
+      try{wx.setStorageSync('nature.profile.v2',next)}catch(e){discard(filePath);return reject(Error('头像设置未保存，请重试'))}
+      if(previous.avatarPath&&previous.avatarPath!==filePath){try{await this.cleanupPaths([previous.avatarPath])}catch(e){}}
+      resolve(next);
+    }}));
+  },
   async clearLocalData() {
     this._dataEpoch = this.getDataEpoch() + 1;
     this._observation=null;
-    const photos = this.getCards().map(c=>c.photoPath).concat(this.getReadyCards().map(c=>c.photoPath),this.getDrafts().map(d=>d.photoPath), this.getCleanup(), wx.getStorageSync('nature.export.files')||[]);
+    const photos = this.getCards().map(c=>c.photoPath).concat(this.getReadyCards().map(c=>c.photoPath),this.getDrafts().map(d=>d.photoPath), this.getCleanup(), wx.getStorageSync('nature.export.files')||[],[(wx.getStorageSync('nature.profile.v2')||{}).avatarPath]);
     // Persist cleanup intent before removing records, so partial file failures can be retried.
     wx.setStorageSync('nature.cleanup.v1', [...new Set(photos.filter(Boolean))]);
     const keys = wx.getStorageInfoSync().keys;
