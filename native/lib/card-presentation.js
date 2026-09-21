@@ -4,6 +4,9 @@ function getCraftPresentation(key){const row=craft[key]||craft.standard;return {
 function presentCard(card={}){const finish=getCraftPresentation(card.finishKey),level=Math.max(1,Math.min(5,Math.floor(Number(card.stars)||1))),starText='★'.repeat(level)+'☆'.repeat(5-level),habitatSeason=[card.habitat,card.season].filter(Boolean).join(' · '),source=card.recognitionSource||card.identification;return {starText,front:{photo:require('./card-image').frontSource(card),no:card.no||'',finish:card.finish||finish.label,finishKey:card.finishKey||'standard',name:card.zh||'',latin:card.latin||'',starText},back:{title:card.zh||'',latin:card.latin||'',artId:card.speciesId||card.id||'',illustration:card.backAssetFileId||illustrationFor(card.speciesId),shortFact:card.factTitle||card.tagline||'',family:card.family||'',tagline:card.tagline||'',facts:Array.isArray(card.facts)?card.facts.slice(0,3):[],knowledge:card.knowledge||card.know||'资料尚未补充',stats:Array.isArray(card.stats)?card.stats.slice(0,3):[],habitatSeason,habitat:card.habitat||'资料尚未补充',iucn:card.iucn||'暂无评估资料',protection:card.protection||'',no:card.no||'',date:card.createdAt&&!card.sample?card.date||'':'',verificationLabel:source==='service'?'真实服务鉴别':'用户确认 / 本地记录'}};}
 function presentVersionedCard(card={}){
  const p=presentCard(card);
+ const categories={plant:'植物',bird:'鸟类',insect:'昆虫',animal:'动物',mammal:'哺乳动物',fungi:'真菌'};
+ p.front.secondaryName=card.latin||(card.scienceSnapshot?.status==='available'?card.scienceSnapshot.english||'':'');
+ p.front.categoryLabel=categories[card.category]||'类别未提供';p.front.locationLabel='地点未公开';p.front.expanded=!card.sample&&card.schemaVersion===2;
  if(card.schemaVersion===2){
   const normalized=require('./observation-card').normalizeCard(card);
   p.front.photo=normalized.artAsset.localPath||normalized.artAsset.fileId||'';

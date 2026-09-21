@@ -19,13 +19,15 @@ function text(ctx,value,x,y,width,size,lineHeight,maxLines,color){
  visible.forEach((l,i)=>ctx.fillText(l,x,y+i*lineHeight));return y+visible.length*lineHeight;
 }
 function front(ctx,card,offset,image){
+ const v=presentCard(card).front;
  ctx.setFillStyle(COLORS[card.finishKey]||'#fff');ctx.fillRect(0,offset,821,1121);
  const h=855,w=821;const ratio=Math.max(w/image.width,h/image.height),dw=image.width*ratio,dh=image.height*ratio;
  ctx.save();ctx.beginPath();ctx.rect(0,offset,w,h);ctx.clip();ctx.drawImage(image,(w-dw)/2,offset+(h-dh)/2,dw,dh);ctx.restore();
- ctx.setFillStyle('#FFFBF2');ctx.fillRect(71,offset+71,170,48);text(ctx,card.no,83,offset+104,146,23,28,1);
- ctx.setFillStyle('#FFFBF2');ctx.fillRect(540,offset+71,210,48);text(ctx,card.finish,552,offset+104,186,26,30,1);
- text(ctx,card.zh,71,offset+927,679,49,59,1);text(ctx,card.latin,71,offset+974,679,27,35,1);
+ ctx.setFillStyle('#FFFBF2');ctx.fillRect(71,offset+71,170,48);text(ctx,v.no,83,offset+104,146,23,28,1);
+ ctx.setFillStyle('#FFFBF2');ctx.fillRect(540,offset+71,210,48);text(ctx,v.finish,552,offset+104,186,26,30,1);
+ text(ctx,v.name,71,offset+927,v.expanded?520:679,49,59,1);text(ctx,v.secondaryName,71,offset+974,679,27,35,1);
  text(ctx,presentCard(card).starText,620,offset+927,130,21,27,1,'#997921');
+ if(v.expanded){text(ctx,v.categoryLabel,71,offset+1015,300,23,28,1,'#58655D');text(ctx,v.locationLabel,390,offset+1015,360,23,28,1,'#58655D');}
  text(ctx,card.sample?'参考资料卡':card.date,71,offset+1040,679,25,30,1,'#58655D');
 }
 function back(ctx,card,offset,illustration){

@@ -22,3 +22,4 @@
 .back .back-bottom{background:transparent;border-top:1rpx solid #d9d0c1;color:#8a938c}
 .back .record-footer-line{justify-content:center;letter-spacing:1rpx}
 .original-label{display:block;flex:none;padding:8rpx 0;font-size:18rpx;line-height:1.4;color:#58655d;text-align:center;background:#fffbf2}
+.expanded-metadata{height:108rpx}.large .expanded-metadata{height:174rpx}.front-context{display:flex;justify-content:space-between;gap:6rpx;font-size:15rpx;line-height:1.4;color:#58655D;margin-top:6rpx}.large .front-context{font-size:19rpx;margin-top:10rpx}.expanded-metadata .name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}.expanded-metadata .latin{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
