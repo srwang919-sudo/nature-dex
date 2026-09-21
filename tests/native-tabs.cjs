@@ -11,7 +11,7 @@ const nav=fs.readFileSync(path.join(root,'native/components/navigation/index.wxm
 assert.ok(nav.includes('wx:for="{{navigationItems}}"')&&nav.includes('currentKey'));
 assert.ok(!nav.includes('>拍摄<')&&!nav.includes('>附近<'));
 const home=fs.readFileSync(path.join(root,'native/pages/home/index.wxml'),'utf8');
-assert.ok(home.includes('探索任务')&&home.includes('去拍摄')&&home.includes('今日收集')&&home.includes('bindtap="nearby"'));
+assert.ok(!home.includes('探索任务')&&home.includes('拍一张')&&home.includes('今日收集')&&!home.includes('bindtap="nearby"'));
 const library=fs.readFileSync(path.join(root,'native/pages/library/index.wxml'),'utf8');
 assert.ok(library.includes('我的图鉴')&&library.includes('博物志案例')&&library.includes('openExample'));
 console.log('PASS: three-tab navigation and exploration hierarchy');

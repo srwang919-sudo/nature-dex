@@ -1,0 +1,14 @@
+const fs=require('fs'),vm=require('vm'),path=require('path'),assert=require('node:assert/strict');
+const root=path.join(__dirname,'..');let page,home,camera=0,album=0,navigations=[];
+const app={finishes:[],globalData:{species:{}},getObservation:()=>null,getReadyCards:()=>[],getCards:()=>[],getDrafts:()=>[]};
+const wx={getStorageSync:()=>false,navigateTo:o=>navigations.push(o),pageScrollTo:()=>{}};
+vm.runInNewContext(fs.readFileSync(path.join(root,'native/pages/observe/index.js'),'utf8'),{Page:p=>page=p,getApp:()=>app,wx,setTimeout,clearTimeout,require:require('module').createRequire(path.join(root,'native/pages/observe/index.js'))});
+page.setData=function(v){Object.assign(this.data,v)};page.openCamera=()=>camera++;page.album=()=>album++;
+page.onLoad({source:'camera'});page.onReady();page.onReady();page.onShow();page.onHide();page.onShow();assert.equal(camera,1);assert.equal(album,0);
+page.onLoad({source:'album'});page.onReady();page.onReady();assert.equal(album,1);
+page.onLoad({});page.onReady();assert.equal(camera,1);assert.equal(album,1);
+page.onLoad({source:'camera'});page.onHide();page.onReady();assert.equal(camera,1,'hidden before ready cancels entry');
+vm.runInNewContext(fs.readFileSync(path.join(root,'native/pages/home/index.js'),'utf8'),{Page:p=>home=p,getApp:()=>app,wx,require:require('module').createRequire(path.join(root,'native/pages/home/index.js'))});
+home.setData=function(v){Object.assign(this.data,v)};home.observe();home.observe();assert.equal(navigations.length,1);assert.ok(navigations[0].url.endsWith('?source=camera'));navigations[0].fail();home.observe();assert.equal(navigations.length,2);home.onShow();home.album();assert.ok(navigations[2].url.endsWith('?source=album'));
+const markup=fs.readFileSync(path.join(root,'native/pages/home/index.wxml'),'utf8');assert.ok(markup.includes('拍一张'));assert.ok(markup.includes('从相册选择'));assert.ok(!markup.includes('task-paper')&&!markup.includes('habitat-entry'));assert.ok(markup.includes('今日收集')&&markup.includes('returnTop')&&markup.includes('exploration-hero'));
+console.log('PASS direct camera consumed once, explicit album, navigation lock and simplified home');

@@ -29,7 +29,7 @@ vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../app.js'),'utf8'),{App
  console.log('PASS exploration counts unique real species and does not invent collection dates');
  const homeMarkup=fs.readFileSync(path.join(__dirname,'../native/pages/home/index.wxml'),'utf8');
  const homeStyle=fs.readFileSync(path.join(__dirname,'../native/pages/home/index.wxss'),'utf8');
- assert.ok(homeMarkup.includes('去大自然里'));assert.ok(homeMarkup.includes('去拍摄'));assert.ok(homeMarkup.includes('今日收集'));assert.ok(homeStyle.includes('.task-paper'));
+ assert.ok(homeMarkup.includes('去大自然里'));assert.ok(homeMarkup.includes('拍一张'));assert.ok(homeMarkup.includes('今日收集'));assert.ok(!homeMarkup.includes('task-paper'));
  let capture,saves=0;wx.showModal=()=>{};wx.saveFile=o=>{saves++;o.success({savedFilePath:'wxfile://persisted-before-metadata.jpg'})};
  vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../native/pages/observe/index.js'),'utf8'),{Page:p=>capture=p,getApp:()=>app,wx,Date,Math,Object,setTimeout,clearTimeout,require:require('node:module').createRequire(path.join(__dirname,'../native/pages/observe/index.js'))});capture.setData=function(v){Object.assign(this.data,v)};
  capture.persist('wxfile://temp-moved.jpg');assert.equal(saves,0,'capture remains temporary until both faces succeed');assert.equal(app.getObservation().photoPath,'wxfile://temp-moved.jpg');assert.equal(app.getDrafts().some(d=>d.photoPath==='wxfile://temp-moved.jpg'),false);app.discardObservation();
