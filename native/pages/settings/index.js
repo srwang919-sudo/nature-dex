@@ -1,12 +1,13 @@
 const app=getApp()
+const {membershipView,socialView}=require('../../lib/availability-model')
 const {hasConsent,setConsent}=require('../../lib/recognition-consent')
 Page({
- onLoad(q={}){this.setData({section:['privacy','help','about'].includes(q.section)?q.section:'privacy',version:'0.1.0'})},
+ onLoad(q={}){this.setData({section:['privacy','help','about','membership','friends'].includes(q.section)?q.section:'privacy',version:'0.1.0',membership:membershipView(),social:socialView()})},
  changeSection(e){this.onLoad({section:e.currentTarget.dataset.section})},
  placeVisibility(e){try{wx.setStorageSync('nature.showLocation',!!e.detail.value);this.setData({showLocation:!!e.detail.value})}catch(e){wx.showToast({title:'设置未保存',icon:'none'})}},
  copyFeedback(){wx.setClipboardData({data:'去大自然里 · 本地反馈模板\n版本：'+this.data.version+'\n问题描述：\n操作步骤：\n预期效果：\n请自行补充后发送给开发者；不要填写照片、精确位置、密码或密钥。'})},
  data:{section:'privacy',version:'0.1.0',showLocation:false,count:0,species:0,days:0,reduce:false,drafts:[],recent:[],notes:[],cleanup:0,clearing:false,exportPath:'',exportBusy:false},
- onShow(){this.setData({recognitionConsent:hasConsent(wx)});this.refresh();if(app.syncCards)app.syncCards().then(()=>this.refresh()).catch(()=>{})},
+ onShow(){this.setData({recognitionConsent:hasConsent(wx)});this.refresh();if(!['membership','friends'].includes(this.data.section)&&app.syncCards)app.syncCards().then(()=>this.refresh()).catch(()=>{})},
  recognitionConsentChange(e){try{setConsent(!!e.detail.value,wx);this.setData({recognitionConsent:!!e.detail.value})}catch(e){wx.showToast({title:'设置未保存',icon:'none'})}},
  refresh(){const cards=app.getCards().filter(c=>c&&c.kind!=='example'&&!c.sample).map(c=>app.decorate(c)).filter(Boolean),cleanup=app.getCleanup().length;this.setData({showLocation:wx.getStorageSync('nature.showLocation')===true,count:cards.length,species:new Set(cards.map(c=>c.speciesId)).size,days:new Set(cards.filter(c=>c.createdAt).map(c=>c.date)).size,reduce:!!wx.getStorageSync('nature.reduceMotion'),drafts:app.getDrafts().slice().reverse().map(d=>({id:d.id,photoPath:d.photoPath,status:d.pendingCard?'待入册卡片':d.mode==='unknown'?'待确认物种':'待鉴别照片'})),recent:cards.slice().reverse().slice(0,12),notes:cards.map(c=>({id:c.id,zh:c.zh,text:wx.getStorageSync('nature.note.'+c.id)||''})).filter(n=>n.text),cleanup,cleanupState:cleanup?'等待清理':'无待清理文件'})},
  motion(e){try{wx.setStorageSync('nature.reduceMotion',e.detail.value);this.setData({reduce:e.detail.value})}catch(e){wx.showToast({title:'设置未保存',icon:'none'})}},

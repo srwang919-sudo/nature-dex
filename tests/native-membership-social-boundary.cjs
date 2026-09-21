@@ -1,0 +1,10 @@
+const assert=require('node:assert/strict'),fs=require('fs'),path=require('path'),vm=require('vm'),{createRequire}=require('module');
+const {membershipView,socialView}=require('../native/lib/availability-model');
+const m=membershipView();assert.equal(m.availability,'unavailable');assert.equal(m.monthly,18);assert.equal(m.yearly,180);assert.equal(m.saving,36);assert.equal(m.saving,m.monthly*12-m.yearly);assert.equal(m.savingPercent,16.7);assert.deepEqual(socialView(),{availability:'unavailable',friends:[]});
+let calls=0;const forbidden=()=>{calls++;throw Error('network forbidden')},urls=[];
+const wx={requestPayment:forbidden,request:forbidden,cloud:{callFunction:forbidden},navigateTo:o=>urls.push(o.url),getStorageSync:k=>k==='nature.profile.v2'?{active:true,paid:true}:null};
+const app={getCards:()=>[],decorate:c=>c,getBadges:()=>({badges:[]}),getCleanup:()=>[],getDrafts:()=>[],syncCards:forbidden};
+function load(name){let p;const f=path.join(__dirname,'../native/pages',name,'index.js');vm.runInNewContext(fs.readFileSync(f,'utf8'),{Page:x=>p=x,getApp:()=>app,wx,require:createRequire(f)});p.setData=function(v){Object.assign(this.data,v)};return p}
+const profile=load('profile');profile.refresh();for(const section of ['membership','friends']){profile.openSettings({currentTarget:{dataset:{section}}});assert.equal(urls.at(-1),'/native/pages/settings/index?section='+section);const settings=load('settings');settings.onLoad({section});settings.onShow();assert.equal(settings.data.section,section);assert.equal(settings.data.membership.availability,'unavailable');assert.equal(settings.data.social.friends.length,0);assert.equal(settings.data.membership.paid,undefined)}assert.equal(calls,0);
+const markup=fs.readFileSync(path.join(__dirname,'../native/pages/settings/index.wxml'),'utf8');for(const text of ['暂未开放','明确公开物种','复制需持有人批准','CloudBase','地点','笔记'])assert.ok(markup.includes(text));assert.match(markup,/disabled="{{true}}"/);assert.doesNotMatch(markup,/bindtap="(?:purchase|pay|copyCard|addFriend)"/);
+console.log('PASS honest membership arithmetic, no paid state/friends fixtures, entry lifecycle has zero network/payment');
