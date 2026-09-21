@@ -159,13 +159,16 @@ App({
   ],
   drawFinish(value) { const n = value === undefined ? Math.random() * 100 : value; return this.finishes[n < 72 ? 0 : n < 92 ? 1 : n < 99 ? 2 : 3] },
   decorate(card) {
+    card = require('./native/lib/observation-card').normalizeCard(card);
     const sp = this.getSpecies(card.speciesId);
     if (!sp) return null;
     const finish = this.finishes.find(f => f.key === card.finishKey) || this.finishes.find(f => f.key === sp.finishKey) || this.finishes[0];
     const protection = { ibis: '国家一级保护动物 · 种群稀少，请勿捕捉、惊扰', pheasant: '国家二级保护动物 · 请勿捕捉、饲养', kingfisher: '三有保护动物 · 请勿捕捉、饲养', egret: '三有保护动物 · 请勿捕捉、饲养', sparrow: '三有保护动物 · 请勿捕捉、饲养' };
     const assetMap = wx.getStorageSync('nature.assets.fileIds') || {};
     const imgKey = 'assets/images/' + sp.id + '.jpg';
-    return Object.assign({}, sp, card, { protection: protection[sp.id] || '', finish: finish.label, finishKey: finish.key, date: new Date(card.createdAt || Date.now()).toLocaleDateString(), image: assetMap[imgKey] || sp.image });
+    const observedAt = card.observedAt !== undefined ? card.observedAt : card.createdAt;
+    const date = observedAt !== undefined && observedAt !== null && observedAt !== '' && Number.isFinite(new Date(observedAt).getTime()) ? new Date(observedAt).toLocaleDateString() : '';
+    return Object.assign({}, sp, card, { protection: protection[sp.id] || '', finish: finish.label, finishKey: finish.key, date, image: assetMap[imgKey] || sp.image });
   },
   prepareCard(speciesId, options = {}) {
     const draft = this.getDraft();

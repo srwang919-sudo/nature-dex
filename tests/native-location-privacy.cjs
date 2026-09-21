@@ -1,0 +1,12 @@
+const assert=require('node:assert/strict');
+const {normalizeLocation,publicLocation}=require('../native/lib/location-privacy');
+assert.deepEqual(publicLocation({label:'私密花园',latitude:31,longitude:121}),{label:'地点未公开'});
+assert.deepEqual(publicLocation(null),{label:'地点未公开'});
+assert.equal(normalizeLocation({placeId:'one',label:'花园'},0),null);
+assert.equal(normalizeLocation({placeId:' ',label:'花园'},1),null);
+const text={placeId:'one',label:'花园',visibility:'public',owner:'fake'};
+assert.deepEqual(normalizeLocation(text,1),{placeId:'one',label:'花园',visibility:'private',consentAt:1});
+for(const extra of [{latitude:91,longitude:1},{latitude:1},{latitude:0,longitude:181},{latitude:NaN,longitude:0},{latitude:'31',longitude:121}])assert.equal(normalizeLocation({...text,...extra},1),null);
+assert.deepEqual(normalizeLocation({...text,latitude:0,longitude:0},1),{placeId:'one',label:'花园',visibility:'private',consentAt:1,latitude:0,longitude:0});
+assert.equal(text.visibility,'public');
+console.log('PASS explicit consent, coordinate validation and private projection');

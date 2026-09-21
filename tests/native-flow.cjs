@@ -1,6 +1,6 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),path=require('node:path');
 const root=path.join(__dirname,'..'),storage=new Map();let app;const wx={getStorageSync:k=>storage.get(k),setStorageSync:(k,v)=>storage.set(k,structuredClone(v)),removeStorageSync:k=>storage.delete(k),showModal:o=>o.success&&o.success({confirm:false}),showToast(){}};
-vm.runInNewContext(fs.readFileSync(path.join(root,'app.js'),'utf8'),{App:a=>app=a,wx,Date,Math,Set});
+vm.runInNewContext(fs.readFileSync(path.join(root,'app.js'),'utf8'),{App:a=>app=a,wx,Date,Math,Set,require:require('node:module').createRequire(path.join(root,'app.js'))});
 assert.deepEqual(app.finishes.map(f=>f.probability).join(','),'72,20,7,1');
 for(const [v,key] of [[0,'standard'],[71.99,'standard'],[72,'holo'],[91.99,'holo'],[92,'alt'],[98.99,'alt'],[99,'numbered']])assert.equal(app.drawFinish(v).key,key);
 assert.throws(()=>app.prepareCard('kingfisher'));

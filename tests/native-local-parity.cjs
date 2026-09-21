@@ -1,7 +1,7 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),path=require('node:path');
 const store=new Map(),removed=[];let failDelete=false,app;const wx={getStorageSync:k=>structuredClone(store.get(k)),setStorageSync:(k,v)=>store.set(k,structuredClone(v)),removeStorageSync:k=>store.delete(k),getStorageInfoSync:()=>({keys:[...store.keys()]}),removeSavedFile:({filePath,success,fail})=>{if(failDelete)fail({errMsg:'busy'});else{removed.push(filePath);success()}}};
 store.set('nature.draft.v3',{photoPath:'wxfile://legacy.jpg',mode:'unknown',pendingCard:{id:'old-card',speciesId:'ibis',photoPath:'wxfile://legacy.jpg'}});
-vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../app.js'),'utf8'),{App:a=>app=a,wx,Date,Math,Set,Promise});
+vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../app.js'),'utf8'),{App:a=>app=a,wx,Date,Math,Set,Promise,require:require('node:module').createRequire(path.join(__dirname,'../app.js'))});
 (async()=>{
  assert.equal(app.getDrafts().length,1);assert.equal(app.getDraft().mode,'unknown');
  const first=app.getDraft();app.createDraft({photoPath:'wxfile://new.jpg',mode:'ready'});
