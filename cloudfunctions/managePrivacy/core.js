@@ -6,7 +6,8 @@ const PERSONAL=Object.freeze([
  ['natureFriendInvites','issuer'],['natureFriendInvites','recipient'],['natureFriendEdges','owner'],['natureSpeciesCards','owner'],
  ['natureSpeciesShares','owner'],['natureSpeciesShares','recipient'],['natureCopyRequests','owner'],
  ['natureCopyRequests','requester'],['natureCopySlots','requester'],['natureMemorialCopies','recipient'],
- ['natureMemorialCopies','sourceOwner'],['recognitionReceipts','owner'],['trustedObservations','owner']
+ ['natureMemorialCopies','sourceOwner'],['recognitionReceipts','owner'],['trustedObservations','owner'],
+ ['natureObservations','owner'],['natureCards','owner'],['userSpeciesDiscoveries','owner']
 ]);
 function createPrivacyService({db,deleteObservation,deletePrivateArt,now=Date.now}){
  const read=async id=>{try{return (await db.collection('accountPrivacy').doc(id).get()).data}catch(e){if(absent(e))return;throw e}};

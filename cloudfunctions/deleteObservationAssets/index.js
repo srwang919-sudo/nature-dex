@@ -10,6 +10,7 @@ async function main(event={},deps={}){
  try{
   // A durable tombstone serializes registration, generation claims and publishing.
   const alreadyDeleted=await db.runTransaction(async tx=>{const d=tx.collection('observationDeletions').doc(key);let old;try{old=(await d.get()).data}catch(e){if(!absent(e))throw e}if(!old)await d.set({data:{owner,observationId,status:'deleting',createdAt:Date.now()}});await tx.collection('trustedObservations').doc(key).set({data:{owner,observationId,status:'revoked',revokedAt:Date.now(),attestationVersion:1}});return old?.status==='deleted'});
+  await require('./domain').revokeDomain(db,owner,observationId);
   const rows=(await db.collection('assets').where({_openid:owner,observationId,purpose:'recognition'}).limit(100).get()).data;
   // Missing registry cannot prove that a private source file is absent.
   if(!rows.length)return alreadyDeleted?{status:'deleted'}:fail('asset_registry_missing');

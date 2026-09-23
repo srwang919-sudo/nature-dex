@@ -124,9 +124,12 @@ acceptRecognition(){try{setConsent(true,wx);this.setData({needsRecognitionConsen
    app.saveDraft(Object.assign({},app.getObservation(),{photoPath:saved.savedFilePath,photoSaved:true,artWork:card,scienceSnapshot,resourcesVerified:true}));
    const prepared=app.prepareCard(sp.id);
    const complete=normalizeCard(Object.assign({},prepared,scienceSnapshot.fields,{category:selected.category||prepared.category,schemaVersion:2,photoPath:saved.savedFilePath,artPhotoPath:card.artPhotoPath,artStatus:'ready',scienceSnapshot,frontMode:'art',observedAt:session.createdAt,localDate:new Date(session.createdAt).toLocaleDateString()}));
+   const receipt=await require('../../lib/save-observation').saveObservation({api:wx.cloud,operationId:card.id,isCurrent:current});
+   if(receipt.observationId!==session.id)throw Error('observation_identity_mismatch');
+   Object.assign(complete,{serverCardId:receipt.cardId,discovery:receipt.discovery,discoveryNumber:receipt.discovery.number,isFirstDiscovery:receipt.isFirstDiscovery});
    app.commitObservationCard(complete);
    wx.navigateTo({url:'/native/pages/reveal/index?id='+complete.id});
-  }catch(e){if(current())this.setData({identifyError:'制卡未完成，未加入收藏。请检查网络后重试。'})}
+  }catch(e){if(current())this.setData({identifyError:e.message==='discovery_baseline_unavailable'?'该物种的历史发现编号尚未核定，本次未入册；请稍后重试。':'制卡未完成，未加入收藏。请检查网络后重试。'})}
   finally{if(!this._unloaded&&token===this._creationToken)this.setData({busy:false,artProgress:''})}
  },
  resume(){if(this._readyId)wx.navigateTo({url:'/native/pages/reveal/index?id='+this._readyId})},

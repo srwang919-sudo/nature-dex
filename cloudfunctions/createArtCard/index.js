@@ -12,6 +12,11 @@ async function main(event={},deps={}){
  if(!api)return fail('runtime_unavailable');
  const owner=api.getWXContext().OPENID;if(!owner)return fail('unauthenticated');
  if(!valid(event.operationId))return fail('invalid_request');
+ if(event.action==='finalize'){
+  if(Object.keys(event).some(k=>!['action','operationId'].includes(k)))return fail('invalid_request');
+  try{return await require('./discovery').finalizeObservation({db:api.database(),owner,operationId:event.operationId})}
+  catch(e){return fail(['account_erasing','cancelled','candidate_unverified','art_not_ready','observation_conflict','discovery_baseline_unavailable'].includes(e.message)?e.message:'observation_save_failed')}
+ }
  if(Object.prototype.hasOwnProperty.call(event,'prompt'))return fail('invalid_request');
  const id=createHash('sha256').update(owner+'|'+event.operationId).digest('hex'),db=require('./account-gate').guardDatabase(api.database(),owner),doc=db.collection('artOperations').doc(id);
  try{
