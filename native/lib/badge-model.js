@@ -13,7 +13,7 @@ const rows=[
  ['puzzle','拼图成画',1,'使用一次卡架布局（原拼图布局）'],
  ['read','守护目光',10,'主动阅读 10 种物种科普']
 ];
-const definitions=Object.freeze(rows.map(([id,name,target,desc])=>Object.freeze({id,key:id,name,target,desc,asset:'/assets/theme/share-safe-leaf.png'})));
+const definitions=Object.freeze(rows.map(([id,name,target,desc])=>Object.freeze({id,key:id,name,target,desc,motif:id})));
 const keyOf=c=>String(c.canonicalSpeciesId||c.speciesId||'').trim();
 const known={kingfisher:'bird',egret:'bird',ibis:'bird',pheasant:'bird',sparrow:'bird',moth:'insect',camellia:'plant'};
 function dateOf(c){const value=c.localDate||(c.observedAt!==undefined?c.observedAt:c.createdAt);if(value===undefined||value===null||value==='')return '';const d=new Date(value);return Number.isFinite(d.getTime())?d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate():''}

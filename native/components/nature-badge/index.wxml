@@ -1,0 +1,1 @@
+<view class="enamel motif-{{safeMotif}} {{earned?'earned':'locked'}} {{large?'large':''}}" aria-hidden="true"><view class="rim"><view class="motif"><view class="part a"/><view class="part b"/><view class="part c"/><view class="part d"/></view></view></view>

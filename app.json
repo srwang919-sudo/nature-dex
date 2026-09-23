@@ -27,6 +27,7 @@
   "requiredPrivateInfos": ["chooseLocation"],
   "lazyCodeLoading": "requiredComponents",
   "usingComponents": {
+    "nature-badge": "/native/components/nature-badge/index",
     "collectible": "/native/components/collectible/index",
     "navigation": "/native/components/navigation/index"
   }

@@ -19,7 +19,7 @@ const first=reveal([],real);assert.equal(first.page.data.unlockedBadge.id,'first
 assert.equal(reveal([real],{id:'b',speciesId:'kingfisher'}).page.data.unlockedBadge,null);
 assert.equal(reveal([],sample[0]).page.data.unlockedBadge,undefined);
 assert.equal(reveal([],real,true).page.data.badgeRevealed,undefined);
-for(const name of ['profile']){const markup=fs.readFileSync(path.join(__dirname,'../native/pages/'+name+'/index.wxml'),'utf8');assert.ok(markup.includes('item.asset')&&markup.includes('item.earned')&&markup.includes('badgeError'));}
+for(const name of ['profile']){const markup=fs.readFileSync(path.join(__dirname,'../native/pages/'+name+'/index.wxml'),'utf8');assert.ok(markup.includes('item.motif')&&markup.includes('item.earned')&&markup.includes('nature-badge'));}
 assert.ok(!fs.readFileSync(path.join(__dirname,'../native/pages/library/index.wxml'),'utf8').includes('species-badge'),'library no longer contains achievement modules');
 console.log('PASS successful first collection only, duplicate/sample/failure and reduced motion');
 let profilePage;const profileFile=path.join(__dirname,'../native/pages/profile/index.js');
