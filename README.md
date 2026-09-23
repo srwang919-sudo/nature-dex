@@ -1,62 +1,36 @@
 # 去大自然里 · 原生微信小程序
 
-> Nature Dex is a privacy-first open-source nature observation and species recognition project. The public repository is available at <https://github.com/srwang919-sudo/nature-dex>.
+唯一发布源为根目录 `app.js / app.json / app.wxss` 与 `native/`，开发者工具导入本目录。历史 `src/`、`dist/` 保留作资料，不是发布产物。根项目已移除不参与原生运行的 Taro/React 依赖与实验编译命令，云函数依赖仍各自独立。
 
-活动入口为根目录 `app.js / app.json / app.wxss` 与 `native/`；`miniprogramRoot: ./`。旧 `src/`、`dist/` 是历史源码和产物，不运行 Taro 编译覆盖当前入口。七物种资料从 `src/data/species.ts` 文本同步并逐字段校验。
+## 当前实际行为
 
-用户已确认当前独立 AppID、名称与主体；本轮只实施本地功能，没有上传或生成手机预览。开发者工具账号登录与产品真实用户登录不是一回事，真实识别、账号云同步和好友赠送未接通。
+- 首页「拍一张」进入相机；相册是独立入口。拍照本身不上传。
+- 同意照片鉴别后，原图上传本人 CloudBase 私有路径；百度动物、植物、通用识别返回候选。用户必须明确选择，分值不是准确率保证。未识别/服务失败不生成卡、不入册、不留可恢复观察列表。
+- 确认候选后，每次另行确认腾讯云私有存储及腾讯混元艺术生成。当前正面是 HY 图生图，不是百炼；生成图不作为鉴别依据。生成、资源验证或保存失败均不退回原图、不入册。
+- 成功卡为 CardV2：彩绘正面、原照片背面；可信本地资料优先，动态物种只保留所选候选附带的百度百科摘要/来源，缺资料明确显示缺失。
+- 图鉴仅真实收藏：整齐网格/横向卡架；旧拼图偏好兼容迁移。七张案例资产不改，不计收藏、等级或自然勋章。
+- 地点仅用户主动选择/填写，详情编辑区标「仅自己可见」；公开卡面、资料分享和导出使用「地点未公开」，不含坐标。
+- 微信资料分享不传私人卡 ID、原图、笔记或地点；用户主动导出图片可能包含自己的照片，保存到相册也是单独动作。打印为 PNG 目标规格（821×1121、裁切750×1050、3mm出血）；有效 DPI 检查不能把低清照片变清晰。PDF/实体下单未开放。
+- 我的含本地头像、按真实物种数计算等级、12个条件勋章和预览。会员18元/月、180元/年仅未开放展示，无支付/付费态；好友无假数据、无真实互通。
+- 本地备份/清除不等于删除云端照片。云端自动同步已停用；没有已实现的账号迁移、好友赠送或支付。
 
-## 本地流程
+## 删除与数据边界
 
-- 图鉴按七物种去重；类别与工艺组合筛选，重复卡保留在最近记录。
-- 内嵌相机单快门 / 相册 → 本机保存 → 独立鉴别（服务未接通时如实unknown）→ 明确手动选种 → 固定工艺 → 揭晓 → 单卡3D翻面/阅读 → 入册。
-- `nature.drafts.v4` 多草稿带activeId，自动兼容旧 `nature.draft.v3`；未知照片、未入册卡均有恢复入口。删除只清理不再被记录引用的照片；失败保存在清理队列并可重试。
-- 私人照片分享图及正背合图由用户明确选择生成并另行保存相册；微信分享按钮仅发送公共物种资料路径与示例缩略图，不携带私人原卡ID、照片、日期或笔记。
-- 打印输出PNG：目标300dpi，外框821×1121px，裁切750×1050px，3mm出血与裁切标记；正文留在安全区。按原图尺寸及照片框覆盖裁切计算有效DPI，低于300明确提示，放大导出不会补回细节。正背分别输出。PDF与实体打印下单尚未开放。
-- 附近是静态生境、季节与礼仪，没有真实定位、距离、公开热点或他人坐标。
-- 个人页含最近观察、笔记、草稿、JSON备份及二次确认清除。JSON里的图片路径仅原设备有效，图片需要单独导出；清除也清理本产品生成的备份文件。
+单卡删除先调用 `deleteObservationAssets`，只传观察 ID。服务端从 OPENID 查询本人登记的原图与私有艺术任务，先写永久删除标记、取消生成，再确认存储删除。公共物种水彩库不在删除范围。云端失败/仍有生成任务时保留本机卡与笔记供重试，不显示「已删除」。没有观察 ID 的旧云卡不能假报已删除，需所有者协助处理。导出到系统相册、用户复制的备份不受单卡删除控制。
 
-工艺概率为72/20/7/1；客户端仅为本地体验，正式可信发行需要服务端签发与版本化规则。识别/赠送契约在 `native/contracts/services.js`，明确 unavailable，不返回假成功。
+删除标记 `observationDeletions` 与每日计数 `usageQuotas` 是新增服务端私有集合；本轮未创建/部署。新客户端、云函数和集合规则必须一并验收，不能仅上传客户端。每用户每日默认：艺术3次、共享水彩首次生成3次、鉴别20次（一次鉴别最多3个识别接口）；失败尝试也计数。它不是全站预算或反滥用系统，仍需控制台预算告警/限额及数据保留策略。
 
-## 来源
+## 本地开发
 
-- 历史设计与实施记录保存在本仓库的 `docs/plans/` 和 `docs/superpowers/plans/`。
+需要 Node.js 20+ 和 npm；无服务凭据也能运行隔离测试：
 
-## 验证
+```sh
+npm ci --ignore-scripts
+npm test
+npm run build:weapp
+npm audit
+```
 
-运行 `node --test tests/*.cjs`：覆盖多草稿迁移、删除重试/共享引用、七格与筛选、双确认清除、分享隐私、打印尺寸、渲染指令、翻面/阅读、完整科学资料和公开识别契约。微信开发者工具可进一步逐文件编译 WXML/WXSS。
+`build:weapp` 仅检查原生源码，不上传、不调用真实识别/生图，不产生 Taro 发布包。云函数测试用假的身份与提供者；通过不代表线上已部署或准确率已校准。
 
-本地自动化测试与原生源码检查通过；相机/相册权限、照片清理、Canvas真机内存/导出、相册保存、微信资料分享落地、字体与GPU手感仍需真实微信设备验收。测试不能替代真机，PNG像素尺寸也不代表纸张色彩已打样。
-# 2026-09-17 识别服务与发布入口（覆盖下方历史说明）
-
-唯一发布源是根目录 app.js/app.json/app.wxss 与 native/。导入本目录到微信开发者工具，不导入dist。npm run build:weapp 和 npm run dev:weapp仅验证原生源；npm run experiment:taro为旧Taro实验，不作为当前产品发布。packOptions排除src/dist/scripts/tests/cloudfunctions和开发依赖；云函数单独部署。
-
-百度是唯一物种识别服务，客户端调用recognizeObservation。拍照只存本地；“同意并鉴别”后才申请本人上传路径、上传并调用百度。0.86仅为待校准的候选分流阈值，不是准确率保证；所有候选仍需用户确认。低分候选和未知照片保留。未配置服务时可手动确认，不假报成功。
-
-百炼只提供确认物种后的可选科普与手绘，卡详情分别显示授权按钮。科普仅发送名称，手绘发送已授权上传的照片。生成任务由用户主动查询，服务端校验本人任务；入册和启动不自动调用。AI科普标识“待核实”，不覆盖身份或保护信息。旧generateIllustration和natureAI2识别入口拒绝执行。
-
-自动云同步与笔记上传已停用，避免无同意上传。我的页显示真实本地数量，空收藏为0，示例不计入；假积分、订阅价格与默认nash统计已去除。
-
-## 必须由所有者在控制台完成
-
-1. 吊销并轮换曾硬编码的旧百炼凭据；删除源码不能使旧凭据失效。不要把新值发送到聊天。
-2. 百度应用启用动物与植物识别并确认额度；recognizeObservation环境变量配置BAIDU_API_KEY、BAIDU_SECRET_KEY。natureAI2配置DASHSCOPE_API_KEY；可选DASHSCOPE_TEXT_MODEL、DASHSCOPE_MODEL。仅在云控制台填写值。
-3. CloudBase创建assets与aiTasks集合。assets客户端仅创建者读写，_openid不得伪造或修改；aiTasks客户端禁止读写，只允许受信任云函数访问。cards历史数据也设仅创建者读写。存储设仅上传者私有读写，不要为了预览开放公开访问。
-4. 部署recognizeObservation与natureAI2及各自wx-server-sdk依赖；同时下线旧generateIllustration或部署其拒绝执行版。核对当前独立小程序、函数环境、外网访问、超时与额度。本地代码不会自动替换线上旧函数。
-5. 微信隐私指引披露照片上传、百度识别、明确授权的百炼生成、存储和删除。当前deleteObservationAssets只是排队占位，不保证云端删除；完整云资产删除、保留周期及撤回机制验收前，不应正式上线照片云服务。函数身份校验不能替代数据库和存储规则。
-6. 两个微信测试身份验证互相不能读照片或查询任务；云函数生成图片的私有读取权限需验证，不可开放存储规避。用清晰、模糊、多主体、非生物与未知物种真图校准阈值、记录误识别，mock测试不是精度评估。
-
-没有操作账号、控制台、部署、上传或preview。七物种默认手绘PNG在本地包缺失，依赖既有云资源映射；本轮不改视觉，不保证离线插画可用。该资源链与私有生成图真机展示仍需验证。
-
-## Open-source development
-
-The canonical public source is the root native Mini Program and `native/` runtime. Start without provider credentials by running the local contract tests and the mock recognition flow. Provider-backed recognition requires owner-managed console configuration and explicit user consent; it is not required for ordinary contributions.
-
-Before publishing, read [`docs/OPEN_SOURCE_SCOPE.md`](docs/OPEN_SOURCE_SCOPE.md). Do not commit `project.private.config.json`, `.env`, user photos, generated archives, or assets without a recorded license.
-
-## 本轮本地证据
-
-- node --test tests/*.cjs：44 tests / 44 pass / 0 fail。
-- npm run build:weapp：原生入口、JS/JSON与页面文件通过，无Taro发布产物。
-- 官方wcc/wcsc逐文件编译24个WXML/WXSS，全部exit 0，无stderr警告。
-- 云函数JS/JSON通过；扫描root/native/cloudfunctions/src源码凭据字面量命中0，不读取环境变量值。
+发布前按 [所有者配置](docs/OWNER_SETUP_GUIDE.md)、[发布检查](docs/RELEASE_CHECKLIST.md) 与 [验收记录](docs/RELEASE_ACCEPTANCE.md) 执行。真机相机/头像/导出/定位，两个微信身份隔离，模型额度/私有图读取/云删除仍是外部门。不要提交密钥、私人照片或备份。开源范围见 [OPEN_SOURCE_SCOPE](docs/OPEN_SOURCE_SCOPE.md)。

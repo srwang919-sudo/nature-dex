@@ -4,6 +4,7 @@ const {recognition}=require('../../contracts/services')
 const {classifyRecognition}=require('../../lib/recognition-result')
 const {recognitionError}=require('../../lib/recognition-errors')
 const {createArtCard}=require('../../lib/art-card')
+const {requestArtConsent}=require('../../lib/art-consent')
 const {buildScience,normalizeCard,scienceForConfirmedCandidate}=require('../../lib/observation-card')
 const {hasConsent,setConsent}=require('../../lib/recognition-consent')
 Page({
@@ -104,6 +105,9 @@ acceptRecognition(){try{setConsent(true,wx);this.setData({needsRecognitionConsen
   this.setData({busy:true,artFailed:false,identifyError:''});
   try{
    let card=Object.assign({id:'art_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),speciesId:sp.id,photoObservationId:session.id,photoPath:session.photoPath,photoFileId:session.photoFileId},session.artWork?.speciesId===sp.id?session.artWork:{});
+    const artConsent=await requestArtConsent(wx,{operationId:card.id,observationId:session.id});
+    if(!artConsent||!current())return;
+    card.artConsent=artConsent;
     this.setData({artProgress:'混元正在创作艺术正面…'});
     card=await createArtCard({api:wx.cloud,card,isCurrent:current,onUpdate:work=>{if(!current())throw Error('stale');app.saveDraft(Object.assign({},app.getObservation(),{artWork:work}))}});
     if(!current())return;

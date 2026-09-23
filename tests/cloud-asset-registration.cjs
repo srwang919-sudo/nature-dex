@@ -4,10 +4,7 @@ const writes=new Map();let downloads=0;
 const api={
  getWXContext:()=>({OPENID:'owner1'}),
  downloadFile:async()=>{downloads++;return {fileContent:Buffer.from('photo')}},
- database:()=>({collection:name=>{
-  assert.equal(name,'assets');
-  return {doc:id=>({set:async({data})=>writes.set(id,data)})};
- }})
+ database:()=>{const db={collection:name=>({doc:id=>({get:async()=>{throw Error('not found')},set:async({data})=>{assert.equal(name,'assets');writes.set(id,data)}})})};db.runTransaction=fn=>fn(db);return db}
 };
 const event={action:'register_asset',consent:true,observationId:'draft1',idempotencyKey:'draft1',cloudPath:'observations/owner1/draft1.jpg',photoFileId:'cloud://env.bucket/observations/owner1/draft1.jpg',purpose:'recognition'};
 (async()=>{

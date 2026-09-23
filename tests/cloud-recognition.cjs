@@ -7,7 +7,7 @@ console.log('PASS: cloud recognition normalization');
 const {main}=require('../cloudfunctions/recognizeObservation');
 process.env.BAIDU_API_KEY='test-key';process.env.BAIDU_SECRET_KEY='test-secret';
 const calls=[];let owns=true;
-const api={getWXContext:()=>({OPENID:'u1'}),downloadFile:async()=>({fileContent:Buffer.from('photo')}),database:()=>({collection:()=>({where:q=>({get:async()=>({data:owns?[q]:[]})})})})};
+const api={getWXContext:()=>({OPENID:'u1'}),downloadFile:async()=>({fileContent:Buffer.from('photo')}),database:()=>{const db={collection:()=>({where:q=>({get:async()=>({data:owns?[q]:[]})}),doc:()=>({get:async()=>{throw Error('not found')},set:async()=>{}})})};db.runTransaction=fn=>fn(db);return db}};
 (async()=>{
  assert.equal((await main({})).code,'consent_required');
  const input={consent:true,observationId:'o1',idempotencyKey:'o1',photoFileId:'cloud://env.bucket/observations/u1/o1.jpg'};

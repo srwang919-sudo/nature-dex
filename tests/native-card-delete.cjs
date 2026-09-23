@@ -1,0 +1,6 @@
+const fs=require('fs'),vm=require('vm'),assert=require('node:assert/strict'),{createRequire}=require('module'),path=require('path');
+const file=path.resolve(__dirname,'../app.js');let app,failed=true,calls=[];
+const card={id:'one',photoFileId:'cloud://original',photoObservationId:'obs'},store=new Map([['nature.cards.v2',[card]],['nature.note.one','private note']]);
+const wx={getStorageSync:k=>store.get(k),setStorageSync:(k,v)=>store.set(k,v),removeStorageSync:k=>store.delete(k),cloud:{callFunction:async input=>{calls.push(input);return {result:{status:failed?'failed':'deleted'}}}}};
+vm.runInNewContext(fs.readFileSync(file,'utf8'),{App:x=>app=x,wx,require:createRequire(file),console});app.cleanupPaths=async()=>{};
+(async()=>{await assert.rejects(app.removeCard('one'));assert.equal(app.getCards().length,1);assert.equal(store.get('nature.note.one'),'private note');failed=false;await app.removeCard('one');assert.equal(app.getCards().length,0);assert.equal(store.has('nature.note.one'),false);assert.deepEqual(JSON.parse(JSON.stringify(calls[0])),{name:'deleteObservationAssets',data:{observationId:'obs'}});console.log('PASS cloud failure preserves local card and note; only observation id sent')})().catch(e=>{console.error(e);process.exitCode=1});

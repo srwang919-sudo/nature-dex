@@ -1,4 +1,6 @@
 const messages={
+ daily_limit:'今天的鉴别次数已达安全限额，请明天再试。',
+ quota_unavailable:'鉴别安全限额暂时无法核验，请稍后重试。',
  provider_missing_parameter:'百度未收到必需的图片参数，请更新云端识别函数后重试。照片仍在本机，也可手动确认物种后制卡。',
  not_configured:'识别函数缺少配置。请在 recognizeObservation 设置 BAIDU_API_KEY 和 BAIDU_SECRET_KEY，并重新部署。',
  provider_auth_failed:'百度鉴权失败。请在百度控制台核对该应用的 API Key 与 Secret Key 是否配套、有效。',

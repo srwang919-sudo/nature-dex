@@ -69,9 +69,9 @@ Page({
   wx.showModal({title:'图片未导出',content,showCancel:false,confirmText:'知道了'});
  },
  removeCard(){
-  wx.showModal({title:'删除这张卡？',content:'卡片、笔记和云端照片都会删除，无法恢复。',confirmText:'删除',confirmColor:'#b03a26',success:r=>{
+  wx.showModal({title:'删除这张卡？',content:'删除本机卡片、笔记及此观察的私有云照片和彩绘。云端删除确认前会保留本机卡片以便重试。',confirmText:'删除',confirmColor:'#b03a26',success:async r=>{
     if(!r.confirm)return;
-    try{app.removeCard(this.id);wx.showToast({title:'已删除'});setTimeout(()=>wx.navigateBack(),600)}catch(e){wx.showToast({title:'删除失败，请重试',icon:'none'})}
+    try{await app.removeCard(this.id);wx.showToast({title:'已删除'});setTimeout(()=>wx.navigateBack(),600)}catch(e){wx.showToast({title:'删除未确认，请稍后重试',icon:'none'})}
   }})
  },
  previewExport(){if(this.data.exportPath)wx.previewImage({urls:[this.data.exportPath],current:this.data.exportPath})},

@@ -1,6 +1,6 @@
 const assert=require('node:assert/strict'),{createArtCard}=require('../native/lib/art-card');
 (async()=>{
- const card={id:'c',speciesId:'ibis',photoObservationId:'d',photoPath:'local',photoFileId:'cloud://original'};
+ const card={artConsent:{version:1,provider:'tencent-hunyuan',acceptedAt:Date.now(),operationId:'c',observationId:'d'},id:'c',speciesId:'ibis',photoObservationId:'d',photoPath:'local',photoFileId:'cloud://original'};
  let latest,calls=[];
  const failed=await createArtCard({card,api:{callFunction:async()=>{throw Error('-504003')}},onUpdate:c=>latest=c,wait:async()=>{}});
  assert.equal(failed.artStatus,'processing');assert.equal(failed.artCode,'generation_pending');assert.equal(latest.photoPath,'local');

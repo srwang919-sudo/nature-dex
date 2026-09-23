@@ -23,3 +23,16 @@
 .back .record-footer-line{justify-content:center;letter-spacing:1rpx}
 .original-label{display:block;flex:none;padding:8rpx 0;font-size:18rpx;line-height:1.4;color:#58655d;text-align:center;background:#fffbf2}
 .expanded-metadata{height:108rpx}.large .expanded-metadata{height:174rpx}.front-context{display:flex;justify-content:space-between;gap:6rpx;font-size:15rpx;line-height:1.4;color:#58655D;margin-top:6rpx}.large .front-context{font-size:19rpx;margin-top:10rpx}.expanded-metadata .name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}.expanded-metadata .latin{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Readable small cards and shelf cards; long scientific names stay inside the frame. */
+.metadata{height:112rpx;padding:8rpx 12rpx;box-sizing:border-box}
+.name-row{min-width:0;align-items:flex-start;flex-wrap:wrap;gap:2rpx 6rpx}
+.name{font-size:28rpx;min-width:0;max-width:100%;line-height:1.35}
+.stars{font-size:18rpx;flex-shrink:0}
+.latin{font-size:24rpx;line-height:1.4;min-width:0;max-width:100%;overflow-wrap:anywhere}
+.expanded-metadata{height:184rpx}
+.front-context{font-size:24rpx;flex-wrap:wrap;line-height:1.4;margin-top:3rpx;overflow:hidden}
+.large .metadata{height:156rpx}
+.large .expanded-metadata{height:224rpx}
+.large .latin,.large .front-context{font-size:24rpx}
+.large .name{font-size:36rpx}
+.sample{bottom:120rpx}.large .sample{bottom:164rpx}

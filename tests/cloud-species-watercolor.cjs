@@ -12,6 +12,7 @@ const deps={cloud:api,generate:async(api,input)=>{generated++;assert.ok(!input.p
  owner='u2';const cached=await main({action:'ensure',speciesId:'ibis',confirmed:true},deps);assert.equal(cached.status,'ready');assert.equal(generated,1);
  assert.ok(!JSON.stringify([...rows]).includes('private-user-photo'));
  const event={action:'submit',operationId:'op1',consent:true,confirmed:true,photoObservationId:'obs1',photoFileId:'cloud://env/observations/u2/obs1.jpg',speciesId:'ibis'};
+ event.artConsent={version:1,provider:'tencent-hunyuan',acceptedAt:Date.now(),operationId:event.operationId,observationId:event.photoObservationId};
  assert.equal((await front(event,{cloud:api})).code,'forbidden');
  rows.set('assetsphoto',{_openid:'u2',fileId:event.photoFileId,observationId:'obs1'});
  let count=0;const frontDeps={cloud:api,generate:async()=>{count++;return 'cloud://private/art'}};

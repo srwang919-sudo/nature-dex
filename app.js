@@ -60,15 +60,18 @@ App({
       if (doc && doc.map && Object.keys(doc.map).length > 0) { wx.setStorageSync('nature.assets.fileIds', doc.map); console.log('[cloud assets] map restored', Object.keys(doc.map).length) }
     } catch (e) { console.warn('[cloud assets]', e) }
   },
-  removeCard(cardId) {
+  async removeCard(cardId) {
     const card = this.getCards().find(c => c.id === cardId)
+    if (!card) return
+    const fileId=card.photoFileId||card.originalPhotoAsset?.fileId||card.artAssetFileId||card.artAsset?.fileId
+    if(fileId){
+      if(!card.photoObservationId||!wx.cloud?.callFunction)throw Error('cloud_delete_unavailable')
+      const reply=await wx.cloud.callFunction({name:'deleteObservationAssets',data:{observationId:card.photoObservationId}})
+      if(reply.result?.status!=='deleted')throw Error(reply.result?.code||'cloud_delete_failed')
+    }
     this.saveCards(this.getCards().filter(c => c.id !== cardId))
     try { wx.removeStorageSync('nature.note.' + cardId) } catch (e) {}
-    if (wx.cloud) {
-      wx.cloud.database().collection('cards').where({ cloudId: cardId }).remove().catch(e => console.warn('[cloud remove db]', e))
-      const fileID = card && card.photoFileID
-      if (fileID) wx.cloud.deleteFile({ fileList: [fileID] }).catch(e => console.warn('[cloud remove file]', e))
-    }
+    await this.cleanupPaths([card.photoPath,card.originalPhotoAsset?.localPath,card.artPhotoPath].filter(p=>p&&!p.startsWith('cloud://')))
   },
   achievementContext() {const cards=this.getCards(),notesByCard={};cards.forEach(c=>{notesByCard[c.id]=wx.getStorageSync('nature.note.'+c.id)||''});return {notesByCard,events:{shelfUsed:!!(wx.getStorageSync('nature.collection.v1')||{}).shelfUsed,puzzleUsed:!!(wx.getStorageSync('nature.collection.v1')||{}).puzzleUsed,scienceReadSpecies:wx.getStorageSync('nature.scienceReads.v1')||[]}}},
   getBadges() { return {badges:require('./native/lib/badge-model').buildAchievements(this.getCards(),this.achievementContext())} },

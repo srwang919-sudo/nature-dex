@@ -1,5 +1,6 @@
 let cloud;try{cloud=require('wx-server-sdk');cloud.init({env:cloud.DYNAMIC_CURRENT_ENV,timeout:150000})}catch(e){}
 const {generate}=require('./provider'),{createHash}=require('crypto');
+const {reserveQuota}=require('./quota');
 const known={kingfisher:'普通翠鸟',egret:'白鹭',ibis:'朱鹮',pheasant:'红腹锦鸡',sparrow:'麻雀',moth:'绿尾大蚕蛾',camellia:'山茶'};
 async function main(event={},deps={}){
  const api=deps.cloud||cloud,fail=code=>({status:'failed',code});
@@ -19,6 +20,7 @@ async function main(event={},deps={}){
   const claimed=await db.runTransaction(async tx=>{
    const entry=tx.collection('speciesWatercolors').doc(cacheKey);let old;try{old=(await entry.get()).data}catch(e){if(!/not exist|not found|DATABASE_DOCUMENT_NOT_EXIST/i.test(e.message||e.errMsg||''))throw e}
    if(old&&(old.status==='ready'||old.status==='generating'&&old.leaseExpiresAt>Date.now()))return false;
+   await reserveQuota(tx,api.getWXContext().OPENID,'watercolor');
    await entry.set({data:{speciesId:event.speciesId,styleVersion,status:'generating',leaseExpiresAt,name,model:'HY-Image-3.0-Plus-4090-Tob-v1.0'}});return true;
   });
   if(!claimed)return {status:'processing',cacheKey};
@@ -31,6 +33,6 @@ async function main(event={},deps={}){
    try{await doc.update({data:{status:'failed',code,leaseExpiresAt:0}})}catch(ignore){return fail('watercolor_cache_write_failed')}
    return fail(code)
   }
- }catch(e){return fail('service_unavailable')}
+ }catch(e){return fail(['daily_limit','quota_unavailable'].includes(e.message)?e.message:'service_unavailable')}
 }
 module.exports={main};

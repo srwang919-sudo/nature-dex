@@ -5,7 +5,7 @@ exports.main = async () => {
   const db = cloud.database()
   const created = [], existed = [], failed = []
   // Fixed allowlist only: callers cannot create arbitrary production resources.
-  for (const name of ['assets', 'artOperations', 'speciesWatercolors']) {
+  for (const name of ['assets', 'artOperations', 'speciesWatercolors', 'observationDeletions', 'usageQuotas']) {
     try { await db.createCollection(name); created.push(name) }
     catch (e) {
       if (/already exist|COLLECTION_EXIST/i.test(e.message || e.errMsg || '')) existed.push(name)
