@@ -1,4 +1,8 @@
 const messages={
+ recognition_pending:'这张照片仍在鉴别中，请稍后再次点击查看结果；不会重复发起付费鉴别。',
+ recognition_expired:'本次鉴别未能完成，未保存卡片。请重新选择照片开始新观察。',
+ receipt_conflict:'照片鉴别记录不一致，请重新选择照片。',
+ cancelled:'这次观察已取消，照片不会继续用于制卡。',
  daily_limit:'今天的鉴别次数已达安全限额，请明天再试。',
  quota_unavailable:'鉴别安全限额暂时无法核验，请稍后重试。',
  provider_missing_parameter:'百度未收到必需的图片参数，请更新云端识别函数后重试。照片仍在本机，也可手动确认物种后制卡。',

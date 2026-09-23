@@ -1,6 +1,7 @@
 let cloud;try{cloud=require('./sdk');cloud.init({env:cloud.DYNAMIC_CURRENT_ENV})}catch(e){}
 const https=require('https');
 const {sanitizeScience,mergeCandidateRoutes}=require('./science');
+const {claimReceipt,completeReceipt}=require('./receipt');
 const SPECIES={翠鸟:'kingfisher',普通翠鸟:'kingfisher',白鹭:'egret',朱鹮:'ibis',红腹锦鸡:'pheasant',锦鸡:'pheasant',麻雀:'sparrow',山茶:'camellia',绿尾大蚕蛾:'moth'};
 function request(url,{method='GET',headers={},body}={}){
  const payload=body===undefined||body===null?null:Buffer.isBuffer(body)?body:Buffer.from(String(body),'utf8');
@@ -47,16 +48,19 @@ async function main(event={},deps={}){
    return {status:'registered',contractVersion:2};
   }catch(e){return fail(registrationStage)}
  }
- let stage='asset_registry';
+ let stage='asset_registry',claimed=false;
+ const receiptInput={owner:openid,observationId:event.observationId,photoFileId:event.photoFileId};
+ const finish=result=>completeReceipt(api.database(),receiptInput,result);
  try{
   const owner=await api.database().collection('assets').where({_openid:openid,fileId:event.photoFileId,observationId:event.observationId,purpose:'recognition'}).get();
   if(!owner.data||!owner.data.length)return fail('forbidden');
-  stage='quota_unavailable';await api.database().runTransaction(tx=>require('./quota').reserveQuota(tx,openid,'recognition'));
+  stage='quota_unavailable';const receipt=await claimReceipt(api.database(),receiptInput,tx=>require('./quota').reserveQuota(tx,openid,'recognition'));
+  if(!receipt.claimed)return receipt.result;claimed=true;
   stage='photo_download';const file=await api.downloadFile({fileID:event.photoFileId});
-  if(!file.fileContent||file.fileContent.length>4*1024*1024)return fail('photo_unavailable');
+  if(!file.fileContent||file.fileContent.length>4*1024*1024)return await finish(fail('photo_unavailable'));
   const send=deps.request||request;
   stage='provider_auth_failed';const auth=await send('https://aip.baidubce.com/oauth/2.0/token',{method:'POST',headers:{'content-type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'client_credentials',client_id:process.env.BAIDU_API_KEY,client_secret:process.env.BAIDU_SECRET_KEY}).toString()});
-  const token=await auth.json();if(auth.status>=400||!token.access_token)return fail('provider_auth_failed');
+  const token=await auth.json();if(auth.status>=400||!token.access_token)return await finish(fail('provider_auth_failed'));
   const kinds=event.kind==='plant'?['plant']:event.kind==='animal'?['animal']:event.kind==='generalOnly'?['general']:['animal','plant','general'];
   stage='provider_error';
   const responses=await Promise.all(kinds.map(async kind=>{try{
@@ -66,10 +70,10 @@ async function main(event={},deps={}){
    return {route:kind,rows:body.result};
   }catch(e){return {failure:fail(/timeout/i.test(e.message||'')?'timeout':'provider_response')}}}));
   const warnings=responses.filter(x=>x.failure).map(x=>x.failure),rows=responses.flatMap(x=>x.rows||[]);
-  if(!rows.length&&warnings.length)return warnings[0];
+  if(!rows.length&&warnings.length)return await finish(warnings[0]);
   const result=mergeCandidateRoutes(responses,normalizeRecognition);
-  return {...result,contractVersion:2};
- }catch(e){return fail(e.message==='daily_limit'?'daily_limit':/timeout/i.test(e.message||'')?'timeout':stage)}
+  return await finish({...result,contractVersion:2});
+ }catch(e){const result=fail(['daily_limit','cancelled','receipt_conflict'].includes(e.message)?e.message:/timeout/i.test(e.message||'')?'timeout':stage);if(claimed){try{return await finish(result)}catch(ignore){}}return result}
 }
 function baiduErrorCode(n){if(n===216101)return 'provider_missing_parameter';if(n===6)return 'provider_permission';if(n===17||n===19)return 'provider_quota';if(n===18)return 'provider_rate_limit';if(n===110||n===111)return 'provider_token';if([216200,216201,216202,216203].includes(n))return 'provider_image';return 'provider_error'}
 module.exports={main,normalizeRecognition,request,baiduErrorCode,imageForm};
