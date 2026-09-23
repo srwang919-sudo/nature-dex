@@ -33,4 +33,8 @@ npm audit
 
 `build:weapp` 仅检查原生源码，不上传、不调用真实识别/生图，不产生 Taro 发布包。云函数测试用假的身份与提供者；通过不代表线上已部署或准确率已校准。
 
+六个活跃/运维云函数有独立锁文件：wx-server-sdk固定4.0.2，两个生图函数另固定@cloudbase/ai 2.30.0。根目录审计0漏洞不包含云函数；当前云SDK的传递依赖仍有高/中风险审计项，详见2026-09-23验收记录。不得用`npm audit fix --force`降级SDK来掩盖兼容性风险。
+
+正式发布还须所有者批准MVP范围：会员购买、好友互通和赠送不提供，相关入口须隐藏或明确标「未开放」，不能用展示价格或概念截图暗示服务已开通。
+
 发布前按 [所有者配置](docs/OWNER_SETUP_GUIDE.md)、[发布检查](docs/RELEASE_CHECKLIST.md) 与 [验收记录](docs/RELEASE_ACCEPTANCE.md) 执行。真机相机/头像/导出/定位，两个微信身份隔离，模型额度/私有图读取/云删除仍是外部门。不要提交密钥、私人照片或备份。开源范围见 [OPEN_SOURCE_SCOPE](docs/OPEN_SOURCE_SCOPE.md)。

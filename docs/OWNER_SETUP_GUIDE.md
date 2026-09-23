@@ -15,6 +15,10 @@
 
 旧 natureAI2 仍含百炼接口与 DASHSCOPE_API_KEY / DASHSCOPE_MODEL / DASHSCOPE_TEXT_MODEL 配置读取，但不是当前制卡链；旧 generateIllustration、claimGift 不应当作已上线功能部署。关闭不使用函数的客户端调用权限，轮换曾泄露/硬编码的历史凭据；删代码不等于吊销。
 
+上述六个函数（含cleanupObservationAssets/initCollections）各自提交package-lock.json：wx-server-sdk精确4.0.2；createArtCard/speciesIllustration的@cloudbase/ai精确2.30.0，避免跨到3.x而未验证模型契约。按锁文件运行npm ci，不用npm install自动更新。微信云端安装流程是否实际遵守lockfile必须在受控部署日志验证，否则由已审阅锁文件生成部署依赖。当前云SDK传递依赖审计仍有漏洞，属于发布阻断；不要接受npm自动建议降到wx-server-sdk 2.5.3，也不要未经兼容验证强制覆盖SDK内部axios/lodash。
+
+2026-09-23逐函数审计：recognizeObservation、createArtCard、speciesIllustration、deleteObservationAssets、cleanupObservationAssets、initCollections均为6个依赖漏洞项（5高、1中、0严重）；各自npm ci成功，audit非零。共同上游链涉及axios、lodash.set、lodash.unset，不能相加成36种独立漏洞。未认定这些风险在生产不可利用，需上游修复或正式风险处置。
+
 ## 发布前必须由所有者完成
 
 - [ ] 核对当前小程序与既定 CloudBase 环境绑定；部署已审阅版本 recognizeObservation、createArtCard、speciesIllustration、deleteObservationAssets，以及必要的清理函数；本地文件存在不等于云端版本正确。
@@ -29,6 +33,7 @@
 - [ ] 两身份验证删除：本人成功；外人不能操作；存储失败不显示成功；生成中删除重试；生成迟到不能复活；旧缺观察 ID 卡进入人工处理，不假报成功。
 - [ ] 制定未成功观察的上传原图/生成结果保留期限、撤回与账号删除渠道；本机「清除本地数据」不会撤销云端数据。已有下载/相册图片需用户自行删除。
 - [ ] 真机相机、相册、头像、Canvas导出、分享与小字体验收；支付商户/订单/回调、微信登录/好友授权均未接通，不得宣传可购买或赠送。
+- [ ] 所有者明确批准首发为不提供会员购买/好友互通/赠送的MVP；发布版须隐藏未提供入口，或清晰标为「未开放」并无可误解的操作。商店说明、截图和营销不得将展示价格当可售权益。未取得该范围批准或完成隐藏/标示验收前不发布。
 
 ## 安全错误定位
 

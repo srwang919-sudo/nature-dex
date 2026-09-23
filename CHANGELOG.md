@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Pin active cloud SDK dependencies and commit per-function lockfiles; independently audit each cloud function and retain upstream vulnerability findings as release blockers.
+
 - Replace queued cloud-deletion placeholder with owner-derived, retryable deletion and cancellation tombstones; preserve local cards until cloud confirmation.
 - Require per-generation Tencent Hunyuan disclosure/trace and enforce server-side consent binding; retain original-photo back and strict failure behavior.
 - Add transactional per-owner daily paid-call limits; external collection rules, deployment and global budget validation remain release gates.

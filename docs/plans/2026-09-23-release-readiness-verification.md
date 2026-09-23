@@ -48,3 +48,33 @@ Official compiler location used: `/Applications/wechatwebdevtools.app/Contents/R
 7. No actual payments/friends/login synchronization or formal publication. Merchant orders/callbacks and friend authorization remain unavailable.
 
 Conclusion: local code/test/documentation gates above have evidence. This is not an assertion that production or all product goals are complete.
+
+## Follow-up: reproducible cloud dependencies and nonzero audit
+
+The previous root audit did not cover deployable cloud functions. This follow-up pins each active/operations function to `wx-server-sdk: 4.0.2`; createArtCard/speciesIllustration additionally pin `@cloudbase/ai: 2.30.0`. Official npm registry metadata checked2026-09-23 reports wx-server-sdk latest4.0.2 and AI latest3.9.1; retaining the already-used AI2.30.0 avoids an unverified major API migration. No application/provider code was changed.
+
+Each function has lockfileVersion3, package integrity/resolution metadata, and exact direct versions. Historical natureAI2/generateIllustration/claimGift were not activated or changed. Commands run separately for all six:
+
+```sh
+npm ci --ignore-scripts --prefix cloudfunctions/recognizeObservation
+npm audit --json --prefix cloudfunctions/recognizeObservation
+```
+
+The same two commands were run with createArtCard, speciesIllustration, deleteObservationAssets, cleanupObservationAssets and initCollections respectively; audit JSON saved only to local `/tmp/nature-deps-<function>-audit.json` (no keys or user data).
+
+| Function | npm ci | Audit vulnerabilities | audited dependency count |
+|---|---|---|---|
+| recognizeObservation | exit0 |5 high /1 moderate /0 critical |102 |
+| createArtCard | exit0 |5 high /1 moderate /0 critical |101 |
+| speciesIllustration | exit0 |5 high /1 moderate /0 critical |101 |
+| deleteObservationAssets | exit0 |5 high /1 moderate /0 critical |102 |
+| cleanupObservationAssets | exit0 |5 high /1 moderate /0 critical |102 |
+| initCollections | exit0 |5 high /1 moderate /0 critical |102 |
+
+All six audits returned nonzero due to known advisory findings, not install failure. These are repeated dependency-tree findings, not36 distinct vulnerabilities. The chains involve wx-server-sdk→@cloudbase/node-sdk3.17.2→@cloudbase/database (lodash.set/lodash.unset) and axios. Representative advisory identifiers: GHSA-p6mc-m468-83gw (lodash.set), GHSA-xxjr-mmjv-4gpg (lodash.unset), GHSA-jr5f-v2jv-69x6 (axios); audit includes further axios advisories. Actual exploitability in this app was not claimed or assessed as safe.
+
+`npm audit` proposed wx-server-sdk2.5.3 as a breaking downgrade; it was not applied. No forced transitive overrides or provider SDK3.x migration was made. **Cloud dependency security remains a release blocker**, requiring an upstream fix or explicit owner-approved, documented risk treatment with compatibility/security testing. A root zero-audit result cannot clear it.
+
+After installing the six locked trees, current worktree `npm test` remained80/80 and `npm run build:weapp` passed. Locks/manifests were checked for exact SDK/AI versions. Cloud functions are excluded from the native main package, so these locks do not expand the native package. Deployment tooling must be verified to honor these locks before any production upload; no deployment/model call was performed here.
+
+Independent-index checkout `/tmp/nature-cloud-locks-idd7QD/clean` repeated npm ci and audit for all six: all installs succeeded, all audits again5 high/1 moderate. Root npm ci,77/77 tests and native build passed. This follow-up touches only manifests/locks/documentation, not provider/prompt/species code or production settings. Release scope additionally requires owner approval of an MVP without membership purchase/friend exchange, and hiding or unambiguously labeling all nonfunctional entries; that visual/product gate has not been signed off here.
