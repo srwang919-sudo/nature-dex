@@ -1,6 +1,9 @@
 <view class="page mine-page {{reduce?'reduce-motion':''}}"><view class="profile"><view class="profile-mark">自然</view><view><view class="title">我的自然手记</view><view class="sub">本地收藏 · 未连接账号或云同步</view></view></view>
 <view class="settings-sections"><button class="secondary" data-section="privacy" bindtap="changeSection">隐私</button><button class="secondary" data-section="help" bindtap="changeSection">帮助与反馈</button><button class="secondary" data-section="about" bindtap="changeSection">关于</button></view>
 <view wx:if="{{section==='privacy'}}" class="panel spaced">
+ <view class="section">云端卡片恢复</view><view class="sub spaced">默认关闭。开启后读取你已成功保存的云端物种、发现编号、插画与私有原照片，并将卡片及照片保存到本机；不会上传现有本地收藏、笔记或地点。此授权独立于百度照片鉴别。</view><view class="setting-card"><text>允许恢复本人云端卡片</text><switch checked="{{recoveryConsent}}" disabled="{{recoveryBusy}}" bindchange="recoveryConsentChange" aria-label="允许恢复本人云端卡片"/></view><view class="sub">关闭后立即停止本机后续恢复，不会自动删除已有本地或云端记录。云端数据需单独删除卡片或申请清除；撤销失败时会提示并重试。</view><view wx:if="{{recoveryMessage}}" class="sub spaced" aria-live="polite">{{recoveryMessage}}</view>
+</view>
+<view wx:if="{{section==='privacy'}}" class="panel spaced">
  <view class="section">云端个人数据清除</view>
  <view class="sub spaced">独立于本机清除。清理过程中该账号暂停生成及分享；支付对账记录与公共物种插画不在删除范围。</view>
  <view wx:if="{{privacyMessage}}" class="sub spaced" aria-live="polite">{{privacyMessage}}</view>

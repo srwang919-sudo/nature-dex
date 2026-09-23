@@ -1,8 +1,9 @@
 const {normalizeCard,buildScience,scienceForConfirmedCandidate}=require('./observation-card');
 async function recoverCards(app,wx){
- const epoch=app.getDataEpoch(),current=()=>epoch===app.getDataEpoch(),saved=[];
+ const consent=require('./recovery-consent');if(!consent.allowed(wx))return {status:'disabled',code:'sync_consent_required'};
+ const epoch=app.getDataEpoch(),current=()=>epoch===app.getDataEpoch()&&consent.allowed(wx),saved=[];
  const check=()=>{if(!current())throw Error('sync_cancelled')};
- const call=async data=>{const r=(await wx.cloud.callFunction({name:'createArtCard',data})).result;check();if(r?.status!=='ready')throw Error(r?.code||'card_sync_unavailable');return r};
+ const call=async data=>{check();const r=(await wx.cloud.callFunction({name:'createArtCard',data})).result;check();if(r?.status!=='ready')throw Error(r?.code||'card_sync_unavailable');return r};
  try{
   const rows=[],seen=new Set();let cursor='';
   do{const page=await call({action:'list_owned',...(cursor?{cursor}:{})});if(!Array.isArray(page.cards))throw Error('card_sync_unavailable');rows.push(...page.cards);cursor=page.nextCursor||'';if(cursor&&seen.has(cursor))throw Error('card_sync_pagination');seen.add(cursor);if(rows.length>10000)throw Error('card_sync_limit')}while(cursor);

@@ -4,7 +4,8 @@ App({
     if (!wx.cloud) { console.warn('[cloud] 基础库过低，无 wx.cloud'); return }
     try { wx.cloud.init({ env: 'nature-prod-d0gufarx064489f0f', traceUser: false }) }
     catch (e) { console.warn('[cloud] init failed', e) }
-    // Cloud sync remains disabled until an explicit account/data consent flow exists.
+    // Recovery stays default-off; only retry an explicitly requested revocation.
+    require('./native/lib/recovery-consent').retryRevocation(wx).catch(()=>{})
     this.refreshAssetUrls()
     this.retryCloudCleanup().catch(()=>{})
   },
@@ -62,7 +63,7 @@ App({
   ensureSpeciesInfo() { return Promise.resolve(null) },
   async generateSubmitFor() { return {status:'disabled',code:'explicit_consent_required'} },
   async pollIllustrations() { return {status:'disabled',code:'explicit_consent_required'} },
-  async syncCards() { if(this._cardSync)return this._cardSync;this._cardSync=require('./native/lib/card-recovery').recoverCards(this,wx);try{return await this._cardSync}finally{this._cardSync=null} },
+  async syncCards() { if(!require('./native/lib/recovery-consent').allowed(wx))return {status:'disabled',code:'sync_consent_required'};if(this._cardSync)return this._cardSync;this._cardSync=require('./native/lib/card-recovery').recoverCards(this,wx);try{return await this._cardSync}finally{this._cardSync=null} },
   getSpecies(id) { const s = this.globalData.species[id]; if (s) return s; return this.getSpeciesInfo(id) },
   draftState() {
     const state = wx.getStorageSync('nature.drafts.v4');
@@ -78,9 +79,9 @@ App({
     return migrated;
   },
   getDrafts() { return this.draftState().items },
-  startObservation(photoPath) { this._observation={id:'obs_'+Date.now()+'_'+Math.random().toString(36).slice(2,8),photoPath,createdAt:Date.now(),mode:'ready'};return this._observation },
+  startObservation(photoPath) { if(this._observation)this.discardObservation();this._observation={id:'obs_'+Date.now()+'_'+Math.random().toString(36).slice(2,8),photoPath,createdAt:Date.now(),mode:'ready'};return this._observation },
   getObservation(){return this._observation||null},
-  discardObservation(){this._observation=null},
+  discardObservation(){const paths=[this._observation?.artLocalPath,this._observation?.photoSaved?this._observation.photoPath:''].filter(Boolean);if(paths.length)wx.setStorageSync('nature.cleanup.v1',[...new Set(this.getCleanup().concat(paths))]);this._observation=null;if(paths.length)this.retryCleanup().catch(()=>{})},
   getDraft() { if(this._observation)return this._observation;const s = this.draftState(); return s.items.find(d => d.id === s.activeId) || null },
   saveDraft(draft) {
     if(this._observation&&this._observation.id===draft.id){this._observation=Object.assign({},draft);return this._observation}
@@ -95,7 +96,7 @@ App({
   clearDraft(id) { const s = this.draftState(), target = id || s.activeId; const items = s.items.filter(d => d.id !== target); wx.setStorageSync('nature.drafts.v4', {version:4,activeId:items.length ? items[items.length-1].id : null,items}); },
   getCleanup() { return wx.getStorageSync('nature.cleanup.v1') || [] },
   async cleanupPaths(paths) {
-    const refs = new Set(this.getCards().map(c => c.photoPath).concat(this.getReadyCards().map(c=>c.photoPath),this.getDrafts().map(d => d.photoPath),[(wx.getStorageSync('nature.profile.v2')||{}).avatarPath]));
+    const refs = new Set(this.getCards().concat(this.getReadyCards(),this.getDrafts()).flatMap(c=>[c.photoPath,c.artPhotoPath,c.artAsset?.localPath,c.originalPhotoAsset?.localPath]).concat([(wx.getStorageSync('nature.profile.v2')||{}).avatarPath]));
     const pending = [...new Set(this.getCleanup().concat(paths))].filter(p => p && !refs.has(p) && !p.startsWith('/assets/'));
     wx.setStorageSync('nature.cleanup.v1', pending);
     const failed = [];
@@ -134,7 +135,7 @@ App({
     require('./native/lib/cloud-cleanup').forget(wx,new Set(this.getCards().concat(this.getReadyCards()).map(c=>c.photoObservationId).filter(Boolean)));
     this._dataEpoch = this.getDataEpoch() + 1;
     this._observation=null;
-    const photos = this.getCards().map(c=>c.photoPath).concat(this.getReadyCards().map(c=>c.photoPath),this.getDrafts().map(d=>d.photoPath), this.getCleanup(), wx.getStorageSync('nature.export.files')||[],[(wx.getStorageSync('nature.profile.v2')||{}).avatarPath]);
+    const photos = this.getCards().concat(this.getReadyCards()).flatMap(c=>[c.photoPath,c.artPhotoPath]).filter(p=>p&&!/^(cloud:\/\/|https?:\/\/)/.test(p)).concat(this.getDrafts().map(d=>d.photoPath), this.getCleanup(), wx.getStorageSync('nature.export.files')||[],[(wx.getStorageSync('nature.profile.v2')||{}).avatarPath]);
     // Persist cleanup intent before removing records, so partial file failures can be retried.
     wx.setStorageSync('nature.cleanup.v1', [...new Set(photos.filter(Boolean))]);
     const keys = wx.getStorageInfoSync().keys;

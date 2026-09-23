@@ -125,14 +125,18 @@ acceptRecognition(){try{setConsent(true,wx);this.setData({needsRecognitionConsen
    const scienceSnapshot=scienceForConfirmedCandidate(selected,sp.id,buildScience(app.globalData.species[sp.id]||{}));
    const artUrl=card.artworkId?(await wx.cloud.callFunction({name:'speciesIllustration',data:{action:'resource',artworkId:card.artworkId}})).result:null;
    if(card.artworkId&&(!artUrl||artUrl.status!=='ready'||!artUrl.url))throw Error('artwork_resource_unavailable');
-   await Promise.all([artUrl?.url||card.artPhotoPath,session.photoPath].map(async src=>{if(!src)throw Error('image_missing');if(src.startsWith('cloud://')){const urls=await wx.cloud.getTempFileURL({fileList:[src]});src=urls.fileList?.[0]?.tempFileURL;if(!src)throw Error('image_url')}return new Promise((resolve,reject)=>wx.getImageInfo({src,success:resolve,fail:reject}))}));
+   const verified=await Promise.all([session.artLocalWorkId===card.id&&session.artLocalPath||artUrl?.url||card.artPhotoPath,session.photoPath].map(async src=>{if(!src)throw Error('image_missing');if(src.startsWith('cloud://')){const urls=await wx.cloud.getTempFileURL({fileList:[src]});src=urls.fileList?.[0]?.tempFileURL;if(!src)throw Error('image_url')}return new Promise((resolve,reject)=>wx.getImageInfo({src,success:resolve,fail:reject}))}));
    if(!current())return;
+   if(!verified[0].path)throw Error('artwork_resource_unavailable');
+   const artSaved=session.artLocalWorkId===card.id&&session.artLocalPath?{savedFilePath:session.artLocalPath}:await new Promise((resolve,reject)=>wx.saveFile({tempFilePath:verified[0].path,success:resolve,fail:reject}));
+   if(!current()){app.cleanupPaths([artSaved.savedFilePath]).catch(()=>{});return}
+   app.saveDraft(Object.assign({},app.getObservation(),{artLocalPath:artSaved.savedFilePath,artLocalWorkId:card.id}));
    const saved=session.photoSaved?{savedFilePath:session.photoPath}:await new Promise((resolve,reject)=>wx.saveFile({tempFilePath:session.photoPath,success:resolve,fail:reject}));
    if(!current()){app.cleanupPaths([saved.savedFilePath]).catch(()=>{});return}
    if(!app.getSpecies(sp.id))wx.setStorageSync('nature.species.'+sp.id,{id:sp.id,zh:sp.zh||sp.id,latin:sp.latin||'',stars:1,facts:[],stats:[],knowledge:'资料尚未补充'});
    app.saveDraft(Object.assign({},app.getObservation(),{photoPath:saved.savedFilePath,photoSaved:true,artWork:card,scienceSnapshot,resourcesVerified:true}));
    const prepared=app.prepareCard(sp.id);
-   const complete=normalizeCard(Object.assign({},prepared,scienceSnapshot.fields,{category:selected.category||prepared.category,schemaVersion:2,photoPath:saved.savedFilePath,artPhotoPath:card.artPhotoPath,artStatus:'ready',scienceSnapshot,frontMode:'art',observedAt:session.createdAt,localDate:new Date(session.createdAt).toLocaleDateString()}));
+   const complete=normalizeCard(Object.assign({},prepared,scienceSnapshot.fields,{category:selected.category||prepared.category,schemaVersion:2,photoPath:saved.savedFilePath,artPhotoPath:artSaved.savedFilePath,artAsset:{localPath:artSaved.savedFilePath,fileId:card.artPhotoPath},artStatus:'ready',scienceSnapshot,frontMode:'art',observedAt:session.createdAt,localDate:new Date(session.createdAt).toLocaleDateString()}));
    const receipt=await require('../../lib/save-observation').saveObservation({api:wx.cloud,operationId:card.id,isCurrent:current});
    if(receipt.observationId!==session.id)throw Error('observation_identity_mismatch');
    Object.assign(complete,{artworkId:card.artworkId,artwork:card.artwork,serverCardId:receipt.cardId,discovery:receipt.discovery,discoveryNumber:receipt.discovery.number,isFirstDiscovery:receipt.isFirstDiscovery});

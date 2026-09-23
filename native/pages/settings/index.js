@@ -1,6 +1,7 @@
 const app=getApp()
 const {membershipView,socialView}=require('../../lib/availability-model')
 const {hasConsent,setConsent}=require('../../lib/recognition-consent')
+const recoveryConsent=require('../../lib/recovery-consent')
 Page({
  async checkCloudPrivacy(){if(this.data.privacyBusy)return;this.setData({privacyBusy:true});try{const result=await require('../../lib/cloud-privacy').privacyAction('status');this.setData({privacyStatus:result.status,privacyMessage:result.label})}catch(e){this.setData({privacyMessage:'暂时无法连接云端清理服务，请稍后重试。'})}finally{this.setData({privacyBusy:false})}},
  requestCloudErasure(){if(this.data.privacyBusy)return;wx.showModal({title:'申请清除云端个人数据？',content:'将停止该账号的识别、生成和分享，删除私有照片及非财务个人记录。支付对账记录依法保留；公共物种插画不受影响。本机数据可另行清除。',confirmText:'继续',success:r=>{if(!r.confirm)return;wx.showModal({title:'再次确认云端清除',content:'此操作不可撤销。清理可能分批完成，未完成时请回来继续；不会仅清空本机就宣称成功。',confirmText:'确认申请',success:async final=>{if(final.confirm)await this.runCloudErasure('requestErasure')}})}})},
@@ -11,7 +12,8 @@ Page({
  placeVisibility(e){try{wx.setStorageSync('nature.showLocation',!!e.detail.value);this.setData({showLocation:!!e.detail.value})}catch(e){wx.showToast({title:'设置未保存',icon:'none'})}},
  copyFeedback(){wx.setClipboardData({data:'去大自然里 · 本地反馈模板\n版本：'+this.data.version+'\n问题描述：\n操作步骤：\n预期效果：\n请自行补充后发送给开发者；不要填写照片、精确位置、密码或密钥。'})},
  data:{section:'privacy',version:'0.1.0',showLocation:false,count:0,species:0,days:0,reduce:false,drafts:[],recent:[],notes:[],cleanup:0,clearing:false,exportPath:'',exportBusy:false},
- onShow(){this.setData({recognitionConsent:hasConsent(wx)});this.refresh();if(!['membership','friends'].includes(this.data.section)&&app.syncCards)app.syncCards().then(()=>this.refresh()).catch(()=>{})},
+ onShow(){this.setData({recognitionConsent:hasConsent(wx),recoveryConsent:recoveryConsent.allowed(wx)});this.refresh()},
+ async recoveryConsentChange(e){const accepted=!!e.detail.value;this.setData({recoveryBusy:true,recoveryMessage:'',recoveryConsent:false});try{await recoveryConsent.setRecoveryConsent(wx,accepted);this.setData({recoveryConsent:recoveryConsent.allowed(wx),recoveryMessage:accepted?'已开启，仅恢复本人已保存云端卡片。':'已关闭后续恢复；云端记录仍保留，可另行删除或申请账号清除。'})}catch(e){this.setData({recoveryConsent:recoveryConsent.allowed(wx),recoveryMessage:accepted?'授权未保存，尚未开启，请检查网络或本机空间。':'本机已停止恢复，云端撤销尚未确认；联网后会重试，请不要清除本机设置。'})}finally{this.setData({recoveryBusy:false})}},
  recognitionConsentChange(e){try{setConsent(!!e.detail.value,wx);this.setData({recognitionConsent:!!e.detail.value})}catch(e){wx.showToast({title:'设置未保存',icon:'none'})}},
  refresh(){const cards=app.getCards().filter(c=>c&&c.kind!=='example'&&!c.sample).map(c=>app.decorate(c)).filter(Boolean),cleanup=app.getCleanup().length;this.setData({showLocation:wx.getStorageSync('nature.showLocation')===true,count:cards.length,species:new Set(cards.map(c=>c.speciesId)).size,days:new Set(cards.filter(c=>c.createdAt).map(c=>c.date)).size,reduce:!!wx.getStorageSync('nature.reduceMotion'),drafts:app.getDrafts().slice().reverse().map(d=>({id:d.id,photoPath:d.photoPath,status:d.pendingCard?'待入册卡片':d.mode==='unknown'?'待确认物种':'待鉴别照片'})),recent:cards.slice().reverse().slice(0,12),notes:cards.map(c=>({id:c.id,zh:c.zh,text:wx.getStorageSync('nature.note.'+c.id)||''})).filter(n=>n.text),cleanup,cleanupState:cleanup?'等待清理':'无待清理文件'})},
  motion(e){try{wx.setStorageSync('nature.reduceMotion',e.detail.value);this.setData({reduce:e.detail.value})}catch(e){wx.showToast({title:'设置未保存',icon:'none'})}},

@@ -1,12 +1,12 @@
 const app=getApp()
 const cardExport=require('../../lib/card-export')
 const {decodeAsset}=require('../../lib/asset-decode')
-const {readableImage,readableFront}=require('../../lib/card-image')
+const {readableImage,readableFront,readableOriginal}=require('../../lib/card-image')
 const {exportFailure}=require('../../lib/export-error')
 const {localIllustrationFor}=require('../../lib/species-illustration')
 const {locationFreeCard}=require('../../lib/collection-model')
 async function decodeBack(canvas,card,current){
- if(card.schemaVersion===2){const original=card.originalPhotoAsset||{};let info;try{info=await readableImage(wx,original.localPath||original.fileId)}catch(e){if(!original.fileId||original.fileId===original.localPath)throw e;info=await readableImage(wx,original.fileId)}return decodeAsset(canvas,info.path,current)}
+ if(card.schemaVersion===2){const info=await readableOriginal(wx,card);return decodeAsset(canvas,info.path,current)}
  let src=card.backAssetFileId||cardExport.illustrationFor(card.speciesId);
  try{const info=await readableImage(wx,src);return await decodeAsset(canvas,info.path,current)}catch(e){if(card.backAssetFileId)throw e;return decodeAsset(canvas,localIllustrationFor(card.speciesId),current).catch(()=>({image:null}))}
 }
