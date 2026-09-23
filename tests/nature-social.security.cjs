@@ -89,7 +89,16 @@ test('rejects forged identity fields and does not trust a local card payload', a
 
 test('creates a mutual friendship without returning either OPENID', async () => {
   const f = fixture();
-  const relationshipId = await connect(f);
+  const invite = await f.call('openid_alice', 'createInvite');
+  const payload = { inviteCode: invite.inviteCode, idempotencyKey: 'accept_1234567890abcdef' };
+  const first = await f.call('openid_bob', 'acceptInvite', payload);
+  const replay = await f.call('openid_bob', 'acceptInvite', payload);
+  assert.deepEqual(replay, first);
+  assert.deepEqual(await f.call('openid_bob', 'acceptInvite', {
+    inviteCode: invite.inviteCode,
+    idempotencyKey: 'accept_different_abcdef',
+  }), { status: 'failed', code: 'invite_used' });
+  const relationshipId = first.relationshipId;
   const alice = await f.call('openid_alice', 'listFriends');
   const bob = await f.call('openid_bob', 'listFriends');
   assert.equal(alice.friends[0].relationshipId, relationshipId);
@@ -201,6 +210,23 @@ test('revocation and blocking immediately remove access and prevent new copy req
     inviteCode: blockedInvite.inviteCode,
     idempotencyKey: 'blocked_accept_1234567',
   }), { status: 'failed', code: 'relationship_blocked' });
+});
+
+test('revoking one species share hides it and prevents approval of its pending request', async () => {
+  const f = fixture();
+  const { shareId } = await registerAndShare(f);
+  const request = await f.call('openid_bob', 'requestCopy', {
+    shareId,
+    idempotencyKey: 'request_before_revoke_1',
+  });
+  assert.equal(request.status, 'ready');
+  assert.equal((await f.call('openid_alice', 'revokeSpeciesShare', { shareId })).status, 'ready');
+  assert.equal((await f.call('openid_bob', 'listSharedSpecies')).species.length, 0);
+  assert.equal((await f.call('openid_alice', 'listCopyRequests')).requests.length, 0);
+  assert.deepEqual(await f.call('openid_alice', 'approveCopy', {
+    copyRequestId: request.copyRequestId,
+    idempotencyKey: 'approve_after_revoke_1',
+  }), { status: 'failed', code: 'share_inactive' });
 });
 
 test('expires invitations and copy requests and makes rejection idempotent', async () => {
