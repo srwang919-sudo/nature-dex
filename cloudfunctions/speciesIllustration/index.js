@@ -10,8 +10,9 @@ async function main(event={},deps={}){
  if(event.confirmed!==true)return fail('confirmation_required');
  if(['photoFileId','image','images','image_urls','prompt','owner','reference'].some(k=>Object.prototype.hasOwnProperty.call(event,k)))return fail('invalid_request');
  let species;try{species=trustedSpecies(event.speciesId)}catch(e){return fail('invalid_species')}
- const name=species.name,styleVersion=PUBLIC_STYLE_VERSION,cacheKey=createHash('sha256').update(styleVersion+'|'+species.id).digest('hex'),db=api.database(),doc=db.collection('speciesWatercolors').doc(cacheKey);
+ const name=species.name,styleVersion=PUBLIC_STYLE_VERSION,cacheKey=createHash('sha256').update(styleVersion+'|'+species.id).digest('hex'),raw=api.database(),db=require('./account-gate').guardDatabase(raw,api.getWXContext().OPENID),doc=raw.collection('speciesWatercolors').doc(cacheKey);
  try{
+  await db.assertActive();
   let cache;try{cache=(await doc.get()).data}catch(e){if(!/not exist|not found|DATABASE_DOCUMENT_NOT_EXIST/i.test(e.message||e.errMsg||''))throw e}
   if(cache?.status==='ready')return {status:'ready',cacheKey,assetFileId:cache.assetFileId,styleVersion};
   if(event.action==='status')return {status:cache?.status||'missing',cacheKey,code:cache?.code||''};
@@ -33,6 +34,6 @@ async function main(event={},deps={}){
    try{await doc.update({data:{status:'failed',code,leaseExpiresAt:0}})}catch(ignore){return fail('watercolor_cache_write_failed')}
    return fail(code)
   }
- }catch(e){return fail(['daily_limit','quota_unavailable'].includes(e.message)?e.message:'service_unavailable')}
+ }catch(e){return fail(['daily_limit','quota_unavailable','account_erasing'].includes(e.message)?e.message:'service_unavailable')}
 }
 module.exports={main};

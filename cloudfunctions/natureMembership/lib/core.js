@@ -214,6 +214,7 @@ function createMembershipService({ repo, gateway, config, now = Date.now } = {})
     const id = orderIdFor(openid, event.idempotencyKey);
     const attempt = 1;
     const reserved = await repo.runTransaction(async tx => {
+      if(await tx.get('accountPrivacy',sha256(openid)))fail('account_erasing');
       const current = await tx.get(COLLECTIONS.orders, id);
       if (current) {
         if (current.openid !== openid || current.planId !== product.id) fail('idempotency_conflict', 'Idempotency key was used for another order', 409);
@@ -249,6 +250,7 @@ function createMembershipService({ repo, gateway, config, now = Date.now } = {})
     }
 
     const timeExpire = toRfc3339(now() + 15 * 60 * 1000);
+    if(await repo.get('accountPrivacy',sha256(openid)))fail('account_erasing');
     let prepay;
     try {
       prepay = await gateway.createJsapiOrder({ ...order, id, timeExpire });
@@ -267,6 +269,8 @@ function createMembershipService({ repo, gateway, config, now = Date.now } = {})
       updatedAt: now(),
     };
     await repo.put(COLLECTIONS.orders, id, order);
+    // Retain authoritative financial reconciliation data, but never return a new checkout after erasure.
+    if(await repo.get('accountPrivacy',sha256(openid)))fail('account_erasing');
     return { status: 'ready', code: 'payment_ready', order: publicOrder({ ...order, _id: id }), requestPayment: signRequestPayment(config, prepay.prepay_id, now) };
   }
 

@@ -26,9 +26,10 @@ async function main(event={},deps={}){
  if(!/^[a-zA-Z0-9_-]{1,100}$/.test(event.observationId||''))return fail('invalid_request');
  const api=deps.cloud||cloud;if(!api)return fail('runtime_unavailable');
  let openid;try{openid=api.getWXContext().OPENID}catch(e){return fail('unauthenticated')}if(!openid)return fail('unauthenticated');
+ let db;try{db=require('./account-gate').guardDatabase(api.database(),openid);await db.assertActive()}catch(e){return fail(e.message==='account_erasing'?'account_erasing':'asset_registry')}
  if(!process.env.BAIDU_API_KEY||!process.env.BAIDU_SECRET_KEY)return fail('not_configured');
  const cloudPath='observations/'+openid+'/'+event.observationId+'.jpg';
- if(event.action==='upload_ticket'){try{return await require('./upload-intent').prepareUpload(api.database(),{owner:openid,observationId:event.observationId,cloudPath},deps.getUploadMetadata,tx=>require('./quota').reserveQuota(tx,openid,'upload'))}catch(e){return fail(['daily_limit','cancelled'].includes(e.message)?e.message:'asset_registry')}}
+ if(event.action==='upload_ticket'){try{return await require('./upload-intent').prepareUpload(db,{owner:openid,observationId:event.observationId,cloudPath},deps.getUploadMetadata,tx=>require('./quota').reserveQuota(tx,openid,'upload'))}catch(e){return fail(['daily_limit','cancelled'].includes(e.message)?e.message:'asset_registry')}}
  if(!event.photoFileId||!event.idempotencyKey)return fail('invalid_request');
  if(!String(event.photoFileId).startsWith('cloud://')||!String(event.photoFileId).endsWith('/'+cloudPath))return fail('forbidden');
  if(event.action==='register_asset'){
@@ -40,7 +41,7 @@ async function main(event={},deps={}){
    registrationStage='asset_registry';
    const id=require('crypto').createHash('sha256').update(openid+'\n'+event.photoFileId).digest('hex');
    const deletionId=require('crypto').createHash('sha256').update(openid+'|'+event.observationId).digest('hex');
-   await api.database().runTransaction(async tx=>{
+   await db.runTransaction(async tx=>{
     let tombstone;try{tombstone=(await tx.collection('observationDeletions').doc(deletionId).get()).data}catch(e){const message=e.message||e.errMsg||'';if(/collection/i.test(message)||!/not exist|not found|DATABASE_DOCUMENT_NOT_EXIST/i.test(message))throw e}
     if(tombstone)throw Error('observation_deleted');
     await tx.collection('assets').doc(id).set({data:{_openid:openid,fileId:event.photoFileId,cloudPath,observationId:event.observationId,purpose:'recognition',registeredAt:Date.now()}});
@@ -50,11 +51,11 @@ async function main(event={},deps={}){
  }
  let stage='asset_registry',claimed=false;
  const receiptInput={owner:openid,observationId:event.observationId,photoFileId:event.photoFileId};
- const finish=result=>completeReceipt(api.database(),receiptInput,result);
+ const finish=result=>completeReceipt(db,receiptInput,result);
  try{
-  const owner=await api.database().collection('assets').where({_openid:openid,fileId:event.photoFileId,observationId:event.observationId,purpose:'recognition'}).get();
+  const owner=await db.collection('assets').where({_openid:openid,fileId:event.photoFileId,observationId:event.observationId,purpose:'recognition'}).get();
   if(!owner.data||!owner.data.length)return fail('forbidden');
-  stage='quota_unavailable';const receipt=await claimReceipt(api.database(),receiptInput,tx=>require('./quota').reserveQuota(tx,openid,'recognition'));
+  stage='quota_unavailable';const receipt=await claimReceipt(db,receiptInput,tx=>require('./quota').reserveQuota(tx,openid,'recognition'));
   if(!receipt.claimed)return receipt.result;claimed=true;
   stage='photo_download';const file=await api.downloadFile({fileID:event.photoFileId});
   if(!file.fileContent||file.fileContent.length>4*1024*1024)return await finish(fail('photo_unavailable'));
@@ -73,7 +74,7 @@ async function main(event={},deps={}){
   if(!rows.length&&warnings.length)return await finish(warnings[0]);
   const result=mergeCandidateRoutes(responses,normalizeRecognition);
   return await finish({...result,contractVersion:2});
- }catch(e){const result=fail(['daily_limit','cancelled','receipt_conflict'].includes(e.message)?e.message:/timeout/i.test(e.message||'')?'timeout':stage);if(claimed){try{return await finish(result)}catch(ignore){}}return result}
+ }catch(e){const result=fail(['daily_limit','cancelled','receipt_conflict','account_erasing'].includes(e.message)?e.message:/timeout/i.test(e.message||'')?'timeout':stage);if(claimed){try{return await finish(result)}catch(ignore){}}return result}
 }
 function baiduErrorCode(n){if(n===216101)return 'provider_missing_parameter';if(n===6)return 'provider_permission';if(n===17||n===19)return 'provider_quota';if(n===18)return 'provider_rate_limit';if(n===110||n===111)return 'provider_token';if([216200,216201,216202,216203].includes(n))return 'provider_image';return 'provider_error'}
 module.exports={main,normalizeRecognition,request,baiduErrorCode,imageForm};

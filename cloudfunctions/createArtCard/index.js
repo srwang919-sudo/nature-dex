@@ -13,8 +13,9 @@ async function main(event={},deps={}){
  const owner=api.getWXContext().OPENID;if(!owner)return fail('unauthenticated');
  if(!valid(event.operationId))return fail('invalid_request');
  if(Object.prototype.hasOwnProperty.call(event,'prompt'))return fail('invalid_request');
- const id=createHash('sha256').update(owner+'|'+event.operationId).digest('hex'),db=api.database(),doc=db.collection('artOperations').doc(id);
+ const id=createHash('sha256').update(owner+'|'+event.operationId).digest('hex'),db=require('./account-gate').guardDatabase(api.database(),owner),doc=db.collection('artOperations').doc(id);
  try{
+  await db.assertActive();
   let current;try{current=(await doc.get()).data}catch(e){if(!/not exist|not found|DATABASE_DOCUMENT_NOT_EXIST/i.test(e.message||e.errMsg||''))throw e}
   if(event.action==='status')return current&&current.owner===owner?{status:current.status,assetFileId:current.assetFileId||'',code:current.code||''}:fail('not_found');
   if(event.action!=='submit'||event.consent!==true||event.confirmed!==true)return fail('confirmation_required');
@@ -48,7 +49,7 @@ async function main(event={},deps={}){
    const published=await db.runTransaction(async tx=>{const entry=tx.collection('artOperations').doc(id),live=(await entry.get()).data;if(await deleted(tx)||live?.status==='cancelled')return false;await entry.update({data:{status:'ready',assetFileId,styleVersion,leaseExpiresAt:0}});await tx.collection('trustedObservations').doc(deletionId).set({data:attestation(owner,event,candidate)});return true});
    if(!published){await doc.update({data:{status:'cancelled',assetFileId}});const removed=await api.deleteFile({fileList:[assetFileId]});if(removed.fileList?.[0]?.status===0)await doc.update({data:{assetFileId:'',leaseExpiresAt:0}});return fail('cancelled')}
    return {status:'ready',assetFileId};
-  }catch(e){await db.runTransaction(async tx=>{const entry=tx.collection('artOperations').doc(id),live=(await entry.get()).data;await entry.update({data:{status:live?.status==='cancelled'?'cancelled':'failed',code:'generation_failed',leaseExpiresAt:0,...(generatedFileId?{assetFileId:generatedFileId}:{})}})});return fail('generation_failed')}
- }catch(e){return fail(['daily_limit','quota_unavailable','candidate_unverified'].includes(e.message)?e.message:'service_unavailable')}
+  }catch(e){if(e.message==='account_erasing'&&generatedFileId){await require('./late-art').discardLateArt(api,id,owner,generatedFileId);return fail('account_erasing')}await db.runTransaction(async tx=>{const entry=tx.collection('artOperations').doc(id),live=(await entry.get()).data;await entry.update({data:{status:live?.status==='cancelled'?'cancelled':'failed',code:'generation_failed',leaseExpiresAt:0,...(generatedFileId?{assetFileId:generatedFileId}:{})}})});return fail('generation_failed')}
+ }catch(e){return fail(['daily_limit','quota_unavailable','candidate_unverified','account_erasing'].includes(e.message)?e.message:'service_unavailable')}
 }
 module.exports={main};

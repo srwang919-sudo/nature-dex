@@ -102,7 +102,7 @@ function requireActive(friendship, caller) {
 
 function ready(code, values = {}) { return { status: 'ready', code, ...values }; }
 
-function createSocialService({ repo, now = Date.now, randomToken = () => randomBytes(24).toString('base64url') } = {}) {
+function createSocialService({ repo, now = Date.now, randomToken = () => randomBytes(24).toString('base64url'), accountGuarded=false } = {}) {
   if (!repo) throw new TypeError('repo is required');
 
   async function sourceStillVerified(store, speciesCardId) {
@@ -379,10 +379,11 @@ function createSocialService({ repo, now = Date.now, randomToken = () => randomB
     async execute(openid, event = {}) {
       if (typeof openid !== 'string' || !openid) return { status: 'failed', code: 'unauthenticated' };
       try {
+        if(!accountGuarded){const guarded=require('./account-gate').accountGate(repo,openid);await guarded.assertActive();return await createSocialService({repo:guarded,now,randomToken,accountGuarded:true}).execute(openid,event)}
         if (typeof event.action !== 'string' || !actions[event.action]) deny('invalid_request');
         return await actions[event.action](openid, event);
       } catch (error) {
-        if (error instanceof DomainError) return { status: 'failed', code: error.code };
+        if (error instanceof DomainError || error.code==='account_erasing') return { status: 'failed', code: error.code };
         throw error;
       }
     },
