@@ -1,0 +1,7 @@
+{
+  "name": "nature-manage-privacy",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {"wx-server-sdk":"4.0.2"},
+  "overrides": {"axios":"0.33.0","lodash.set":"npm:lodash@4.18.1","lodash.unset":"npm:lodash@4.18.1"}
+}
