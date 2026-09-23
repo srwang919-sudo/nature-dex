@@ -215,7 +215,7 @@ function createMembershipService({ repo, gateway, config, now = Date.now } = {})
     const attempt = 1;
     const reserved = await repo.runTransaction(async tx => {
       const guard=await tx.get('accountPrivacy',sha256(openid));if(guard&&guard.status!=='active')fail('account_erasing');
-      await tx.put('accountPrivacy',sha256(openid),{owner:openid,status:'active',generation:(guard?.generation||0)+1});
+      await tx.put('accountPrivacy',sha256(openid),{status:'active',generation:(guard?.generation||0)+1});
       const current = await tx.get(COLLECTIONS.orders, id);
       if (current) {
         if (current.openid !== openid || current.planId !== product.id) fail('idempotency_conflict', 'Idempotency key was used for another order', 409);

@@ -5,14 +5,14 @@ async function discardLateArt(api,id,owner,fileId){
   const doc=tx.collection('artOperations').doc(id);let row;
   try{row=(await doc.get()).data}catch(e){if(!/not found|not exist|DATABASE_DOCUMENT_NOT_EXIST/i.test(e.message||''))throw e}
   if(row&&row.owner!==owner)throw Error('forbidden');
+  const key=require('crypto').createHash('sha256').update(owner).digest('hex');
+  const marker=tx.collection('accountPrivacy').doc(key),account=(await marker.get()).data;
+  if(!account||account.status==='active')throw Error('forbidden');
   if(row)await doc.update({data});
   else{
-   const key=require('crypto').createHash('sha256').update(owner).digest('hex');
-   const marker=tx.collection('accountPrivacy').doc(key),account=(await marker.get()).data;
-   if(!account||account.owner!==owner)throw Error('forbidden');
    await doc.set({data:{owner,...data}});
-   await marker.update({data:{status:'erasing',phase:'private_operations',updatedAt:Date.now()}});
   }
+  await marker.update({data:{status:'erasing',phase:'private_operations',generation:(account.generation||0)+1,updatedAt:Date.now()}});
  });
  await update({status:'cancelled',code:'account_erasing',assetFileId:fileId,leaseExpiresAt:0});
  try{

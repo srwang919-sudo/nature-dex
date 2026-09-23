@@ -35,6 +35,9 @@ async function main(event={},deps={}){
   const lease=Date.now()+180000;
   const claimed=await db.runTransaction(async tx=>{
    if(await deleted(tx))throw Error('cancelled');
+   await confirmedCandidate(tx,owner,event);
+   const receipt=tx.collection('recognitionReceipts').doc(deletionId),receiptRow=(await receipt.get()).data;
+   await receipt.update({data:{generation:(receiptRow.generation||0)+1}});
    const entry=tx.collection('artOperations').doc(id);let old;try{old=(await entry.get()).data}catch(e){if(!/not exist|not found|DATABASE_DOCUMENT_NOT_EXIST/i.test(e.message||e.errMsg||''))throw e}
    if(old&&(old.status==='ready'||old.leaseExpiresAt>Date.now()&&old.status==='processing'))return false;
    await reserveQuota(tx,owner,'art');

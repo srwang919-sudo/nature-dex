@@ -5,7 +5,7 @@ async function assertActive(db,owner,lock=false){
  const doc=db.collection('accountPrivacy').doc(accountKey(owner));let row;
  try{row=(await doc.get()).data}catch(e){const message=e.message||e.errMsg||'';if(/collection/i.test(message)||!/not exist|not found|DATABASE_DOCUMENT_NOT_EXIST/i.test(message))throw e}
  if(row&&row.status!=='active')throw Error('account_erasing');
- if(lock)await doc.set({data:{owner,status:'active',generation:(row?.generation||0)+1}});
+ if(lock)await doc.set({data:{status:'active',generation:(row?.generation||0)+1}});
 }
 function guardDatabase(db,owner){
  const transaction=work=>db.runTransaction(async tx=>{await assertActive(tx,owner,true);return work(tx)});

@@ -3,7 +3,7 @@ const key=owner=>createHash('sha256').update(owner).digest('hex');
 const absent=e=>!/collection/i.test(e.message||'')&&/not found|not exist|DATABASE_DOCUMENT_NOT_EXIST/i.test(e.message||'');
 // Fixed owner-derived fields only. Finance and public watercolor are deliberately absent.
 const PERSONAL=Object.freeze([
- ['natureFriendInvites','issuer'],['natureFriendEdges','owner'],['natureSpeciesCards','owner'],
+ ['natureFriendInvites','issuer'],['natureFriendInvites','recipient'],['natureFriendEdges','owner'],['natureSpeciesCards','owner'],
  ['natureSpeciesShares','owner'],['natureSpeciesShares','recipient'],['natureCopyRequests','owner'],
  ['natureCopyRequests','requester'],['natureCopySlots','requester'],['natureMemorialCopies','recipient'],
  ['natureMemorialCopies','sourceOwner'],['recognitionReceipts','owner'],['trustedObservations','owner']
@@ -13,7 +13,7 @@ function createPrivacyService({db,deleteObservation,deletePrivateArt,now=Date.no
  const rows=async(c,q)=>(await db.collection(c).where(q).limit(20).get()).data||[];
  const projection=row=>({status:row.status==='erased'?'erased':row.status==='failed'?'failed':'processing',phase:row.phase||'private_assets',code:row.code||'',updatedAt:row.updatedAt});
  async function continueJob(owner,id){
-  const marker=db.collection('accountPrivacy').doc(id),job=await read(id);if(!job)return {status:'failed',code:'erasure_not_requested'};
+  const marker=db.collection('accountPrivacy').doc(id),job=await read(id);if(!job||job.status==='active')return {status:'failed',code:'erasure_not_requested'};
   if(job.status==='erased')return projection(job);
   try{
    const assets=await rows('assets',{_openid:owner});
@@ -43,6 +43,7 @@ function createPrivacyService({db,deleteObservation,deletePrivateArt,now=Date.no
    for(const edge of edges){if(edge.relationshipId){
     const related=await rows('natureFriendEdges',{relationshipId:edge.relationshipId});
     for(const row of related)await db.collection('natureFriendEdges').doc(row._id).remove();
+    if(related.length===20){await db.collection('natureFriendEdges').doc(edge._id).set({data:{owner,relationshipId:edge.relationshipId}});return {status:'processing',phase:'relationships'}}
     await db.collection('natureFriendships').doc(edge.relationshipId).remove();
    }}
    for(const [collection,field] of PERSONAL){
@@ -50,11 +51,12 @@ function createPrivacyService({db,deleteObservation,deletePrivateArt,now=Date.no
     if(found.length){for(const row of found)await db.collection(collection).doc(row._id).remove();await marker.update({data:{status:'erasing',phase:'personal_records',code:'',updatedAt:now()}});return {status:'processing',phase:'personal_records'}}
    }
    // Marker retained to prevent account resurrection. Financial data still reconciles separately.
+   const fence=await read(id),pendingAssets=await rows('assets',{_openid:owner}),pendingArt=await rows('artOperations',{owner});
    const complete=await db.runTransaction(async tx=>{
-    const pendingAssets=(await tx.collection('assets').where({_openid:owner}).limit(1).get()).data||[];
-    const pendingArt=(await tx.collection('artOperations').where({owner}).limit(1).get()).data||[];
-    const result={status:pendingAssets.length||pendingArt.length?'erasing':'erased',phase:pendingAssets.length||pendingArt.length?'private_assets':'complete',code:'',updatedAt:now()};
-    await tx.collection('accountPrivacy').doc(id).update({data:result});return result;
+    const doc=tx.collection('accountPrivacy').doc(id),latest=(await doc.get()).data;
+    const pending=pendingAssets.length||pendingArt.length||(latest.generation||0)!==(fence.generation||0);
+    const result={status:pending?'erasing':'erased',phase:pending?'private_assets':'complete',code:'',generation:(latest.generation||0)+1,updatedAt:now()};
+    await doc.update({data:result});return result;
    });return projection(complete);
   }catch(e){const code=['unregistered_asset','generation_pending','private_delete_failed','private_art_remaining'].includes(e.message)?e.message:'erasure_unavailable';await marker.update({data:{status:'failed',code,updatedAt:now()}});return {status:'failed',code,retryable:true}}
  }
@@ -64,7 +66,7 @@ function createPrivacyService({db,deleteObservation,deletePrivateArt,now=Date.no
   const id=key(owner);
   try{
    if(event.action==='requestErasure'){
-    await db.runTransaction(async tx=>{const doc=tx.collection('accountPrivacy').doc(id);let old;try{old=(await doc.get()).data}catch(e){if(!absent(e))throw e}if(!old||old.status==='active')await doc.set({data:{owner,status:'erasing',generation:(old?.generation||0)+1,phase:'private_assets',requestedAt:now(),updatedAt:now()}})});
+    await db.runTransaction(async tx=>{const doc=tx.collection('accountPrivacy').doc(id);let old;try{old=(await doc.get()).data}catch(e){if(!absent(e))throw e}if(!old||old.status==='active')await doc.set({data:{status:'erasing',generation:(old?.generation||0)+1,phase:'private_assets',requestedAt:now(),updatedAt:now()}})});
     return projection(await read(id));
    }
    if(event.action==='status'){const job=await read(id);return job&&job.status!=='active'?projection(job):{status:'active'}}
