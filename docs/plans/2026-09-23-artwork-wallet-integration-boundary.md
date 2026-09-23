@@ -6,6 +6,7 @@ The new repository and wallet primitives are not yet exposed by production entry
 
 - `officialArtwork`: only approved + is_official entries selected through a canonical-species index. Never reads legacy speciesWatercolors.ready.
 - `reviewArtwork`: a server-controlled artworkReviewers hashed-identity document must be active; its generation is written to fence role revocation. Writes revisioned review audit events with reviewer hash, decision and time; no image bytes, raw prompt, notes or location.
+- Review permits platform_generated and user_first_unlock species-level candidates, never custom_user_generated photo derivatives. Approval requires a separately published server derivative, removes owner/observationId, preserves nonpersonal source classification, and marks contributor anonymous.
 - `reserveCreation` / `settleCreation`: lifetime 10 bonus, UTC monthly free 5 / authoritative ACTIVE membership 30; idempotent operation and attempt IDs; reservation and usage ledger; commit/release and rejection of stale/expired commit. Caller must run these in account-fenced transactions.
 
 ## Necessary next integration work, not completed
