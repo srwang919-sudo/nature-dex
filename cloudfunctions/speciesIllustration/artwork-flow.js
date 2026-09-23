@@ -4,6 +4,7 @@ const {buildPublicSpeciesPrompt}=require('./prompt');
 const hash=x=>createHash('sha256').update(x).digest('hex');
 const read=async d=>{try{return (await d.get()).data}catch(e){if(!/collection/i.test(e.message||'')&&/DATABASE_DOCUMENT_NOT_EXIST|not found|not exist/i.test(e.message||''))return null;throw e}};
 async function observationFence(tx,owner,observationId){const key=hash(owner+'|'+observationId);if(await read(tx.collection('observationDeletions').doc(key)))throw Error('cancelled');const doc=tx.collection('trustedObservations').doc(key),old=await read(doc);await doc.set({data:{...old,owner,observationId,status:old?.status||'pending',generation:(old?.generation||0)+1}})}
+async function savedCandidateConsent(db,owner,art,lock=false){if(art.status!=='candidate')return;const obs=await read(db.collection('natureObservations').doc(hash(owner+'|'+art.observationId)));if(obs?.status!=='saved')return;const doc=db.collection('cardRecoveryConsents').doc(hash(owner)),grant=await read(doc);if(grant?.owner!==owner||grant.version!==1||grant.accepted!==true)throw Error('sync_consent_required');if(lock)await doc.set({data:{...grant,generation:(grant.generation||0)+1}})}
 async function transaction(db,work){for(let i=0;;i++)try{return await db.runTransaction(work)}catch(e){if(i>=3||![e.code,e.errCode,e.message].includes('DATABASE_TRANSACTION_CONFLICT'))throw e;await new Promise(r=>setTimeout(r,10*(i+1)))}}
 async function artworkFlow(api,event,deps={}){
  const owner=api.getWXContext().OPENID,db=api.database(),now=deps.now||Date.now;
@@ -13,8 +14,9 @@ async function artworkFlow(api,event,deps={}){
   const art=await read(db.collection('speciesArtworks').doc(event.artworkId));
   if(!art||!(art.status==='approved'&&art.is_official===true||art.status==='candidate'&&art.owner===owner))throw Error('artwork_forbidden');
   if(art.status==='candidate'&&await read(db.collection('observationDeletions').doc(hash(owner+'|'+art.observationId))))throw Error('artwork_forbidden');
+  await savedCandidateConsent(db,owner,art);
   const urls=await api.getTempFileURL({fileList:[{fileID:art.assetFileId,maxAge:600}]});const url=urls.fileList?.[0]?.tempFileURL;if(!url?.startsWith('https://'))throw Error('artwork_resource_unavailable');
-  await transaction(db,async tx=>{await assertActive(tx,owner,true);const current=await read(tx.collection('speciesArtworks').doc(event.artworkId));if(!current||current.assetFileId!==art.assetFileId||!(current.status==='approved'&&current.is_official===true||current.status==='candidate'&&current.owner===owner))throw Error('artwork_forbidden');if(current.status==='candidate')await observationFence(tx,owner,current.observationId)});
+  await transaction(db,async tx=>{await assertActive(tx,owner,true);const current=await read(tx.collection('speciesArtworks').doc(event.artworkId));if(!current||current.assetFileId!==art.assetFileId||!(current.status==='approved'&&current.is_official===true||current.status==='candidate'&&current.owner===owner))throw Error('artwork_forbidden');if(current.status==='candidate'){await observationFence(tx,owner,current.observationId);await savedCandidateConsent(tx,owner,current,true)}});
   return {status:'ready',url,expiresAt:now()+600000};
  }
  if(!/^[a-zA-Z0-9_-]{1,100}$/.test(event.operationId||''))throw Error('invalid_request');

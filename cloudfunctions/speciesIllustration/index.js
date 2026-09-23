@@ -1,5 +1,5 @@
 let cloud;try{cloud=require('./sdk');cloud.init({env:cloud.DYNAMIC_CURRENT_ENV,timeout:150000})}catch(e){}
-const safe=new Set(['invalid_request','unauthenticated','account_erasing','candidate_unverified','cancelled','discovery_baseline_unavailable','creation_quota_exhausted','art_consent_required','review_forbidden','artwork_invalid','artwork_forbidden','artwork_resource_unavailable','operator_required']);
+const safe=new Set(['invalid_request','unauthenticated','account_erasing','candidate_unverified','cancelled','discovery_baseline_unavailable','creation_quota_exhausted','art_consent_required','review_forbidden','artwork_invalid','artwork_forbidden','artwork_resource_unavailable','operator_required','sync_consent_required']);
 async function main(event={},deps={}){
  const api=deps.cloud||cloud;if(!api)return {status:'failed',code:'runtime_unavailable'};
  try{
