@@ -9,7 +9,7 @@ async function main(event={},deps={}){
  const db=api.database(),key=createHash('sha256').update(owner+'|'+observationId).digest('hex'),marker=db.collection('observationDeletions').doc(key);
  try{
   // A durable tombstone serializes registration, generation claims and publishing.
-  const alreadyDeleted=await db.runTransaction(async tx=>{const d=tx.collection('observationDeletions').doc(key);let old;try{old=(await d.get()).data}catch(e){if(!absent(e))throw e}if(!old)await d.set({data:{owner,observationId,status:'deleting',createdAt:Date.now()}});await tx.collection('trustedObservations').doc(key).set({data:{owner,observationId,status:'revoked',revokedAt:Date.now(),attestationVersion:1}});return old?.status==='deleted'});
+  const alreadyDeleted=await db.runTransaction(async tx=>{if(deps.requireUnfinished){let observation;try{observation=(await tx.collection('natureObservations').doc(key).get()).data}catch(e){if(!absent(e))throw e}if(observation?.owner===owner&&observation.status==='saved')throw Error('observation_saved')}const d=tx.collection('observationDeletions').doc(key);let old;try{old=(await d.get()).data}catch(e){if(!absent(e))throw e}if(!old)await d.set({data:{owner,observationId,status:'deleting',createdAt:Date.now()}});await tx.collection('trustedObservations').doc(key).set({data:{owner,observationId,status:'revoked',revokedAt:Date.now(),attestationVersion:1}});return old?.status==='deleted'});
   await require('./domain').revokeDomain(db,owner,observationId);
   const rows=(await db.collection('assets').where({_openid:owner,observationId,purpose:'recognition'}).limit(100).get()).data;
   // Missing registry cannot prove that a private source file is absent.
@@ -40,12 +40,12 @@ async function main(event={},deps={}){
   // derivative has no owner/observation binding and is never touched here.
   for(const op of operations)if(op.artworkId){
    await db.runTransaction(async tx=>{const d=tx.collection('speciesArtworks').doc(op.artworkId);let art;try{art=(await d.get()).data}catch(e){if(!absent(e))throw e}
-    if(art?.owner===owner&&art.observationId===observationId&&art.status==='candidate')await d.remove();
+    if(art?.owner===owner&&art.observationId===observationId&&art.status!=='approved')await d.remove();
    });
   }
   await marker.update({data:{status:'deleted',deletedAt:Date.now()}});
   for(const asset of rows)await db.collection('assets').doc(asset._id).remove();
   return {status:'deleted'};
- }catch(e){return fail('cloud_delete_failed')}
+ }catch(e){return e.message==='observation_saved'?{status:'retained'}:fail('cloud_delete_failed')}
 }
 module.exports={main};

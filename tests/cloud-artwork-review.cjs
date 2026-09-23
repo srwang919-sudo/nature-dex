@@ -13,7 +13,8 @@ test('unreviewed and legacy artwork never official; authorized review controls i
  await reviewArtwork(tx,{reviewer:'staff',artworkId:'a',decision:'deprecate',now:2});assert.equal(await officialArtwork(tx,'kingfisher'),null);
  assert.equal([...rows.keys()].filter(k=>k.startsWith('artworkReviewEvents/')).length,2);
  const original=rows.get('speciesArtworks/a');
- rows.set('speciesArtworks/b',{...original,status:'candidate',owner:'creator',source:'user_first_unlock'});
+ rows.set('speciesArtworks/b',{...original,status:'candidate',owner:'creator',observationId:'obs',source:'user_first_unlock'});
+ rows.set('trustedObservations/'+createHash('sha256').update('creator|obs').digest('hex'),{owner:'creator',observationId:'obs',status:'verified'});
  await reviewArtwork(tx,{reviewer:'staff',artworkId:'b',decision:'approve',publishedAssetFileId:'cloud://env/official-artworks/b.jpg',now:3});assert.equal(rows.get('speciesArtworks/b').source,'user_first_unlock');assert.equal(rows.get('speciesArtworks/b').owner,undefined);
  rows.set('speciesArtworks/custom',{...original,status:'candidate',owner:'creator',source:'custom_user_generated'});
  await assert.rejects(reviewArtwork(tx,{reviewer:'staff',artworkId:'custom',decision:'approve',publishedAssetFileId:'cloud://env/official-artworks/custom.jpg',now:4}),/artwork_invalid/);

@@ -16,6 +16,14 @@ async function reviewArtwork(tx,{reviewer,artworkId,decision,publishedAssetFileI
  if(decision==='approve'&&(typeof publishedAssetFileId!=='string'||!publishedAssetFileId.startsWith('cloud://')||!publishedAssetFileId.endsWith('/official-artworks/'+artworkId+'.jpg')))throw Error('published_derivative_required');
  const canonical=trustedSpecies(row.speciesId).id,indexDoc=tx.collection('officialSpeciesArtworks').doc(key(canonical)),index=await read(indexDoc);
  if(decision==='approve'&&row.owner)await require('./account-gate').assertActive(tx,row.owner,true);
+ if(decision==='approve'&&row.source==='user_first_unlock'&&row.owner){
+  if(typeof row.observationId!=='string'||!/^[A-Za-z0-9_-]{1,100}$/.test(row.observationId))throw Error('artwork_invalid');
+  const observationKey=key(row.owner+'|'+row.observationId);
+  if(await read(tx.collection('observationDeletions').doc(observationKey)))throw Error('artwork_invalid');
+  const fence=tx.collection('trustedObservations').doc(observationKey),old=await read(fence);
+  if(!old||old.owner!==row.owner||old.observationId!==row.observationId||!['pending','verified'].includes(old.status))throw Error('artwork_invalid');
+  await fence.set({data:{...old,generation:(old.generation||0)+1}});
+ }
  const revision=(row.reviewRevision||0)+1,status={approve:'approved',reject:'rejected',deprecate:'deprecated'}[decision];
  if(decision==='approve'&&index?.artworkId&&index.artworkId!==artworkId){const oldDoc=tx.collection('speciesArtworks').doc(index.artworkId),old=await read(oldDoc);if(old)await oldDoc.set({data:{...old,is_official:false,is_default:false}})}
  const next={...row,status,is_official:decision==='approve',is_default:decision==='approve',reviewRevision:revision,reviewedAt:now};

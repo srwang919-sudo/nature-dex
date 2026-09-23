@@ -44,6 +44,7 @@ App({
   async removeCard(cardId) {
     const card = this.getCards().find(c => c.id === cardId)
     if (!card) return
+    this._dataEpoch = this.getDataEpoch() + 1;
     const fileId=card.photoFileId||card.originalPhotoAsset?.fileId||card.artAssetFileId||card.artAsset?.fileId
     if(fileId){
       if(!card.photoObservationId||!wx.cloud?.callFunction)throw Error('cloud_delete_unavailable')
@@ -61,7 +62,7 @@ App({
   ensureSpeciesInfo() { return Promise.resolve(null) },
   async generateSubmitFor() { return {status:'disabled',code:'explicit_consent_required'} },
   async pollIllustrations() { return {status:'disabled',code:'explicit_consent_required'} },
-  async syncCards() { return {status:'disabled',code:'sync_consent_required'} },
+  async syncCards() { if(this._cardSync)return this._cardSync;this._cardSync=require('./native/lib/card-recovery').recoverCards(this,wx);try{return await this._cardSync}finally{this._cardSync=null} },
   getSpecies(id) { const s = this.globalData.species[id]; if (s) return s; return this.getSpeciesInfo(id) },
   draftState() {
     const state = wx.getStorageSync('nature.drafts.v4');
@@ -152,7 +153,7 @@ App({
   drawFinish(value) { const n = value === undefined ? Math.random() * 100 : value; return this.finishes[n < 72 ? 0 : n < 92 ? 1 : n < 99 ? 2 : 3] },
   decorate(card) {
     card = require('./native/lib/observation-card').normalizeCard(card);
-    const sp = this.getSpecies(card.speciesId);
+    const sp = this.getSpecies(card.speciesId)||(card.serverCardId&&card.zh?{id:card.speciesId,zh:card.zh,latin:card.latin||''}:null);
     if (!sp) return null;
     const finish = this.finishes.find(f => f.key === card.finishKey) || this.finishes.find(f => f.key === sp.finishKey) || this.finishes[0];
     const protection = { ibis: '国家一级保护动物 · 种群稀少，请勿捕捉、惊扰', pheasant: '国家二级保护动物 · 请勿捕捉、饲养', kingfisher: '三有保护动物 · 请勿捕捉、饲养', egret: '三有保护动物 · 请勿捕捉、饲养', sparrow: '三有保护动物 · 请勿捕捉、饲养' };

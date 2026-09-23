@@ -14,6 +14,7 @@ async function artworkFlow(api,event,deps={}){
   if(!art||!(art.status==='approved'&&art.is_official===true||art.status==='candidate'&&art.owner===owner))throw Error('artwork_forbidden');
   if(art.status==='candidate'&&await read(db.collection('observationDeletions').doc(hash(owner+'|'+art.observationId))))throw Error('artwork_forbidden');
   const urls=await api.getTempFileURL({fileList:[{fileID:art.assetFileId,maxAge:600}]});const url=urls.fileList?.[0]?.tempFileURL;if(!url?.startsWith('https://'))throw Error('artwork_resource_unavailable');
+  await transaction(db,async tx=>{await assertActive(tx,owner,true);const current=await read(tx.collection('speciesArtworks').doc(event.artworkId));if(!current||current.assetFileId!==art.assetFileId||!(current.status==='approved'&&current.is_official===true||current.status==='candidate'&&current.owner===owner))throw Error('artwork_forbidden');if(current.status==='candidate')await observationFence(tx,owner,current.observationId)});
   return {status:'ready',url,expiresAt:now()+600000};
  }
  if(!/^[a-zA-Z0-9_-]{1,100}$/.test(event.operationId||''))throw Error('invalid_request');

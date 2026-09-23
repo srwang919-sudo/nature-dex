@@ -6,7 +6,7 @@ async function drain(wx,protectedIds=new Set()){
  if(!wx.cloud)return entries(wx);
  for(const id of entries(wx)){
   if(protectedIds.has(id))continue;
-  try{const result=await wx.cloud.callFunction({name:'cleanupObservationAssets',data:{observationId:id}});if(result.result?.status==='cleaned')forget(wx,new Set([id]))}catch(e){}
+  try{const result=await wx.cloud.callFunction({name:'cleanupObservationAssets',data:{observationId:id}});if(['cleaned','retained'].includes(result.result?.status))forget(wx,new Set([id]))}catch(e){}
  }
  return entries(wx);
 }
