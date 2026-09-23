@@ -231,6 +231,42 @@ test('revoking one species share hides it and prevents approval of its pending r
   }), { status: 'failed', code: 'share_inactive' });
 });
 
+test('reconnecting never resurrects an old share or old copy request', async () => {
+  const f = fixture();
+  const { relationshipId, shareId, registered } = await registerAndShare(f);
+  const oldRequest = await f.call('openid_bob', 'requestCopy', {
+    shareId,
+    idempotencyKey: 'request_old_generation_1',
+  });
+  assert.equal((await f.call('openid_alice', 'revokeFriend', { relationshipId })).status, 'ready');
+
+  const invite = await f.call('openid_alice', 'createInvite');
+  const reconnected = await f.call('openid_bob', 'acceptInvite', {
+    inviteCode: invite.inviteCode,
+    idempotencyKey: 'accept_new_generation_1',
+  });
+  assert.equal(reconnected.relationshipId, relationshipId);
+  assert.equal((await f.call('openid_bob', 'listSharedSpecies')).species.length, 0);
+  assert.deepEqual(await f.call('openid_alice', 'approveCopy', {
+    copyRequestId: oldRequest.copyRequestId,
+    idempotencyKey: 'approve_old_generation_1',
+  }), { status: 'failed', code: 'share_inactive' });
+
+  const reshared = await f.call('openid_alice', 'setSpeciesPublic', {
+    relationshipId,
+    speciesCardId: registered.speciesCard.id,
+    shared: true,
+  });
+  assert.equal(reshared.shareId, shareId);
+  assert.equal((await f.call('openid_bob', 'listSharedSpecies')).species.length, 1);
+  const newRequest = await f.call('openid_bob', 'requestCopy', {
+    shareId,
+    idempotencyKey: 'request_new_generation_1',
+  });
+  assert.equal(newRequest.status, 'ready');
+  assert.notEqual(newRequest.copyRequestId, oldRequest.copyRequestId);
+});
+
 test('expires invitations and copy requests and makes rejection idempotent', async () => {
   const f = fixture();
   const invite = await f.call('openid_alice', 'createInvite');

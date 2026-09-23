@@ -138,20 +138,22 @@ function createSocialService({ repo, now = Date.now, randomToken = () => randomB
         const invite = await tx.get(COLLECTIONS.invites, inviteId);
         if (!invite) deny('not_found');
         if (invite.issuer === openid) deny('self_invite');
-        if (invite.expiresAt <= now()) deny('expired');
         const relationshipId = keys.relationship(invite.issuer, openid);
         if (invite.status === 'accepted') {
           if (invite.recipient === openid && invite.acceptKeyHash === sha256(event.idempotencyKey)) return ready('friend_connected', { relationshipId });
           deny('invite_used');
         }
+        if (invite.expiresAt <= now()) deny('expired');
         if (invite.status !== 'open') deny('invite_used');
         const current = await tx.get(COLLECTIONS.friendships, relationshipId);
         if (current?.status === 'blocked' || current?.blockedBy?.length) deny('relationship_blocked');
         const connectedAt = now();
+        const generation = current?.status === 'active' ? (current.generation || 1) : (current?.generation || 0) + 1;
         const friendship = {
           members: [invite.issuer, openid].sort(),
           status: 'active',
           blockedBy: [],
+          generation,
           connectedAt,
           updatedAt: connectedAt,
         };
@@ -209,9 +211,10 @@ function createSocialService({ repo, now = Date.now, randomToken = () => randomB
         const updatedAt = now();
         await tx.put(COLLECTIONS.shares, shareId, {
           ...(current || {}), owner: openid, recipient, relationshipId: event.relationshipId,
+          relationshipGeneration: friendship.generation,
           speciesCardId: event.speciesCardId, species: publicSpecies(card.species),
           status: event.shared ? 'active' : 'revoked', updatedAt,
-          createdAt: current?.createdAt || updatedAt,
+          createdAt: current?.relationshipGeneration === friendship.generation ? current.createdAt : updatedAt,
         });
         return ready(event.shared ? 'species_shared' : 'share_revoked', { shareId, shared: event.shared });
       });
@@ -233,7 +236,7 @@ function createSocialService({ repo, now = Date.now, randomToken = () => randomB
       const species = [];
       for (const share of shares) {
         const relationship = await repo.get(COLLECTIONS.friendships, share.relationshipId);
-        if (relationship?.status === 'active' && relationship.members?.includes(openid)) {
+        if (relationship?.status === 'active' && relationship.members?.includes(openid) && share.relationshipGeneration === relationship.generation) {
           species.push({ shareId: share._id, relationshipId: share.relationshipId, species: publicSpecies(share.species), sharedAt: share.createdAt });
         }
       }
@@ -250,17 +253,22 @@ function createSocialService({ repo, now = Date.now, randomToken = () => randomB
         if (share.status !== 'active') deny('share_inactive');
         const friendship = await tx.get(COLLECTIONS.friendships, share.relationshipId);
         requireActive(friendship, openid);
+        if (share.relationshipGeneration !== friendship.generation) deny('share_inactive');
         const existing = await tx.get(COLLECTIONS.copyRequests, requestId);
-        if (existing) return ready('copy_requested', { copyRequestId: requestId, state: existing.state, expiresAt: existing.expiresAt });
+        if (existing) {
+          if (existing.relationshipGeneration !== friendship.generation) deny('idempotency_reused');
+          return ready('copy_requested', { copyRequestId: requestId, state: existing.state, expiresAt: existing.expiresAt });
+        }
         const slot = await tx.get(COLLECTIONS.copySlots, slotId);
         if (slot?.state === 'approved') deny('already_copied');
         if (slot?.state === 'pending') {
           const pending = await tx.get(COLLECTIONS.copyRequests, slot.requestId);
-          if (pending && pending.expiresAt > now()) deny('request_pending');
+          if (pending && pending.expiresAt > now() && pending.relationshipGeneration === friendship.generation) deny('request_pending');
         }
         const createdAt = now(), expiresAt = createdAt + COPY_TTL;
         await tx.put(COLLECTIONS.copyRequests, requestId, {
           owner: share.owner, requester: openid, shareId: event.shareId, relationshipId: share.relationshipId,
+          relationshipGeneration: friendship.generation,
           species: publicSpecies(share.species), state: 'pending', requestKeyHash: sha256(event.idempotencyKey), createdAt, expiresAt,
         });
         await tx.put(COLLECTIONS.copySlots, slotId, { requester: openid, shareId: event.shareId, requestId, state: 'pending', updatedAt: createdAt });
@@ -276,7 +284,7 @@ function createSocialService({ repo, now = Date.now, randomToken = () => randomB
         if (request.expiresAt <= now()) continue;
         const share = await repo.get(COLLECTIONS.shares, request.shareId);
         const friendship = await repo.get(COLLECTIONS.friendships, request.relationshipId);
-        if (share?.status === 'active' && share.owner === openid && friendship?.status === 'active' && friendship.members?.includes(openid)) {
+        if (share?.status === 'active' && share.owner === openid && friendship?.status === 'active' && friendship.members?.includes(openid) && share.relationshipGeneration === friendship.generation && request.relationshipGeneration === friendship.generation) {
           requests.push({
             copyRequestId: request._id,
             relationshipId: request.relationshipId,
@@ -324,6 +332,7 @@ function createSocialService({ repo, now = Date.now, randomToken = () => randomB
       if (!share || share.status !== 'active' || share.owner !== openid || share.recipient !== request.requester) deny('share_inactive');
       const friendship = await tx.get(COLLECTIONS.friendships, request.relationshipId);
       requireActive(friendship, openid);
+      if (share.relationshipGeneration !== friendship.generation || request.relationshipGeneration !== friendship.generation) deny('share_inactive');
       const decidedAt = now();
       await tx.put(COLLECTIONS.copyRequests, event.copyRequestId, { ...request, state: decision, decisionKeyHash, decidedAt });
       await tx.put(COLLECTIONS.copySlots, keys.copySlot(request.requester, request.shareId), { requester: request.requester, shareId: request.shareId, requestId: event.copyRequestId, state: decision, updatedAt: decidedAt });
