@@ -23,7 +23,7 @@ function front(ctx,card,offset,image){
  ctx.setFillStyle(COLORS[card.finishKey]||'#fff');ctx.fillRect(0,offset,821,1121);
  const h=855,w=821;const ratio=Math.max(w/image.width,h/image.height),dw=image.width*ratio,dh=image.height*ratio;
  ctx.save();ctx.beginPath();ctx.rect(0,offset,w,h);ctx.clip();ctx.drawImage(image,(w-dw)/2,offset+(h-dh)/2,dw,dh);ctx.restore();
- ctx.setFillStyle('#FFFBF2');ctx.fillRect(71,offset+71,170,48);text(ctx,v.no,83,offset+104,146,23,28,1);
+ if(v.no){ctx.setFillStyle('#FFFBF2');ctx.fillRect(71,offset+71,410,48);text(ctx,v.no,83,offset+104,386,23,28,1);}
  ctx.setFillStyle('#FFFBF2');ctx.fillRect(540,offset+71,210,48);text(ctx,v.finish,552,offset+104,186,26,30,1);
  text(ctx,v.name,71,offset+927,v.expanded?520:679,49,59,1);text(ctx,v.secondaryName,71,offset+974,679,27,35,1);
  text(ctx,presentCard(card).starText,620,offset+927,130,21,27,1,'#997921');
@@ -47,7 +47,7 @@ function back(ctx,card,offset,illustration){
  field('分类',card.family,1);field('IUCN 评估',card.iucn,1);field('观察札记',card.tagline,2);field('识别与行为',card.factTitle,2);field('栖息环境 / 可见季节',[card.habitat,card.season].filter(Boolean).join(' · '),2);
  // Protection uses its own reserved area; long science never overwrites it.
  if(card.protection){text(ctx,'中国保护信息',71,offset+850,679,22,28,1,'#58655D');text(ctx,card.protection,71,offset+893,679,28,38,3);}
- text(ctx,[card.no,!card.sample&&card.createdAt?card.date:''].filter(Boolean).join(' · '),71,offset+1042,679,24,30,1,'#58655D');
+ text(ctx,[presentCard(card).back.no,!card.sample&&card.createdAt?card.date:''].filter(Boolean).join(' · '),71,offset+1042,679,24,30,1,'#58655D');
 }
 function drawLineArt(ctx,id,x,y,scale){const commands=lineArtFor(id);if(!commands.length)return;ctx.setStrokeStyle('#58655D');ctx.setLineWidth(1.3);ctx.beginPath();commands.forEach(({op,points:p})=>{if(op==='M')ctx.moveTo(x+p[0]*scale,y+p[1]*scale);else if(op==='L')ctx.lineTo(x+p[0]*scale,y+p[1]*scale);else if(op==='Q'&&ctx.quadraticCurveTo)ctx.quadraticCurveTo(x+p[0]*scale,y+p[1]*scale,x+p[2]*scale,y+p[3]*scale);else if(op==='C'&&ctx.bezierCurveTo)ctx.bezierCurveTo(x+p[0]*scale,y+p[1]*scale,x+p[2]*scale,y+p[3]*scale,x+p[4]*scale,y+p[5]*scale)});ctx.stroke();}
 function cropMarks(ctx,offset){const x=(821-750)/2,y=offset+(1121-1050)/2;ctx.setStrokeStyle('#58655D');ctx.setLineWidth(1);for(const [cx,cy,sx,sy]of [[x,y,-1,-1],[x+750,y,1,-1],[x,y+1050,-1,1],[x+750,y+1050,1,1]]){ctx.beginPath();ctx.moveTo(cx+sx*8,cy);ctx.lineTo(cx+sx*25,cy);ctx.moveTo(cx,cy+sy*8);ctx.lineTo(cx,cy+sy*25);ctx.stroke();}}

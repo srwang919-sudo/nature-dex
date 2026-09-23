@@ -3,7 +3,7 @@
   <view wx:if="{{!back}}" class="inner">
     <image wx:if="{{!imageUnavailable && presentation.front.photo}}" class="photo" src="{{presentation.front.photo}}" mode="aspectFill" binderror="imageError"/>
     <view wx:else class="photo photo-fallback"><text>原图不可用</text><text>请重新选择</text></view>
-    <view class="anchor"><text class="number">{{presentation.front.no}}</text><text class="badge">{{presentation.front.finish}}</text></view><view class="shine"></view>
+    <view class="anchor"><text wx:if="{{presentation.front.no}}" class="number">{{presentation.front.no}}</text><text class="badge">{{presentation.front.finish}}</text></view><view class="shine"></view>
     <view class="metadata {{presentation.front.expanded?'expanded-metadata':''}}"><view class="name-row"><text class="name">{{presentation.front.name}}</text><text class="stars">{{presentation.front.starText}}</text></view><text class="latin">{{presentation.front.secondaryName}}</text><view wx:if="{{presentation.front.expanded}}" class="front-context"><text>{{presentation.front.categoryLabel}}</text><text>{{presentation.front.locationLabel}}</text></view></view>
     <view wx:if="{{card.sample}}" class="sample">示例</view>
   </view>

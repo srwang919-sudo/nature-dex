@@ -5,7 +5,6 @@ Page({
  data:{intro:false,discoveryTitle:'',discoveryReward:'',discoveryImage:'',card:null,opened:false,opening:false,holding:false,direct:false,saved:false,duplicate:0,progress:0,reduce:false,back:false,revealStage:'sealed'},
  onLoad(q){this.id=q.id;this.load(true);this.setData({reduce:!!wx.getStorageSync('nature.reduceMotion')})},
 load(initial=false){const raw=app.findCard(this.id);if(!raw){wx.showToast({title:'没有找到这张卡',icon:'none'});return}const matches=app.getCards().filter(c=>c.speciesId===raw.speciesId&&c.id!==raw.id).length;this.setData({...(initial?{intro:!raw.revealed}:{}),card:app.decorate(raw),opened:!!raw.revealed,saved:app.getCards().some(c=>c.id===raw.id),duplicate:matches,discoveryTitle:matches?'又遇见了':'新物种发现',discoveryReward:matches?'观察记录 +1':'探索经验 +1',discoveryImage:(app.decorate(raw).artPhotoPath||app.decorate(raw).photoPath||app.decorate(raw).image||''),progress:Math.min((matches+1)/5*100,100)})},
- hold(){if(this.data.intro||this.data.opened||this.data.opening)return;this.setData({holding:true});this._hold=setTimeout(()=>this.open(),700)},
  release(){clearTimeout(this._hold);this._hold=null;if(!this.data.opening)this.setData({holding:false})},
  machine(){if(this._machine)return this._machine;this._machine=createRevealMachine({reducedMotion:this.data.reduce,onStage:stage=>{if(stage==='settled'){this.setData({opened:true,opening:false,holding:false,revealStage:stage});return}this.setData({opening:stage!=='sealed',holding:false,revealStage:stage})}});return this._machine},
  open(){if(this.data.intro||this.data.opened||this.data.opening)return;this.release();const raw=app.findCard(this.id);if(!raw)return;try{raw.revealed=true;app.updateCard(raw);if(!this.data.reduce&&wx.vibrateShort)wx.vibrateShort({type:'light',fail:()=>{}});this.machine().start()}catch(e){wx.showToast({title:'保存失败，请重试',icon:'none'})}},
@@ -18,6 +17,6 @@ load(initial=false){const raw=app.findCard(this.id);if(!raw){wx.showToast({title
  cancelReveal(){clearTimeout(this._hold);if(this._machine)this._machine.cancel();if(!this.data.opened)this.setData({holding:false,opening:false,revealStage:'sealed'})},
  onHide(){clearTimeout(this._direct);this.cancelReveal()},
  onUnload(){this.onHide()},
- continueDiscovery(){if(!this.data.intro)return;this.setData({intro:false});this.onShow()},
- onShow(){if(this.id)this.load();clearTimeout(this._direct);if(this.data.intro)return;if(this.data.reduce)this.setData({direct:true});else if(!this.data.opened)this._direct=setTimeout(()=>this.setData({direct:true}),3000)}
+ continueDiscovery(){if(!this.data.intro)return;this.setData({intro:false});this.open()},
+ onShow(){if(this.id)this.load();if(!this.data.intro&&!this.data.opened&&!this.data.opening)this.open()}
 })
