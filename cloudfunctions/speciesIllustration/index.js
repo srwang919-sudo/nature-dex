@@ -1,4 +1,4 @@
-let cloud;try{cloud=require('wx-server-sdk');cloud.init({env:cloud.DYNAMIC_CURRENT_ENV,timeout:150000})}catch(e){}
+let cloud;try{cloud=require('./sdk');cloud.init({env:cloud.DYNAMIC_CURRENT_ENV,timeout:150000})}catch(e){}
 const {generate}=require('./provider'),{createHash}=require('crypto');
 const {reserveQuota}=require('./quota');
 const {trustedSpecies}=require('./species');

@@ -1,4 +1,4 @@
-let cloud;try{cloud=require('wx-server-sdk');cloud.init({env:cloud.DYNAMIC_CURRENT_ENV})}catch(e){}
+let cloud;try{cloud=require('./sdk');cloud.init({env:cloud.DYNAMIC_CURRENT_ENV})}catch(e){}
 const https=require('https');
 const {sanitizeScience,mergeCandidateRoutes}=require('./science');
 const SPECIES={翠鸟:'kingfisher',普通翠鸟:'kingfisher',白鹭:'egret',朱鹮:'ibis',红腹锦鸡:'pheasant',锦鸡:'pheasant',麻雀:'sparrow',山茶:'camellia',绿尾大蚕蛾:'moth'};

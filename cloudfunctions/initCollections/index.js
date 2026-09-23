@@ -1,4 +1,4 @@
-const cloud = require('wx-server-sdk')
+const cloud = require('./sdk')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 exports.main = async () => {
   if (!cloud.getWXContext().OPENID) return { ok: false, code: 'unauthenticated' }

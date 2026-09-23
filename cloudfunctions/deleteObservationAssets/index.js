@@ -1,4 +1,4 @@
-let cloud;try{cloud=require('wx-server-sdk');cloud.init({env:cloud.DYNAMIC_CURRENT_ENV})}catch(e){}
+let cloud;try{cloud=require('./sdk');cloud.init({env:cloud.DYNAMIC_CURRENT_ENV})}catch(e){}
 const {createHash}=require('crypto');
 const absent=e=>/not exist|not found|DATABASE_DOCUMENT_NOT_EXIST/i.test(e.message||e.errMsg||'');
 async function main(event={},deps={}){

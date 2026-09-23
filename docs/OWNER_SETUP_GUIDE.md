@@ -19,6 +19,10 @@
 
 2026-09-23逐函数审计：recognizeObservation、createArtCard、speciesIllustration、deleteObservationAssets、cleanupObservationAssets、initCollections均为6个依赖漏洞项（5高、1中、0严重）；各自npm ci成功，audit非零。共同上游链涉及axios、lodash.set、lodash.unset，不能相加成36种独立漏洞。未认定这些风险在生产不可利用，需上游修复或正式风险处置。
 
+### 2026-09-23 依赖兼容修复复验
+
+上方 6 项漏洞是修复前记录。当前六函数锁文件已使用 axios 0.33.0 和 lodash 4.18.1 注册表别名，并通过各函数 sdk.js 适配数据库所需 set/unset 导出。六次干净安装、六份独立 audit 均为 0 个已知漏洞；正常路径、原型污染、离线数据库事务测试通过。不能只复制 index.js 部署：sdk.js、manifest、lockfile 必须一起部署，且控制台实际依赖安装仍需复验。维护说明与命令见 `docs/plans/2026-09-23-cloud-sdk-compatibility-verification.md`。未调用真实云数据库或模型，生产兼容性仍待受控验证。
+
 ## 发布前必须由所有者完成
 
 - [ ] 核对当前小程序与既定 CloudBase 环境绑定；部署已审阅版本 recognizeObservation、createArtCard、speciesIllustration、deleteObservationAssets，以及必要的清理函数；本地文件存在不等于云端版本正确。

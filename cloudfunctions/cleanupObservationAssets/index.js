@@ -1,4 +1,4 @@
-let cloud;try{cloud=require('wx-server-sdk');cloud.init({env:cloud.DYNAMIC_CURRENT_ENV})}catch(e){}
+let cloud;try{cloud=require('./sdk');cloud.init({env:cloud.DYNAMIC_CURRENT_ENV})}catch(e){}
 async function main(event={},deps={}){
  const api=deps.cloud||cloud;if(!api)return {status:'failed',code:'runtime_unavailable'};
  const owner=api.getWXContext().OPENID;if(!owner||typeof event.observationId!=='string'||!/^[a-zA-Z0-9_-]{1,100}$/.test(event.observationId))return {status:'failed',code:'invalid_request'};
