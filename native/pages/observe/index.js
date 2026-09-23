@@ -14,7 +14,7 @@ Page({
  onShow(){this.restore();const cards=app.getCards(),today=new Date().toDateString(),owned=new Set(cards.map(c=>c.speciesId));this.setData({reduceMotion:!!wx.getStorageSync('nature.reduceMotion'),drafts:app.getDrafts().map(d=>({id:d.id,photoPath:d.photoPath,status:d.pendingCard?'待入册卡片':d.mode==='unknown'?'待确认物种':'待鉴别照片'})).reverse(),recent:cards.slice(-3).reverse().map(c=>app.decorate(c)).filter(Boolean),today:cards.filter(c=>c.createdAt&&new Date(c.createdAt).toDateString()===today).map(c=>app.decorate(c)).filter(Boolean),undiscovered:Object.values(app.globalData.species).filter(s=>!owned.has(s.id)).slice(0,2)})},
  restore(){const d=app.getObservation?app.getObservation():app.getDraft();if(d)this.setData({photoPath:d.photoPath,mode:d.mode||'ready',species:null,pending:false});else{const ready=app.getReadyCards&&app.getReadyCards().slice(-1)[0];if(ready){this._readyId=ready.id;this.setData({photoPath:ready.photoPath,pending:true,mode:'ready'})}}},
  onHide(){this._creationToken=(this._creationToken||0)+1;this.setData({busy:false,artProgress:''});this._entrySource='';this.setData({cameraOpen:false,cameraReady:false,aiBusy:false});this._token=(this._token||0)+1;clearTimeout(this._timer);if(this.data.mode==='identifying')this.setData({mode:'ready'})},
- onUnload(){this._unloaded=true;this.onHide();const d=app.getObservation&&app.getObservation();if(d){app.discardObservation();if(app.retryCloudCleanup)app.retryCloudCleanup().catch(()=>{})}},
+ onUnload(){this._unloaded=true;this.onHide();const d=app.getObservation&&app.getObservation();if(d&&!this._serverSavedCard){app.discardObservation();if(app.retryCloudCleanup)app.retryCloudCleanup().catch(()=>{})}},
  openCamera(){this.setData({cameraOpen:true,cameraReady:false,cameraError:''})},
  newPhoto(){clearTimeout(this._timer);this._token=(this._token||0)+1;this.setData({photoPath:'',mode:'empty',species:null,pending:false})},
  recover(e){clearTimeout(this._timer);this._token=(this._token||0)+1;try{app.selectDraft(e.currentTarget.dataset.id);this.restore();this.setData({showDemo:false})}catch(e){wx.showToast({title:'恢复失败',icon:'none'})}},
@@ -99,6 +99,7 @@ acceptRecognition(){try{setConsent(true,wx);this.setData({needsRecognitionConsen
  candidate(e){const id=e.currentTarget.dataset.id,preset=app.getSpecies(id),item=(this.data.recognition.candidates||[]).find(x=>x.speciesId===id)||{};this.setData({species:Object.assign({},preset||{},{id:id,zh:item.name||(preset?preset.zh:id),name:item.name||id,latin:item.latin||(preset&&preset.latin)||''})})},
  async confirm(){
   if(!this.data.species||this.data.busy)return;
+  if(this._serverSavedCard){try{app.commitObservationCard(this._serverSavedCard);const id=this._serverSavedCard.id;this._serverSavedCard=null;wx.navigateTo({url:'/native/pages/reveal/index?id='+id})}catch(e){this.setData({identifyError:'观察已保存到云端，卡片待同步。请释放本机空间后在本页重试，勿重复拍摄。'})}return}
   if(!hasConsent(wx)){this.setData({identifyError:'请先在设置中同意照片鉴别与私有云处理，再确认制卡。'});return}
   const session=app.getObservation?app.getObservation():null,sp=this.data.species;
   if(!session||!['recognized','needs_confirmation'].includes(session.recognition?.status)||!session.recognition.candidates.some(c=>c.speciesId===sp.id)){this.setData({identifyError:'请先识别成功并确认候选物种。'});return}
@@ -106,6 +107,11 @@ acceptRecognition(){try{setConsent(true,wx);this.setData({needsRecognitionConsen
   this.setData({busy:true,artFailed:false,identifyError:''});
   try{
    let card=Object.assign({id:'art_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),speciesId:sp.id,photoObservationId:session.id,photoPath:session.photoPath,photoFileId:session.photoFileId},session.artWork?.speciesId===sp.id?session.artWork:{});
+    const resolved=(await wx.cloud.callFunction({name:'speciesIllustration',data:{action:'resolve',operationId:card.id,photoObservationId:session.id,speciesId:sp.id,confirmed:true}})).result;
+    if(!current())return;
+    if(resolved?.status==='ready')card=Object.assign({},card,{artStatus:'ready',artPhotoPath:resolved.assetFileId,artworkId:resolved.artworkId,artwork:{status:resolved.artworkStatus,isOfficial:resolved.isOfficial===true}});
+    else if(!['needs_creation','processing'].includes(resolved?.status))throw Error(resolved?.code||'artwork_unavailable');
+    if(card.artStatus!=='ready'){
     const artConsent=await requestArtConsent(wx,{operationId:card.id,observationId:session.id});
     if(!artConsent||!current())return;
     card.artConsent=artConsent;
@@ -113,10 +119,13 @@ acceptRecognition(){try{setConsent(true,wx);this.setData({needsRecognitionConsen
     card=await createArtCard({api:wx.cloud,card,isCurrent:current,onUpdate:work=>{if(!current())throw Error('stale');app.saveDraft(Object.assign({},app.getObservation(),{artWork:work}))}});
     if(!current())return;
     if(card.artStatus!=='ready'){this.setData({artFailed:true,identifyError:card.artMessage});return}
+    }
    this.setData({artProgress:'正在核验彩绘、原照片与博物资料…'});
    const selected=session.recognition.candidates.find(c=>c.speciesId===sp.id);
    const scienceSnapshot=scienceForConfirmedCandidate(selected,sp.id,buildScience(app.globalData.species[sp.id]||{}));
-   await Promise.all([card.artPhotoPath,session.photoPath].map(async src=>{if(!src)throw Error('image_missing');if(src.startsWith('cloud://')){const urls=await wx.cloud.getTempFileURL({fileList:[src]});src=urls.fileList?.[0]?.tempFileURL;if(!src)throw Error('image_url')}return new Promise((resolve,reject)=>wx.getImageInfo({src,success:resolve,fail:reject}))}));
+   const artUrl=card.artworkId?(await wx.cloud.callFunction({name:'speciesIllustration',data:{action:'resource',artworkId:card.artworkId}})).result:null;
+   if(card.artworkId&&(!artUrl||artUrl.status!=='ready'||!artUrl.url))throw Error('artwork_resource_unavailable');
+   await Promise.all([artUrl?.url||card.artPhotoPath,session.photoPath].map(async src=>{if(!src)throw Error('image_missing');if(src.startsWith('cloud://')){const urls=await wx.cloud.getTempFileURL({fileList:[src]});src=urls.fileList?.[0]?.tempFileURL;if(!src)throw Error('image_url')}return new Promise((resolve,reject)=>wx.getImageInfo({src,success:resolve,fail:reject}))}));
    if(!current())return;
    const saved=session.photoSaved?{savedFilePath:session.photoPath}:await new Promise((resolve,reject)=>wx.saveFile({tempFilePath:session.photoPath,success:resolve,fail:reject}));
    if(!current()){app.cleanupPaths([saved.savedFilePath]).catch(()=>{});return}
@@ -126,10 +135,12 @@ acceptRecognition(){try{setConsent(true,wx);this.setData({needsRecognitionConsen
    const complete=normalizeCard(Object.assign({},prepared,scienceSnapshot.fields,{category:selected.category||prepared.category,schemaVersion:2,photoPath:saved.savedFilePath,artPhotoPath:card.artPhotoPath,artStatus:'ready',scienceSnapshot,frontMode:'art',observedAt:session.createdAt,localDate:new Date(session.createdAt).toLocaleDateString()}));
    const receipt=await require('../../lib/save-observation').saveObservation({api:wx.cloud,operationId:card.id,isCurrent:current});
    if(receipt.observationId!==session.id)throw Error('observation_identity_mismatch');
-   Object.assign(complete,{serverCardId:receipt.cardId,discovery:receipt.discovery,discoveryNumber:receipt.discovery.number,isFirstDiscovery:receipt.isFirstDiscovery});
+   Object.assign(complete,{artworkId:card.artworkId,artwork:card.artwork,serverCardId:receipt.cardId,discovery:receipt.discovery,discoveryNumber:receipt.discovery.number,isFirstDiscovery:receipt.isFirstDiscovery});
+   this._serverSavedCard=complete;
    app.commitObservationCard(complete);
+   this._serverSavedCard=null;
    wx.navigateTo({url:'/native/pages/reveal/index?id='+complete.id});
-  }catch(e){if(current())this.setData({identifyError:e.message==='discovery_baseline_unavailable'?'该物种的历史发现编号尚未核定，本次未入册；请稍后重试。':'制卡未完成，未加入收藏。请检查网络后重试。'})}
+  }catch(e){if(current())this.setData({identifyError:this._serverSavedCard?'观察已保存到云端，卡片待同步。请释放本机空间后在本页重试，勿重复拍摄。':e.message==='discovery_baseline_unavailable'?'该物种的历史发现编号尚未核定，本次未入册；请稍后重试。':e.message==='creation_quota_exhausted'?'创作额度已用完，本次未入册；已有官方插画的物种仍可免费记录。':e.message==='artwork_resource_unavailable'?'插画暂时无法读取，本次未入册。请重试读取，不会重复扣除创作额度。':'制卡未完成，未加入收藏。请检查网络后重试。'})}
   finally{if(!this._unloaded&&token===this._creationToken)this.setData({busy:false,artProgress:''})}
  },
  resume(){if(this._readyId)wx.navigateTo({url:'/native/pages/reveal/index?id='+this._readyId})},

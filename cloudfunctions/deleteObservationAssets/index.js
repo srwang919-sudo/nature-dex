@@ -36,6 +36,13 @@ async function main(event={},deps={}){
    if(!row||row.status!==0)return fail('cloud_delete_failed');
   }
   for(const op of operations)await db.collection('artOperations').doc(op._id).update({data:{assetFileId:'',leaseExpiresAt:0,deletedAt:Date.now()}});
+  // Only private candidates from this observation are removed. An approved
+  // derivative has no owner/observation binding and is never touched here.
+  for(const op of operations)if(op.artworkId){
+   await db.runTransaction(async tx=>{const d=tx.collection('speciesArtworks').doc(op.artworkId);let art;try{art=(await d.get()).data}catch(e){if(!absent(e))throw e}
+    if(art?.owner===owner&&art.observationId===observationId&&art.status==='candidate')await d.remove();
+   });
+  }
   await marker.update({data:{status:'deleted',deletedAt:Date.now()}});
   for(const asset of rows)await db.collection('assets').doc(asset._id).remove();
   return {status:'deleted'};

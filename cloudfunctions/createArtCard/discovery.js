@@ -9,7 +9,10 @@ async function finalizeObservation({db,owner,operationId,now=Date.now,wait=ms=>n
   const outcome=await db.runTransaction(async tx=>{
    await assertActive(tx,owner,true);
    const operationKey=hash(owner+'|'+operationId),operation=tx.collection('artOperations').doc(operationKey),op=await read(operation);
-   if(!op||op.owner!==owner||op.status!=='ready'||typeof op.photoFileId!=='string'||typeof op.assetFileId!=='string'||!op.assetFileId.startsWith('cloud://')||!op.assetFileId.endsWith('/private-art/'+owner+'/'+operationKey+'.jpg'))throw Error('art_not_ready');
+   if(!op||op.owner!==owner||op.status!=='ready'||op.isAttempt||typeof op.photoFileId!=='string')throw Error('art_not_ready');
+   let artwork=null;
+   if(op.artworkId){artwork=await read(tx.collection('speciesArtworks').doc(op.artworkId));if(!artwork||artwork.speciesId!==op.speciesId||!(artwork.status==='approved'&&artwork.is_official===true||artwork.status==='candidate'&&artwork.owner===owner))throw Error('art_not_ready');await tx.collection('speciesArtworks').doc(op.artworkId).set({data:{...artwork,generation:(artwork.generation||0)+1}})}
+   else if(typeof op.assetFileId!=='string'||!op.assetFileId.startsWith('cloud://')||!op.assetFileId.endsWith('/private-art/'+owner+'/'+operationKey+'.jpg'))throw Error('art_not_ready');
    const prefix='/observations/'+owner+'/',offset=op.photoFileId.lastIndexOf(prefix),observationId=offset<0?'':op.photoFileId.slice(offset+prefix.length,-4);
    if(!op.photoFileId.startsWith('cloud://')||!op.photoFileId.endsWith('.jpg')||!/^[a-zA-Z0-9_-]{1,100}$/.test(observationId))throw Error('asset_invalid');
    const key=hash(owner+'|'+observationId),event={photoObservationId:observationId,photoFileId:op.photoFileId,speciesId:op.speciesId};
@@ -32,7 +35,7 @@ async function finalizeObservation({db,owner,operationId,now=Date.now,wait=ms=>n
    await discoveryDoc.set({data:{owner,speciesId,number,status:'verified',firstObservedAt:discovery?.firstObservedAt||now(),activeObservationCount:(discovery?.activeObservationCount||0)+1,updatedAt:now()}});
    const receipt={status:'saved',observationId,cardId:key,discovery:{status:'verified',number},isFirstDiscovery:!discovery};
    await obsDoc.set({data:{owner,observationId,speciesId,operationId,status:'saved',originalPhotoFileId:op.photoFileId,confirmed:true,recognitionReceiptId:key,confidence:candidate.confidence,savedAt:now(),receipt}});
-   await tx.collection('natureCards').doc(key).set({data:{owner,observationId,speciesId,status:'saved',cardType:'original_observation',artwork:{status:'candidate',isOfficial:false,fileId:op.assetFileId},originalPhotoFileId:op.photoFileId,discoveryKey,createdAt:now()}});
+   await tx.collection('natureCards').doc(key).set({data:{owner,observationId,speciesId,status:'saved',cardType:'original_observation',artwork:{id:op.artworkId||'',status:artwork?.status||'candidate',isOfficial:artwork?.is_official===true,fileId:artwork?.assetFileId||op.assetFileId},originalPhotoFileId:op.photoFileId,discoveryKey,createdAt:now()}});
    return receipt;
   });return outcome?.result||outcome;
  }catch(e){if(attempt>=3||![e.code,e.errCode,e.message].includes('DATABASE_TRANSACTION_CONFLICT'))throw e;await wait(20*(attempt+1))}

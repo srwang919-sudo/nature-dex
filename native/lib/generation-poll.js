@@ -1,4 +1,4 @@
-const safeCodes=new Set(['not_found','generation_failed','service_unavailable','invalid_species','invalid_request','forbidden','unauthenticated','confirmation_required','reference_unavailable','watercolor_model_quota','watercolor_model_permission','watercolor_model_parameter','watercolor_model_failed','watercolor_download_failed','watercolor_upload_failed']);
+const safeCodes=new Set(['creation_quota_exhausted','discovery_baseline_unavailable','artwork_unavailable','generation_timeout','not_found','generation_failed','service_unavailable','invalid_species','invalid_request','forbidden','unauthenticated','confirmation_required','reference_unavailable','watercolor_model_quota','watercolor_model_permission','watercolor_model_parameter','watercolor_model_failed','watercolor_download_failed','watercolor_upload_failed']);
 // A timed-out client request does not cancel the server operation. Status calls
 // reuse its operation/species key and never submit a second generation.
 async function pollGeneration({api,name,submit,status,isCurrent=()=>true,wait=ms=>new Promise(r=>setTimeout(r,ms)),now=Date.now}){

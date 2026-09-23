@@ -1,39 +1,12 @@
 let cloud;try{cloud=require('./sdk');cloud.init({env:cloud.DYNAMIC_CURRENT_ENV,timeout:150000})}catch(e){}
-const {generate}=require('./provider'),{createHash}=require('crypto');
-const {reserveQuota}=require('./quota');
-const {trustedSpecies}=require('./species');
-const {buildPublicSpeciesPrompt,PUBLIC_STYLE_VERSION}=require('./prompt');
+const safe=new Set(['invalid_request','unauthenticated','account_erasing','candidate_unverified','cancelled','discovery_baseline_unavailable','creation_quota_exhausted','art_consent_required','review_forbidden','artwork_invalid','artwork_forbidden','artwork_resource_unavailable','operator_required']);
 async function main(event={},deps={}){
- const api=deps.cloud||cloud,fail=code=>({status:'failed',code});
- if(!api)return fail('runtime_unavailable');
- if(!api.getWXContext().OPENID)return fail('unauthenticated');
- if(event.confirmed!==true)return fail('confirmation_required');
- if(['photoFileId','image','images','image_urls','prompt','owner','reference'].some(k=>Object.prototype.hasOwnProperty.call(event,k)))return fail('invalid_request');
- let species;try{species=trustedSpecies(event.speciesId)}catch(e){return fail('invalid_species')}
- const name=species.name,styleVersion=PUBLIC_STYLE_VERSION,cacheKey=createHash('sha256').update(styleVersion+'|'+species.id).digest('hex'),raw=api.database(),db=require('./account-gate').guardDatabase(raw,api.getWXContext().OPENID),doc=raw.collection('speciesWatercolors').doc(cacheKey);
+ const api=deps.cloud||cloud;if(!api)return {status:'failed',code:'runtime_unavailable'};
  try{
-  await db.assertActive();
-  let cache;try{cache=(await doc.get()).data}catch(e){if(!/not exist|not found|DATABASE_DOCUMENT_NOT_EXIST/i.test(e.message||e.errMsg||''))throw e}
-  if(cache?.status==='ready')return {status:'ready',cacheKey,assetFileId:cache.assetFileId,styleVersion};
-  if(event.action==='status')return {status:cache?.status||'missing',cacheKey,code:cache?.code||''};
-  if(event.action!=='ensure')return fail('invalid_request');
-  const leaseExpiresAt=Date.now()+180000;
-  const claimed=await db.runTransaction(async tx=>{
-   const entry=tx.collection('speciesWatercolors').doc(cacheKey);let old;try{old=(await entry.get()).data}catch(e){if(!/not exist|not found|DATABASE_DOCUMENT_NOT_EXIST/i.test(e.message||e.errMsg||''))throw e}
-   if(old&&(old.status==='ready'||old.status==='generating'&&old.leaseExpiresAt>Date.now()))return false;
-   await reserveQuota(tx,api.getWXContext().OPENID,'watercolor');
-   await entry.set({data:{speciesId:species.id,styleVersion,status:'generating',leaseExpiresAt,name,model:'HY-Image-3.0-Plus-4090-Tob-v1.0'}});return true;
-  });
-  if(!claimed)return {status:'processing',cacheKey};
-  try{
-   const assetFileId=await (deps.generate||generate)(api,{path:'public-species-watercolors/'+cacheKey+'.jpg',prompt:buildPublicSpeciesPrompt(species.id)});
-   await doc.update({data:{status:'ready',assetFileId,leaseExpiresAt:0,updatedAt:Date.now()}});return {status:'ready',cacheKey,assetFileId,styleVersion};
-  }catch(e){
-   const safeCodes=['watercolor_sdk_unavailable','watercolor_model_quota','watercolor_model_permission','watercolor_model_parameter','watercolor_model_failed','watercolor_response_invalid','watercolor_download_failed','watercolor_image_invalid','watercolor_upload_failed'];
-   const code=safeCodes.includes(e.message)?e.message:'watercolor_cache_finalize_failed';
-   try{await doc.update({data:{status:'failed',code,leaseExpiresAt:0}})}catch(ignore){return fail('watercolor_cache_write_failed')}
-   return fail(code)
-  }
- }catch(e){return fail(['daily_limit','quota_unavailable','account_erasing'].includes(e.message)?e.message:'service_unavailable')}
+  if(event.action==='ensure')return {status:'failed',code:'legacy_generation_disabled'};
+  if(event.action==='review')return await require('./review-service').reviewService(api,event,deps);
+  if(event.action==='reconcile')return await require('./reconcile').reconcile(api,event,deps);
+  return await require('./artwork-flow').artworkFlow(api,event,deps);
+ }catch(e){return {status:'failed',code:safe.has(e.message)?e.message:'service_unavailable'}}
 }
 module.exports={main};

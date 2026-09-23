@@ -1,0 +1,33 @@
+const test=require('node:test'),assert=require('node:assert/strict'),{createHash}=require('crypto');
+const {artworkFlow}=require('../cloudfunctions/speciesIllustration/artwork-flow');
+const hash=x=>createHash('sha256').update(x).digest('hex');
+function fixture(){const rows=new Map();let owner='a',calls=0,clock=1e12;const db={collection:c=>({doc:id=>({async get(){if(!rows.has(c+'/'+id))throw Error('DATABASE_DOCUMENT_NOT_EXIST');return {data:structuredClone(rows.get(c+'/'+id))}},async set({data}){rows.set(c+'/'+id,structuredClone(data))},async update({data}){rows.set(c+'/'+id,{...rows.get(c+'/'+id),...data})}})}),async runTransaction(fn){const old=structuredClone(rows);try{return await fn(db)}catch(e){rows.clear();for(const pair of old)rows.set(...pair);throw e}}};
+ const api={database:()=>db,getWXContext:()=>({OPENID:owner}),deleteFile:async()=>({fileList:[{status:0}]}),getTempFileURL:async()=>({fileList:[{tempFileURL:'https://safe.invalid/art'}]})};
+ const event={action:'resolve',operationId:'op',photoObservationId:'obs',speciesId:'kingfisher',confirmed:true};
+ rows.set('recognitionReceipts/'+hash('a|obs'),{owner:'a',observationId:'obs',photoFileId:'cloud://env/observations/a/obs.jpg',status:'complete',result:{candidates:[{speciesId:'kingfisher',name:'普通翠鸟',confidence:.9}]}});rows.set('natureSpecies/'+hash('kingfisher'),{counterStatus:'initialized',baselineVersion:'test',lastDiscoveryNumber:0});
+ const deps={now:()=>clock,metadata:async({cloudPath})=>({data:{fileId:'cloud://env/'+cloudPath}}),generate:async(api,input)=>{calls++;assert.equal(input.reference,undefined);assert.ok(!input.prompt.includes('observations/'));return 'cloud://env/'+input.path}};
+ return {rows,db,api,event,deps,calls:()=>calls,owner:v=>owner=v,time:v=>clock=v,run:e=>artworkFlow(api,{...event,...e},deps)};
+}
+test('approved artwork reuse performs zero provider and zero quota writes; legacy cache ignored',async()=>{const f=fixture();f.rows.set('speciesWatercolors/old',{status:'ready'});assert.equal((await f.run({})).status,'needs_creation');f.rows.set('speciesArtworks/official',{speciesId:'kingfisher',status:'approved',is_official:true,assetFileId:'cloud://env/official-artworks/official.jpg'});f.rows.set('officialSpeciesArtworks/'+hash('kingfisher'),{artworkId:'official'});assert.equal((await f.run({})).status,'ready');assert.equal(f.calls(),0);assert.equal([...f.rows.keys()].filter(k=>k.startsWith('creation')).length,0)});
+test('candidate generation is private, independently attempted, failure releases',async()=>{const f=fixture();const consent={version:1,provider:'tencent-hunyuan',acceptedAt:Date.now(),operationId:'op',observationId:'obs'};
+ f.deps.generate=async()=>{throw Error('model_failed')};assert.equal((await f.run({action:'generate',consent:true,artConsent:consent})).status,'failed');assert.equal([...f.rows.values()].find(x=>x.operationId==='op'&&x.source==='bonus').status,'released');
+ f.deps.generate=async(api,{path})=>'cloud://env/'+path;const r=await f.run({action:'generate',consent:true,artConsent:consent});assert.equal(r.status,'ready');assert.ok(r.artworkId.endsWith('_2'));const art=f.rows.get('speciesArtworks/'+r.artworkId);assert.equal(art.status,'candidate');assert.equal(art.is_official,false);assert.equal(art.source,'user_first_unlock');
+ assert.equal((await artworkFlow(f.api,{action:'resource',artworkId:r.artworkId},f.deps)).status,'ready');f.owner('b');await assert.rejects(artworkFlow(f.api,{action:'resource',artworkId:r.artworkId},f.deps),/artwork_forbidden/);
+});
+test('late provider output after timeout/deletion/erasure never charges or publishes',async()=>{
+ for(const kind of ['timeout','delete','erase']){const f=fixture();let finish;f.deps.generate=async(api,{path})=>{await new Promise(r=>finish=r);return 'cloud://env/'+path};
+ const pending=f.run({action:'generate',consent:true,artConsent:{version:1,provider:'tencent-hunyuan',acceptedAt:Date.now(),operationId:'op',observationId:'obs'}});await new Promise(r=>setImmediate(r));
+ if(kind==='timeout'){f.time(1e12+180001);assert.equal((await artworkFlow(f.api,{action:'status',operationId:'op'},f.deps)).code,'generation_timeout')}
+ if(kind==='delete')f.rows.set('observationDeletions/'+hash('a|obs'),{status:'deleted'});
+ if(kind==='erase')f.rows.set('accountPrivacy/'+hash('a'),{status:'erasing',generation:2});
+ finish();assert.equal((await pending).status,'failed');assert.equal([...f.rows.keys()].filter(k=>k.startsWith('speciesArtworks/')).length,0);
+ assert.notEqual(f.rows.get('creationReservations/'+hash('a|op')).status,'committed');
+ }
+});
+test('review publishes separate derivative, anonymizes and awards private contributor; URL expires in 600 seconds',async()=>{
+ const f=fixture(),id='candidate';f.rows.set('speciesArtworks/'+id,{speciesId:'kingfisher',owner:'a',observationId:'obs',source:'user_first_unlock',status:'candidate',assetFileId:'cloud://env/private-art/a/candidate.jpg',styleVersion:'museum-v1'});
+ f.rows.set('artworkReviewers/'+hash('a'),{active:true});f.api.downloadFile=async()=>({fileContent:Buffer.from([255,216,255,224,0,0,0,0,0])});f.api.uploadFile=async({cloudPath})=>({fileID:'cloud://env/'+cloudPath});
+ await require('../cloudfunctions/speciesIllustration/review-service').reviewService(f.api,{action:'review',artworkId:id,decision:'approve'},{metadata:async({cloudPath})=>({data:{fileId:'cloud://env/'+cloudPath}})});
+ const art=f.rows.get('speciesArtworks/'+id);assert.equal(art.assetFileId,'cloud://env/official-artworks/candidate.jpg');assert.equal(art.owner,undefined);assert.equal(art.observationId,undefined);assert.equal(f.rows.get('userArtworkContributions/'+hash('a|kingfisher')).owner,'a');
+ f.owner('b');const resource=await artworkFlow(f.api,{action:'resource',artworkId:id},f.deps);assert.equal(resource.expiresAt,1e12+600000);
+});

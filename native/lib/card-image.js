@@ -8,6 +8,7 @@ async function readableImage(api,src){
  return new Promise((resolve,reject)=>{try{api.getImageInfo({src,success:info=>resolve(Object.assign({},info,{path:info.path||src})),fail:()=>reject(error('getImageInfo'))})}catch(e){reject(error('getImageInfo'))}});
 }
 async function readableFront(api,card){
+ if(card.artworkId){const response=await api.cloud.callFunction({name:'speciesIllustration',data:{action:'resource',artworkId:card.artworkId}});if(response.result?.status!=='ready'||!response.result.url)throw Object.assign(Error('cloud_download'),{code:'cloud_download'});return readableImage(api,response.result.url)}
  const src=frontSource(card);
  try{return await readableImage(api,src)}catch(error){
   if(!card.artPhotoPath&&card.frontMode!=='art'&&card.photoFileId&&card.photoFileId!==src)return readableImage(api,card.photoFileId);

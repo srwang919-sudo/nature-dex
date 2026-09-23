@@ -9,9 +9,10 @@ Component({
  fixCloudUrls(p){
   const token=this._assetToken=(this._assetToken||0)+1;
   if(!wx.cloud||!p)return;
+  if(this.data?.card?.artworkId){wx.cloud.callFunction({name:'speciesIllustration',data:{action:'resource',artworkId:this.data.card.artworkId}}).then(r=>{if(token!==this._assetToken)return;if(r.result?.status==='ready'&&r.result.url)this.setData({'presentation.front.photo':r.result.url,imageUnavailable:false});else this.setData({imageUnavailable:true})}).catch(()=>{if(token===this._assetToken)this.setData({imageUnavailable:true})});}
   const items=[];
   if(p.back&&p.back.illustration&&p.back.illustration.indexOf('cloud://')===0)items.push(p.back.illustration);
-  if(p.front&&p.front.photo&&p.front.photo.indexOf('cloud://')===0)items.push(p.front.photo);
+  if(!this.data?.card?.artworkId&&p.front&&p.front.photo&&p.front.photo.indexOf('cloud://')===0)items.push(p.front.photo);
   if(!items.length)return;
   wx.cloud.getTempFileURL({fileList:items}).then(t=>{
    if(token!==this._assetToken)return;
