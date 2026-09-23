@@ -2,7 +2,7 @@ const app=getApp()
 const {resolve}=require('../../lib/asset-resolver')
 const {recognition}=require('../../contracts/services')
 const {classifyRecognition}=require('../../lib/recognition-result')
-const {recognitionError}=require('../../lib/recognition-errors')
+const {recognitionError,cloudFailure}=require('../../lib/recognition-errors')
 const {createArtCard}=require('../../lib/art-card')
 const {requestArtConsent}=require('../../lib/art-consent')
 const {buildScience,normalizeCard,scienceForConfirmedCandidate}=require('../../lib/observation-card')
@@ -51,12 +51,12 @@ Page({
  async uploadPhoto(draft,filePath){
   if(!hasConsent(wx))throw {code:'consent_required'};
   if(!wx.cloud||!draft)return '';
-  let ticket;try{ticket=await wx.cloud.callFunction({name:'recognizeObservation',data:{action:'upload_ticket',consent:true,observationId:draft.id}})}catch(e){throw {code:'cloud_call'}}
+  let ticket;try{ticket=await wx.cloud.callFunction({name:'recognizeObservation',data:{action:'upload_ticket',consent:true,observationId:draft.id}})}catch(e){throw cloudFailure(e,'upload_ticket')}
   if(!ticket.result||ticket.result.status!=='ready')throw {code:ticket.result&&ticket.result.code||'cloud_version'};
   if(ticket.result.contractVersion!==2||!ticket.result.cloudPath)throw {code:'cloud_version'};
   let uploaded;try{uploaded=await wx.cloud.uploadFile({cloudPath:ticket.result.cloudPath,filePath})}catch(e){throw {code:'photo_upload'}}
   let registration;
-  try{registration=await wx.cloud.callFunction({name:'recognizeObservation',data:{action:'register_asset',consent:true,observationId:draft.id,idempotencyKey:draft.id,cloudPath:ticket.result.cloudPath,photoFileId:uploaded.fileID,purpose:'recognition'}})}catch(e){throw {code:'cloud_call'}}
+  try{registration=await wx.cloud.callFunction({name:'recognizeObservation',data:{action:'register_asset',consent:true,observationId:draft.id,idempotencyKey:draft.id,cloudPath:ticket.result.cloudPath,photoFileId:uploaded.fileID,purpose:'recognition'}})}catch(e){throw cloudFailure(e,'register_asset')}
   if(!registration.result||registration.result.status!=='registered')throw {code:registration.result&&registration.result.code||'cloud_version'};
   return uploaded.fileID;
  },
@@ -92,7 +92,7 @@ acceptRecognition(){try{setConsent(true,wx);this.setData({needsRecognitionConsen
    this.setData({mode:result.status,recognitionStatus:result.status,recognition,species:null,aiBusy:false,showDemo:false});
    if(result.status==='failed'||result.status==='unavailable')this.setData({identifyError:recognitionError(result)});
    else if(raw&&Array.isArray(raw.warnings)&&raw.warnings.length)this.setData({identifyError:raw.warnings.some(w=>w.code==='route_disagreement')?'不同识别路线结果不一致，请仔细确认；分类标签不一定是具体物种。':'部分接口未完成，候选不完整，请确认后继续。'+recognitionError(raw.warnings[0])});
-  }catch(e){if(current())this.setData({mode:'ready',aiBusy:false,showDemo:false,identifyError:recognitionError(e&&e.code?e:{code:stage})})}
+  }catch(e){if(current())this.setData({mode:'ready',aiBusy:false,showDemo:false,identifyError:recognitionError(e&&e.code?e:stage==='cloud_call'?cloudFailure(e,'recognize'):{code:stage})})}
  },
  demo(){this.setData({showDemo:!this.data.showDemo})},
  candidate(e){const id=e.currentTarget.dataset.id,preset=app.getSpecies(id),item=(this.data.recognition.candidates||[]).find(x=>x.speciesId===id)||{};this.setData({species:Object.assign({},preset||{},{id:id,zh:item.name||(preset?preset.zh:id),name:item.name||id,latin:item.latin||(preset&&preset.latin)||''})})},

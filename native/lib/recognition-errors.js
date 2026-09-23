@@ -16,7 +16,7 @@ const messages={
  asset_registry:'服务端照片登记失败。请确认 assets 集合已创建，且已部署支持 register_asset 的 recognizeObservation；不要开放客户端写权限。',
  photo_upload:'照片上传失败，请检查网络和 CloudBase 私有存储权限。',
  cloud_version:'云端识别函数版本不匹配，请重新部署 recognizeObservation 到当前小程序环境。',
- cloud_call:'云函数调用失败，请确认当前环境中已部署 recognizeObservation，并检查函数运行日志。',
+ cloud_call:'识别云函数调用未完成。请按下方云码、阶段和请求编号检查 nature-prod 中 recognizeObservation 的调用日志；目录关联不代表运行成功。',
  runtime_unavailable:'云函数运行环境缺少依赖，请部署时安装 wx-server-sdk。',
  unauthenticated:'未能获取微信调用身份，请从微信小程序内重试。',
  consent_required:'请先确认隐私授权，再开始鉴别。',
@@ -26,5 +26,6 @@ const messages={
  local_save:'识别记录未能保存，请检查本机空间后重试。'
 };
 function safeCode(input){if(input&&Object.prototype.hasOwnProperty.call(messages,input.code))return input.code;if(input&&Number.isFinite(input.errCode))return 'cloud_call';return 'provider_error'}
-function recognitionError(input){const code=safeCode(input),n=Number.isInteger(input&&input.providerCode)&&input.providerCode>=0&&input.providerCode<1000000?input.providerCode:null;return messages[code]+' [识别码:'+code+(n===null?'':' / 百度:'+n)+']'}
-module.exports={recognitionError,safeCode};
+function cloudFailure(error={},stage){const result={code:'cloud_call'};if(Number.isInteger(error.errCode)&&Math.abs(error.errCode)<10000000)result.cloudCode=error.errCode;if(['upload_ticket','register_asset','recognize'].includes(stage))result.stage=stage;const id=error.requestID||error.requestId;if(typeof id==='string'&&/^[a-zA-Z0-9-]{1,80}$/.test(id))result.requestId=id;return result}
+function recognitionError(input){const code=safeCode(input),n=Number.isInteger(input&&input.providerCode)&&input.providerCode>=0&&input.providerCode<1000000?input.providerCode:null;const safe=cloudFailure({errCode:input&&input.cloudCode,requestId:input&&input.requestId},input&&input.stage);return messages[code]+' [识别码:'+code+(n===null?'':' / 百度:'+n)+(safe.cloudCode===undefined?'':' / 云码:'+safe.cloudCode)+(safe.stage?' / 阶段:'+safe.stage:'')+(safe.requestId?' / 请求:'+safe.requestId:'')+']'}
+module.exports={recognitionError,safeCode,cloudFailure};

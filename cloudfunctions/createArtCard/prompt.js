@@ -1,0 +1,4 @@
+const {trustedSpecies}=require("./species");
+const PRIVATE_STYLE_VERSION="watercolor-i2i-v2";
+function buildPrivateArtPrompt(id){const {name}=trustedSpecies(id);return `Create a refined natural-history watercolor portrait of the confirmed species "${name}" from the supplied observation photograph. Preserve the individual animal or plant\'s true anatomy, proportions, diagnostic markings, colors, pose, and visible condition. Isolate one clear subject, keep a quiet habitat-informed background, soft natural light, translucent watercolor washes, colored-pencil details, subtle cold-press paper grain, museum field-guide accuracy, and generous editorial breathing room. No text, letters, numbers, labels, borders, frames, logos, signatures, fantasy traits, duplicated body parts, invented markings, or species substitution. This artwork is commemorative and must not be used as identification evidence.`}
+module.exports={PRIVATE_STYLE_VERSION,buildPrivateArtPrompt};

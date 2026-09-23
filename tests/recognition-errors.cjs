@@ -7,3 +7,10 @@ assert.ok(recognitionError({code:'provider_quota',providerCode:17}).includes('17
 assert.ok(!recognitionError({code:'bad-secret',message:'secret',providerCode:'secret'}).includes('secret'));
 assert.ok(recognitionError({errCode:-501000}).includes('云函数'));
 console.log('PASS safe allowlisted recognition codes survive classification without raw provider details');
+const {cloudFailure}=require('../native/lib/recognition-errors');
+const transport=cloudFailure({errCode:-504003,errMsg:'secret URL token',requestID:'abc-123'},'upload_ticket');
+assert.equal(transport.cloudCode,-504003);assert.equal(transport.stage,'upload_ticket');
+assert.ok(recognitionError(transport).includes('云码:-504003'));
+assert.ok(recognitionError(transport).includes('upload_ticket'));
+assert.ok(!recognitionError(transport).includes('secret'));
+assert.equal(cloudFailure({errCode:'secret',requestID:'https://private'},'secret').requestId,undefined);

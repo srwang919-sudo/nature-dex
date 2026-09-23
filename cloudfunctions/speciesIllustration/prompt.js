@@ -1,0 +1,4 @@
+const {trustedSpecies}=require("./species");
+const PUBLIC_STYLE_VERSION="watercolor-t2i-v2";
+function buildPublicSpeciesPrompt(id){const {name}=trustedSpecies(id);return `Create a full-body natural-history watercolor plate of "${name}" with scientifically faithful anatomy, proportions, diagnostic markings, plumage, fur, scales, or botanical structures. Show one complete subject in a restrained, species-appropriate habitat, with translucent watercolor washes, fine colored-pencil details, subtle cold-press paper texture, balanced museum field-guide composition, and clear silhouette separation. No text, letters, numbers, labels, card frame, logo, signature, photographic look, fantasy traits, duplicated anatomy, invented markings, or another species.`}
+module.exports={PUBLIC_STYLE_VERSION,buildPublicSpeciesPrompt};
