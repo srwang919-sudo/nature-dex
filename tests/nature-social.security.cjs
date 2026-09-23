@@ -8,6 +8,18 @@ const { main } = require('../cloudfunctions/natureSocial');
 
 const sha256 = value => createHash('sha256').update(value).digest('hex');
 
+test('revoked source observation hides shares and blocks new copies and pending approval',async()=>{
+ const f=fixture(),s=await registerAndShare(f);
+ const pending=await f.call('openid_bob','requestCopy',{shareId:s.shareId,idempotencyKey:'copy_1234567890abcdef'});
+ assert.equal(pending.status,'ready');
+ f.repo.seed('trustedObservations',s.observation._id,{...s.observation,status:'revoked'});
+ assert.deepEqual((await f.call('openid_bob','listSharedSpecies')).species,[]);
+ assert.deepEqual((await f.call('openid_alice','listCopyRequests')).requests,[]);
+ assert.equal((await f.call('openid_bob','requestCopy',{shareId:s.shareId,idempotencyKey:'copy_other_1234567890'})).code,'not_verified');
+ assert.equal((await f.call('openid_alice','approveCopy',{copyRequestId:pending.copyRequestId,idempotencyKey:'approve_1234567890abcd'})).code,'not_verified');
+ assert.equal((await f.call('openid_alice','setSpeciesPublic',{relationshipId:s.relationshipId,speciesCardId:s.registered.speciesCard.id,shared:true})).code,'not_verified');
+});
+
 function fixture() {
   let now = Date.UTC(2026, 8, 23, 4);
   let tokenNumber = 0;

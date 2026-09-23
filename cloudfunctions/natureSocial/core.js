@@ -105,6 +105,13 @@ function ready(code, values = {}) { return { status: 'ready', code, ...values };
 function createSocialService({ repo, now = Date.now, randomToken = () => randomBytes(24).toString('base64url') } = {}) {
   if (!repo) throw new TypeError('repo is required');
 
+  async function sourceStillVerified(store, speciesCardId) {
+    const card = await store.get(COLLECTIONS.cards, speciesCardId);
+    if (!card) return false;
+    const record = await store.get(COLLECTIONS.observations, keys.trustedObservation(card.owner, card.observationId));
+    return !!(record && record.owner === card.owner && record.observationId === card.observationId && record.status === 'verified' && record.confirmed === true && record.attestationVersion === 1);
+  }
+
   const actions = {
     async getProfile(openid, event) {
       if (!exactEvent(event, [])) deny('invalid_request');
@@ -206,6 +213,7 @@ function createSocialService({ repo, now = Date.now, randomToken = () => randomB
         const recipient = requireActive(friendship, openid);
         const card = await tx.get(COLLECTIONS.cards, event.speciesCardId);
         if (!card || card.owner !== openid) deny('forbidden');
+        if (event.shared && !await sourceStillVerified(tx, event.speciesCardId)) deny('not_verified');
         const shareId = keys.share(openid, recipient, event.speciesCardId);
         const current = await tx.get(COLLECTIONS.shares, shareId);
         const updatedAt = now();
@@ -236,7 +244,7 @@ function createSocialService({ repo, now = Date.now, randomToken = () => randomB
       const species = [];
       for (const share of shares) {
         const relationship = await repo.get(COLLECTIONS.friendships, share.relationshipId);
-        if (relationship?.status === 'active' && relationship.members?.includes(openid) && share.relationshipGeneration === relationship.generation) {
+        if (relationship?.status === 'active' && relationship.members?.includes(openid) && share.relationshipGeneration === relationship.generation && await sourceStillVerified(repo, share.speciesCardId)) {
           species.push({ shareId: share._id, relationshipId: share.relationshipId, species: publicSpecies(share.species), sharedAt: share.createdAt });
         }
       }
@@ -251,6 +259,7 @@ function createSocialService({ repo, now = Date.now, randomToken = () => randomB
         const share = await tx.get(COLLECTIONS.shares, event.shareId);
         if (!share || share.recipient !== openid) deny('forbidden');
         if (share.status !== 'active') deny('share_inactive');
+        if (!await sourceStillVerified(tx, share.speciesCardId)) deny('not_verified');
         const friendship = await tx.get(COLLECTIONS.friendships, share.relationshipId);
         requireActive(friendship, openid);
         if (share.relationshipGeneration !== friendship.generation) deny('share_inactive');
@@ -284,7 +293,7 @@ function createSocialService({ repo, now = Date.now, randomToken = () => randomB
         if (request.expiresAt <= now()) continue;
         const share = await repo.get(COLLECTIONS.shares, request.shareId);
         const friendship = await repo.get(COLLECTIONS.friendships, request.relationshipId);
-        if (share?.status === 'active' && share.owner === openid && friendship?.status === 'active' && friendship.members?.includes(openid) && share.relationshipGeneration === friendship.generation && request.relationshipGeneration === friendship.generation) {
+        if (share?.status === 'active' && share.owner === openid && friendship?.status === 'active' && friendship.members?.includes(openid) && share.relationshipGeneration === friendship.generation && request.relationshipGeneration === friendship.generation && await sourceStillVerified(repo, share.speciesCardId)) {
           requests.push({
             copyRequestId: request._id,
             relationshipId: request.relationshipId,
@@ -330,6 +339,7 @@ function createSocialService({ repo, now = Date.now, randomToken = () => randomB
       if (request.expiresAt <= now()) deny('expired');
       const share = await tx.get(COLLECTIONS.shares, request.shareId);
       if (!share || share.status !== 'active' || share.owner !== openid || share.recipient !== request.requester) deny('share_inactive');
+      if (!await sourceStillVerified(tx, share.speciesCardId)) deny('not_verified');
       const friendship = await tx.get(COLLECTIONS.friendships, request.relationshipId);
       requireActive(friendship, openid);
       if (share.relationshipGeneration !== friendship.generation || request.relationshipGeneration !== friendship.generation) deny('share_inactive');
