@@ -45,7 +45,7 @@ wx.cloud.callFunction({
 })
 ```
 
-月度价格固定为 1800 分，年度价格固定为 18000 分。云函数只从 `getWXContext().OPENID` 取用户身份，且严格拒绝额外的 `openid` / `amount` / `price` / `status` 字段。成功结果中的 `requestPayment` 可直接交给 `wx.requestPayment`。
+新订单月度价格为 1990 分，年度价格为 19800 分（最终版 V1 规范）；已有订单保留原金额，不追溯改价。云函数只从 `getWXContext().OPENID` 取用户身份，且严格拒绝额外的 `openid` / `amount` / `price` / `status` 字段。成功结果中的 `requestPayment` 可交给 `wx.requestPayment`，但客户端回调不是会员开通依据，必须服务端验签/查询。新目录价格尚未部署。
 
 ## 数据集与索引
 

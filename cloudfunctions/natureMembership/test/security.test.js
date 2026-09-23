@@ -118,8 +118,8 @@ test('server catalog and trusted OPENID defeat forged client price and identity'
   assert.equal(calls.create, 0);
 
   const result = await service.createPayment('trusted-openid', { action: 'createPayment', planId: 'monthly', idempotencyKey: 'idem_key_1234' });
-  assert.equal(result.order.total, 1800);
-  assert.equal(calls.createdOrder.total, 1800);
+  assert.equal(result.order.total, 1990);
+  assert.equal(calls.createdOrder.total, 1990);
   assert.equal(calls.createdOrder.openid, 'trusted-openid');
   const stored = repo.entries(COLLECTIONS.orders)[0];
   assert.equal(stored.openid, 'trusted-openid');
@@ -133,7 +133,7 @@ test('idempotent order creation reuses the same prepay session and signs request
   const second = await service.createPayment('openid-1', event);
   assert.equal(calls.create, 1);
   assert.equal(first.order.orderId, second.order.orderId);
-  assert.equal(first.order.total, 18000);
+  assert.equal(first.order.total, 19800);
   const params = first.requestPayment;
   const message = `${config.appId}\n${params.timeStamp}\n${params.nonceStr}\n${params.package}\n`;
   assert.equal(params.signType, 'RSA');
@@ -233,7 +233,7 @@ test('successful signed authoritative query grants once; duplicate processing ca
     trade_state: 'SUCCESS',
     success_time: new Date(now()).toISOString(),
     payer: { openid: 'openid-3' },
-    amount: { total: 1800, currency: 'CNY' },
+    amount: { total: 1990, currency: 'CNY' },
   };
   const notification = signedNotification({ config, timestamp: now(), resource: { out_trade_no: order.outTradeNo } });
   await service.acceptNotification({ ...notification, kind: 'payment' });
@@ -285,7 +285,7 @@ test('full refund callback is queried authoritatively and removes the correspond
     trade_state: 'SUCCESS',
     success_time: new Date(now()).toISOString(),
     payer: { openid: 'openid-5' },
-    amount: { total: 1800, currency: 'CNY' },
+    amount: { total: 1990, currency: 'CNY' },
   };
   await service.queryOwnedOrder('openid-5', { action: 'queryOrder', orderId: created.order.orderId });
   await service.requestFullRefund(created.order.orderId, '测试退款');
@@ -295,7 +295,7 @@ test('full refund callback is queried authoritatively and removes the correspond
     out_refund_no: order.outRefundNo,
     refund_status: 'SUCCESS',
     success_time: new Date(now()).toISOString(),
-    amount: { total: 1800, refund: 1800, currency: 'CNY' },
+    amount: { total: 1990, refund: 1990, currency: 'CNY' },
   };
   const notification = signedNotification({
     config,

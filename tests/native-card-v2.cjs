@@ -9,7 +9,7 @@ assert.equal(normalized.schemaVersion,undefined,'legacy is not falsely promoted'
 assert.equal(old.originalPhotoAsset,undefined);
 assert.equal(normalizeCard({artPhotoPath:'/art'}).originalPhotoAsset.localPath,'');
 const modern={schemaVersion:2,canonicalSpeciesId:'kingfisher',originalPhotoAsset:{localPath:'/v2',fileId:'cloud://original'},artAsset:{localPath:'/painting',fileId:''}};
-assert.deepEqual(normalizeCard(modern),{...modern,speciesId:'kingfisher'});
+assert.deepEqual(normalizeCard(modern),{...modern,speciesId:'kingfisher',cardType:'original_observation',artworkState:'legacy_private',countsAsDiscovery:true,discoveryNumber:null});
 normalized.originalPhotoAsset.localPath='changed';assert.equal(old.photoPath,'/original');
 assert.equal(buildScience({}).status,'missing');
 const science=buildScience({know:'可信知识',iucn:'LC',protection:'三有保护',facts:[{title:'一',detail:'二'}],untrusted:'ignore'});

@@ -1,6 +1,6 @@
 const assert=require('node:assert/strict'),fs=require('fs'),path=require('path'),vm=require('vm'),{createRequire}=require('module');
 const {membershipView,socialView}=require('../native/lib/availability-model');
-const m=membershipView();assert.equal(m.availability,'unavailable');assert.equal(m.monthly,18);assert.equal(m.yearly,180);assert.equal(m.saving,36);assert.equal(m.saving,m.monthly*12-m.yearly);assert.equal(m.savingPercent,16.7);assert.deepEqual(socialView(),{availability:'unavailable',friends:[]});
+const m=membershipView();assert.equal(m.availability,'unavailable');assert.equal(m.monthly,19.9);assert.equal(m.yearly,198);assert.equal(m.saving,40.8);assert.equal(m.saving,Math.round((m.monthly*12-m.yearly)*100)/100);assert.equal(m.savingPercent,17.1);assert.deepEqual(socialView(),{availability:'unavailable',friends:[]});
 let calls=0;const forbidden=()=>{calls++;throw Error('network forbidden')},urls=[];
 const wx={requestPayment:forbidden,request:forbidden,cloud:{callFunction:forbidden},navigateTo:o=>urls.push(o.url),getStorageSync:k=>k==='nature.profile.v2'?{active:true,paid:true}:null};
 const app={getCards:()=>[],decorate:c=>c,getBadges:()=>({badges:[]}),getCleanup:()=>[],getDrafts:()=>[],syncCards:forbidden};

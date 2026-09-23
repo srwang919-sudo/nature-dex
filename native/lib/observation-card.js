@@ -1,8 +1,9 @@
 // Read adapter only: never promotes legacy cards or persists migrations.
+const {projectV1Card}=require('./v1-card-model');
 function asset(value,localPath,fileId){return {localPath:value&&typeof value.localPath==='string'?value.localPath:localPath||'',fileId:value&&typeof value.fileId==='string'?value.fileId:fileId||''}}
 function normalizeCard(card={}){
  const id=card.canonicalSpeciesId||card.speciesId||'';
- return Object.assign({},card,{canonicalSpeciesId:id,speciesId:id,
+ return Object.assign({},card,projectV1Card(card),{canonicalSpeciesId:id,speciesId:id,
   originalPhotoAsset:asset(card.originalPhotoAsset,card.photoPath,card.photoFileId),
   artAsset:asset(card.artAsset,card.artPhotoPath,card.artAssetFileId)});
 }
