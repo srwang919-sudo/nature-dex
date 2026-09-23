@@ -3,6 +3,7 @@
     "native/pages/home/index",
     "native/pages/library/index",
     "native/pages/profile/index",
+    "native/pages/journey/index",
     "native/pages/observe/index",
     "native/pages/reveal/index",
     "native/pages/card/index",
@@ -13,9 +14,9 @@
   ],
   "window": {
     "navigationBarTitleText": "去大自然里",
-    "navigationBarBackgroundColor": "#FFFBF2",
+    "navigationBarBackgroundColor": "#F5F2E9",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#FFFBF2"
+    "backgroundColor": "#F5F2E9"
   },
   "sitemapLocation": "sitemap.json",
   "permission": {

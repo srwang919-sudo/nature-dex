@@ -1,13 +1,13 @@
 const assert=require('node:assert/strict'),fs=require('fs'),vm=require('vm'),path=require('path');
 const model=require('../native/lib/tab-model');
-assert.deepEqual(model.tabs.map(x=>x.key),['discover','collection','me']);
-assert.deepEqual(model.navigationItems.map(x=>x.key),['discover','collection','me']);
-assert.deepEqual(model.navigationItems.map(x=>x.label),['首页','图鉴','我的']);
+assert.deepEqual(model.tabs.map(x=>x.key),['discover','collection','capture','journey','me']);
+assert.deepEqual(model.navigationItems.map(x=>x.key),['discover','collection','capture','journey','me']);
+assert.deepEqual(model.navigationItems.map(x=>x.label),['探索','图鉴','发现','旅程','我的']);
 let component;const calls=[];
 vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../native/components/navigation/index.js'),'utf8'),{require:()=>model,Component:x=>component=x,wx:{navigateTo:x=>calls.push(['push',x.url]),reLaunch:x=>calls.push(['tab',x.url])}});
 const ctx={data:{currentKey:'discover'},setData(x){Object.assign(this.data,x)}};
 const tap=key=>component.methods.go.call(ctx,{currentTarget:{dataset:{key}}});
-tap('capture');assert.deepEqual(calls,[]);
+tap('capture');assert.deepEqual(calls.pop(),['push','/native/pages/observe/index?source=camera']);
 tap('discover');tap('invalid');assert.equal(calls.length,0);
 tap('collection');assert.deepEqual(calls[0],['tab','/native/pages/library/index']);
 component.observers.active.call(ctx,'observe');assert.equal(ctx.data.hidden,true);

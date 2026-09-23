@@ -1,0 +1,6 @@
+<view class="page journey-page {{reduceMotion?'reduce-motion':''}}">
+ <text class="sub">留给未来的自己</text><view class="title">自然旅程</view>
+ <view wx:if="{{!groups.length}}" class="journey-empty"><view class="section">第一次遇见，值得记下来。</view><text class="sub">照片、季节和当时的心情，会慢慢成为你的自然记忆。</text><button class="primary spaced" bindtap="capture">拍一张</button></view>
+ <view wx:for="{{groups}}" wx:key="label" class="month-section"><view class="section">{{item.label}}</view><view class="journey-grid"><view wx:for="{{item.cards}}" wx:for-item="card" wx:key="id" class="journey-card" data-id="{{card.id}}" bindtap="open" aria-role="button" aria-label="{{'回看'+card.zh}}"><collectible card="{{card}}"/></view></view></view>
+ <view wx:if="{{places.length}}" class="spaced"><view class="section">走过的地方</view><text class="sub">你主动留下的地点，仅自己可见</text><view wx:for="{{places}}" wx:key="placeId" class="place-row"><text>{{item.label}}</text><text class="sub">{{item.count}} 次遇见</text></view></view>
+</view><navigation active="journey"/>

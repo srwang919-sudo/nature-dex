@@ -18,3 +18,4 @@ page{--paper:#FFF8E8;--surface:#FFFCF4;--ink:#183F36;--muted:#52635A;--moss:#647
 .empty{color:var(--muted);background:var(--surface)}.grow{min-width:0}
 .reduce-motion .primary,.reduce-motion .secondary{transition:none;transform:none}
 @media(prefers-reduced-motion:reduce){.primary,.secondary{transition:none}.primary:active,.secondary:active{transform:none}}
+@import "native/styles/museum.wxss";
