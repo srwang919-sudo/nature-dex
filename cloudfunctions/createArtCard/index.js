@@ -5,6 +5,7 @@ const {validConsent}=require('./consent');
 const {reserveQuota}=require('./quota');
 const {buildPrivateArtPrompt,PRIVATE_STYLE_VERSION}=require('./prompt');
 const {trustedSpecies}=require('./species');
+const {confirmedCandidate,attestation}=require('./observation');
 const valid=x=>typeof x==='string'&&/^[a-zA-Z0-9_-]{1,100}$/.test(x);
 async function main(event={},deps={}){
  const api=deps.cloud||cloud,fail=code=>({status:'failed',code,retryable:['generation_failed','busy','runtime_unavailable'].includes(code)});
@@ -29,6 +30,7 @@ async function main(event={},deps={}){
   const styleVersion=current?(current.styleVersion||'legacy'):NATURAL_HISTORY_STYLE_VERSION;
   if(styleVersion===NATURAL_HISTORY_STYLE_VERSION)artPrompt=buildNaturalHistoryPrompt({speciesId:species.id});
   const owned=await db.collection('assets').where({_openid:owner,fileId:event.photoFileId,observationId:event.photoObservationId}).get();if(!owned.data?.length)return fail('forbidden');
+  const candidate=await confirmedCandidate(db,owner,event);
   const lease=Date.now()+180000;
   const claimed=await db.runTransaction(async tx=>{
    if(await deleted(tx))throw Error('cancelled');
@@ -43,10 +45,10 @@ async function main(event={},deps={}){
    const photo=await api.downloadFile({fileID:event.photoFileId});
    const assetFileId=await (deps.generate||generate)(api,{reference:photo.fileContent,path:'private-art/'+owner+'/'+id+'.jpg',prompt:artPrompt});
    generatedFileId=assetFileId;
-   const published=await db.runTransaction(async tx=>{const entry=tx.collection('artOperations').doc(id),live=(await entry.get()).data;if(await deleted(tx)||live?.status==='cancelled')return false;await entry.update({data:{status:'ready',assetFileId,styleVersion,leaseExpiresAt:0}});return true});
+   const published=await db.runTransaction(async tx=>{const entry=tx.collection('artOperations').doc(id),live=(await entry.get()).data;if(await deleted(tx)||live?.status==='cancelled')return false;await entry.update({data:{status:'ready',assetFileId,styleVersion,leaseExpiresAt:0}});await tx.collection('trustedObservations').doc(deletionId).set({data:attestation(owner,event,candidate)});return true});
    if(!published){await doc.update({data:{status:'cancelled',assetFileId}});const removed=await api.deleteFile({fileList:[assetFileId]});if(removed.fileList?.[0]?.status===0)await doc.update({data:{assetFileId:'',leaseExpiresAt:0}});return fail('cancelled')}
    return {status:'ready',assetFileId};
   }catch(e){await db.runTransaction(async tx=>{const entry=tx.collection('artOperations').doc(id),live=(await entry.get()).data;await entry.update({data:{status:live?.status==='cancelled'?'cancelled':'failed',code:'generation_failed',leaseExpiresAt:0,...(generatedFileId?{assetFileId:generatedFileId}:{})}})});return fail('generation_failed')}
- }catch(e){return fail(['daily_limit','quota_unavailable'].includes(e.message)?e.message:'service_unavailable')}
+ }catch(e){return fail(['daily_limit','quota_unavailable','candidate_unverified'].includes(e.message)?e.message:'service_unavailable')}
 }
 module.exports={main};

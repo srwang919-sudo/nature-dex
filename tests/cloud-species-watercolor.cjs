@@ -19,6 +19,7 @@ const deps={cloud:api,generate:async(api,input)=>{generated++;assert.ok(!input.p
  assert.equal((await front(event,{cloud:api})).code,'forbidden');
  assert.equal((await front({...event,prompt:'override'},{cloud:api})).code,'invalid_request');
  rows.set('assetsphoto',{_openid:'u2',fileId:event.photoFileId,observationId:'obs1'});
+ rows.set('recognitionReceipts'+require('crypto').createHash('sha256').update('u2|obs1').digest('hex'),{owner:'u2',observationId:'obs1',photoFileId:event.photoFileId,status:'complete',result:{candidates:[{speciesId:'ibis',name:'朱鹮',confidence:.9,category:'bird'}]}});
  let count=0;const frontDeps={cloud:api,generate:async()=>{count++;return 'cloud://private/art'}};
  assert.equal((await front(event,frontDeps)).status,'ready');
  assert.equal((await front(event,frontDeps)).status,'ready');assert.equal(count,1);
