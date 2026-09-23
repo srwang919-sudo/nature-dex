@@ -17,7 +17,7 @@ assert.equal(page.data.today.length,0,'undated record cannot pretend to be colle
 app.getCards=()=>[{kind:'example',speciesId:'ibis'},{sample:true,speciesId:'moth'}];page.refresh()
 assert.equal(page.data.worldCards.length,0);assert.equal(page.data.task,undefined)
 app.getCards=()=>[{id:'a',speciesId:'kingfisher'},{id:'b',speciesId:'kingfisher'}];page.refresh()
-assert.equal(page.data.worldCards.length,2)
+assert.equal(page.data.worldCards.length,1,'same species occupies only one world position')
 page.observe();page.onShow();page.album()
 assert.equal(JSON.stringify(destinations),JSON.stringify(['/native/pages/observe/index?source=camera','/native/pages/observe/index?source=album']))
 console.log('PASS truthful home progress, sample exclusion, duplicates and distinct routes')

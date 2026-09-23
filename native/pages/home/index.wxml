@@ -2,9 +2,11 @@
  <view class="explore-top"><text class="brand">去大自然里</text><text class="sub">{{dateLabel}}</text></view>
  <view class="world-canvas">
   <view class="world-heading"><text class="eyebrow">{{seasonLabel}} · 按当前月份</text><view class="title">你的自然世界</view><text class="sub">每一次遇见，都留下自己的位置。</text></view>
-  <view wx:if="{{worldCards.length}}" class="world-specimens"><view wx:for="{{worldCards}}" wx:key="id" class="world-specimen specimen-{{index}}" data-id="{{item.id}}" bindtap="openCard" aria-role="button" aria-label="{{'查看真实收藏：'+item.zh}}"><collectible card="{{item}}"/></view></view>
-  <view wx:else class="world-empty"><view class="world-contour contour-one"/><view class="world-contour contour-two"/><view class="world-empty-copy"><text>这里，等着你的第一次发现</text><text class="sub">尚无真实收藏，画布为你留白。</text></view></view>
-  <text class="world-caption">{{worldCards.length?'来自你的真实收藏，轻点回看':'去大自然里，留意一片叶、一声鸟鸣。'}}</text>
+  <view class="world-ecosystem"><view class="scene-canopy"/><view class="scene-branch"/><view class="scene-ground"/><view class="scene-water"/>
+   <view wx:for="{{worldCards}}" wx:key="id" class="world-specimen zone-{{item.worldZone}} slot-{{item.worldSlot}}" data-id="{{item.id}}" bindtap="openCard" aria-role="button" aria-label="{{'查看真实收藏：'+item.zh}}"><collectible card="{{item}}" scene="{{true}}"/></view>
+   <view wx:if="{{!worldCards.length}}" class="world-empty-copy"><text>这里，等着你的第一次发现</text><text class="sub">尚无真实收藏，画布为你留白。</text></view>
+  </view>
+  <text class="world-caption">自然场景示意，非实际分布 · {{worldCards.length?'轻点物种回看':'从第一次遇见开始'}}</text>
  </view>
  <view class="record-area"><button class="primary home-record" bindtap="observe" aria-label="拍一张，打开相机"><text>拍一张</text></button><button class="album-entry" bindtap="album">从相册选择</button></view>
  <view class="row between today-heading"><text class="section">今天的遇见</text><button class="link" bindtap="library">看图鉴</button></view>

@@ -2,7 +2,7 @@ const {presentCard}=require('../../lib/card-presentation')
 const {localIllustrationFor}=require('../../lib/species-illustration')
 function automaticMediaDenied(){const pages=typeof getCurrentPages==='function'?getCurrentPages():[],route=pages[pages.length-1]?.route||'';return ['native/pages/home/index','native/pages/library/index','native/pages/journey/index','native/pages/profile/index'].includes(route)&&!require('../../lib/recovery-consent').allowed(wx)}
 Component({
- options:{virtualHost:true},properties:{card:Object,large:Boolean,back:Boolean,motion:Boolean},data:{stars:'',presentation:null,imageUnavailable:false},
+ options:{virtualHost:true},properties:{card:Object,large:Boolean,back:Boolean,motion:Boolean,scene:Boolean},data:{stars:'',presentation:null,imageUnavailable:false},
  observers:{card:function(c){if(c){const presentation=presentCard(c),denied=automaticMediaDenied()||(c.serverCardId&&!require('../../lib/recovery-consent').allowed(wx));if(denied){if(/^(cloud:\/\/|https?:\/\/)/.test(presentation.front.photo))presentation.front.photo='';if(/^(cloud:\/\/|https?:\/\/)/.test(presentation.back.illustration))presentation.back.illustration=''}this.setData({stars:presentation.starText,presentation,imageUnavailable:denied&&!presentation.front.photo,backUnavailable:denied&&!presentation.back.illustration});this.fixCloudUrls(presentation)}}},
  methods:{
   imageError(){this.setData({imageUnavailable:true})},

@@ -1,4 +1,5 @@
-<view class="physical {{presentation.front.finishKey}} {{large?'large':''}} {{motion?'moving':''}}">
+<view wx:if="{{scene}}" class="scene-art"><image wx:if="{{!imageUnavailable && presentation.front.photo}}" class="scene-image" src="{{presentation.front.photo}}" mode="aspectFit" binderror="imageError"/><view wx:else class="scene-unavailable">插画待恢复</view><text class="scene-name">{{presentation.front.name}}</text></view>
+<view wx:else class="physical {{presentation.front.finishKey}} {{large?'large':''}} {{motion?'moving':''}}">
   <view wx:if="{{!back}}" class="inner">
     <image wx:if="{{!imageUnavailable && presentation.front.photo}}" class="photo" src="{{presentation.front.photo}}" mode="aspectFill" binderror="imageError"/>
     <view wx:else class="photo photo-fallback"><text>原图不可用</text><text>请重新选择</text></view>
