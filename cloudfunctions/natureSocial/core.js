@@ -146,7 +146,7 @@ function createSocialService({ repo, now = Date.now, randomToken = () => randomB
         }
         if (invite.status !== 'open') deny('invite_used');
         const current = await tx.get(COLLECTIONS.friendships, relationshipId);
-        if (current?.status === 'blocked') deny('relationship_blocked');
+        if (current?.status === 'blocked' || current?.blockedBy?.length) deny('relationship_blocked');
         const connectedAt = now();
         const friendship = {
           members: [invite.issuer, openid].sort(),
@@ -350,7 +350,7 @@ function createSocialService({ repo, now = Date.now, randomToken = () => randomB
         if (!blockedBy.includes(openid)) deny('forbidden');
         blockedBy.splice(blockedBy.indexOf(openid), 1);
       }
-      const status = operation === 'revoke' ? 'revoked' : blockedBy.length ? 'blocked' : 'revoked';
+      const status = blockedBy.length ? 'blocked' : 'revoked';
       await tx.put(COLLECTIONS.friendships, event.relationshipId, { ...friendship, status, blockedBy, updatedAt: now(), ...(operation === 'revoke' ? { revokedBy: openid } : {}) });
       return ready(operation === 'block' ? 'friend_blocked' : operation === 'unblock' ? 'friend_unblocked' : 'friend_revoked', { relationshipId: event.relationshipId, relationshipStatus: status });
     });

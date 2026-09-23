@@ -205,6 +205,8 @@ test('revocation and blocking immediately remove access and prevent new copy req
     idempotencyKey: 'accept_again_123456789',
   })).status, 'ready');
   assert.equal((await f.call('openid_bob', 'blockFriend', { relationshipId })).status, 'ready');
+  const revokeWhileBlocked = await f.call('openid_alice', 'revokeFriend', { relationshipId });
+  assert.equal(revokeWhileBlocked.relationshipStatus, 'blocked');
   const blockedInvite = await f.call('openid_alice', 'createInvite');
   assert.deepEqual(await f.call('openid_bob', 'acceptInvite', {
     inviteCode: blockedInvite.inviteCode,
