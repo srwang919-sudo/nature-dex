@@ -2,7 +2,7 @@ const {presentCard}=require('./card-presentation');
 const {lineArtFor}=require('./species-line-art');
 const {illustrationFor}=require('./species-illustration');
 const PRINT_SPEC=Object.freeze({width:821,height:1121,trimWidth:750,trimHeight:1050,bleedMm:3,dpi:300});
-function publicShare(card){const id=card.speciesId||card.id;return {title:'去大自然里 · '+card.zh+'的自然档案',path:'/native/pages/card/index?id=sample_'+encodeURIComponent(id),imageUrl:'https://nature-card-app.app.workbuddy.host/assets/images/'+id+'.jpg'};}
+function publicShare(card){const id=card.speciesId||card.id;return {title:'去大自然里 · '+card.zh+'的自然档案',path:'/native/pages/card/index?id=sample_'+encodeURIComponent(id),imageUrl:'/assets/theme/share-safe-leaf.png'};}
 function exportPlan(card,mode){const backs=mode==='share'&&!!card.protection;return {mode,width:821,height:backs?2282:1121,backs,print:mode.indexOf('print')===0};}
 const COLORS={standard:'#FFFFFF',holo:'#DEF0FC',alt:'#FCE3DE',numbered:'#FFF3D6'};
 function printQuality(image,mode,card={}){

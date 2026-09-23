@@ -1,13 +1,3 @@
-/* 资产解析：https 临时链接（getTempFileURL 刷新，2h 有效）> cloud fileID > 包内路径 */
-function resolve(path){
-  try{
-    const key=String(path).replace(/^\//,'');
-    if(key.indexOf('assets/images/')===0)return path;
-    const urls=wx.getStorageSync('nature.assets.urls')||{};
-    if(urls[key])return urls[key];
-    const map=wx.getStorageSync('nature.assets.fileIds')||{};
-    if(map[key])return map[key];
-  }catch(e){}
-  return path;
-}
+// Retired static maps must never resurrect rights-unverified assets from cache.
+function resolve(path){return typeof path==='string'&&/^\/?assets\/(images|illustrations|badges|fonts)\//.test(path)?'':path||''}
 module.exports={resolve};

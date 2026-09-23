@@ -2,7 +2,10 @@
   <view class="explore-top"><text class="brand">去大自然里</text><text class="sub">自然观察手册</text></view>
   <view class="exploration-intro">
     <view class="intro-copy"><view class="title"><view>今天去发现</view><view>一点新鲜事</view></view><text class="sub">拍照 · 鉴别 · 收藏这次遇见</text></view>
-    <image class="exploration-hero" src="/assets/theme/exploration-hero.jpg" mode="aspectFill" aria-hidden="true"/>
+    <view class="exploration-hero" aria-hidden="true">
+      <view class="hero-sun"></view><view class="hero-hill hero-hill-back"></view><view class="hero-hill hero-hill-front"></view>
+      <view class="hero-plant"><view class="hero-stem"></view><view class="hero-leaf hero-leaf-a"></view><view class="hero-leaf hero-leaf-b"></view><view class="hero-leaf hero-leaf-c"></view></view>
+    </view>
   </view>
   <view class="record-area"><button class="home-record" bindtap="observe" aria-label="拍一张，打开相机"><view class="record-camera" aria-hidden="true"></view><text>拍一张</text></button><text class="sub">拍下眼前的自然，留下自己的收藏</text><button class="album-entry" bindtap="album">从相册选择</button></view>
   <view class="row between today-heading"><text class="section">今日收集</text><button class="link" bindtap="library">图鉴 {{found}} / {{total}}</button></view>

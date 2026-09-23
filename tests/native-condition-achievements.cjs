@@ -3,7 +3,7 @@ const names=['初识自然','三叶档案','飞羽来信','微观访客','重逢
 const cards=Array.from({length:20},(_,i)=>({id:'c'+i,speciesId:'dynamic-'+i,category:i<3?'plant':i<6?'bird':i<9?'insect':'other',localDate:'2026-09-'+String(21+i%4).padStart(2,'0'),location:i<3?{placeId:'p'+i,label:'地点'+i,visibility:'private',consentAt:1}:null}));
 cards.push({...cards[0],id:'repeat1'},{...cards[0],id:'repeat2'});
 const context={notesByCard:{c0:'一',c1:'二',c2:'三'},events:{puzzleUsed:true,scienceReadSpecies:cards.slice(0,10).map(c=>c.speciesId)}};
-const all=buildAchievements(cards,context);assert.deepEqual(all.map(b=>b.name),names);assert.ok(all.every(b=>b.earned));assert.equal(all.length,12);assert.equal(new Set(all.map(b=>b.asset)).size,12);
+const all=buildAchievements(cards,context);assert.deepEqual(all.map(b=>b.name),names);assert.ok(all.every(b=>b.earned));assert.equal(all.length,12);assert.equal(new Set(all.map(b=>b.asset)).size,1);
 assert.equal(buildAchievements(cards.map(c=>({...c,sample:true})),context).filter(b=>b.earned).length,0);
 assert.equal(buildAchievements(cards.map(c=>({...c,artStatus:'failed'})),context).filter(b=>b.earned).length,0);
 const get=(cs,name,ctx={})=>buildAchievements(cs,ctx).find(b=>b.name===name);

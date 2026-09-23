@@ -1,7 +1,7 @@
 const assert=require('node:assert/strict'),path=require('node:path'),fs=require('node:fs');
 const lib=require(path.join(__dirname,'../native/lib/card-export.js'));
 const card={id:'private-123',speciesId:'ibis',zh:'朱鹮',photoPath:'wxfile://private.jpg',note:'private note',protection:'国家一级保护动物'};
-const share=lib.publicShare(card);assert.ok(share.path.includes('sample_ibis'));assert.ok(!JSON.stringify(share).includes('private'));assert.ok(share.imageUrl.endsWith('/assets/images/ibis.jpg'));
+const share=lib.publicShare(card);assert.ok(share.path.includes('sample_ibis'));assert.ok(!JSON.stringify(share).includes('private'));assert.ok(share.imageUrl.endsWith('/assets/theme/share-safe-leaf.png'));
 assert.deepEqual(lib.PRINT_SPEC,{width:821,height:1121,trimWidth:750,trimHeight:1050,bleedMm:3,dpi:300});
 assert.equal(lib.exportPlan(card,'share').backs,true);assert.equal(lib.exportPlan({...card,protection:''},'share').backs,false);
 assert.equal(lib.exportPlan(card,'printFront').height,1121);assert.equal(lib.exportPlan(card,'printBack').width,821);

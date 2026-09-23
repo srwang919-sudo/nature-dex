@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="640" viewBox="0 0 800 640" role="img" aria-labelledby="title desc">
+  <title id="title">去大自然里</title>
+  <desc id="desc">项目自绘的中性叶片分享图，不含用户照片或物种图像。</desc>
+  <rect width="800" height="640" fill="#F4F0E4"/>
+  <circle cx="650" cy="112" r="54" fill="#E8C86A"/>
+  <path d="M0 500 Q175 398 352 486 T800 450 V640 H0Z" fill="#D9E2C5"/>
+  <path d="M0 552 Q210 460 410 548 T800 510 V640 H0Z" fill="#B9C99B"/>
+  <path d="M398 520 C390 420 418 316 486 226" fill="none" stroke="#2F6659" stroke-width="13" stroke-linecap="round"/>
+  <path d="M443 353 C353 350 298 300 302 227 C388 224 447 272 443 353Z" fill="#6F8750"/>
+  <path d="M465 298 C468 216 518 164 590 160 C594 238 548 294 465 298Z" fill="#8EA05F"/>
+  <path d="M420 438 C337 439 287 397 286 332 C363 328 417 368 420 438Z" fill="#496F51"/>
+  <text x="72" y="108" fill="#183F36" font-family="PingFang SC, Microsoft YaHei, sans-serif" font-size="48" font-weight="600">去大自然里</text>
+  <text x="75" y="154" fill="#58655D" font-family="PingFang SC, Microsoft YaHei, sans-serif" font-size="24">自然观察手册</text>
+</svg>
