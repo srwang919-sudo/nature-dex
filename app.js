@@ -6,6 +6,7 @@ App({
     catch (e) { console.warn('[cloud] init failed', e) }
     // Cloud sync remains disabled until an explicit account/data consent flow exists.
     this.refreshAssetUrls()
+    this.retryCloudCleanup().catch(()=>{})
   },
   globalData: {
     species: {
@@ -39,6 +40,7 @@ App({
   async cloudSyncNote() { return {status:'disabled',code:'sync_consent_required'} },
   async refreshAssetUrls() { return {status:'retired'} },
   async syncAssets() { return {status:'retired'} },
+  async retryCloudCleanup(){const protectedIds=new Set(this.getCards().concat(this.getReadyCards()).map(c=>c.photoObservationId).filter(Boolean));if(this._observation)protectedIds.add(this._observation.id);return require('./native/lib/cloud-cleanup').drain(wx,protectedIds)},
   async removeCard(cardId) {
     const card = this.getCards().find(c => c.id === cardId)
     if (!card) return
@@ -128,13 +130,14 @@ App({
     }}));
   },
   async clearLocalData() {
+    require('./native/lib/cloud-cleanup').forget(wx,new Set(this.getCards().concat(this.getReadyCards()).map(c=>c.photoObservationId).filter(Boolean)));
     this._dataEpoch = this.getDataEpoch() + 1;
     this._observation=null;
     const photos = this.getCards().map(c=>c.photoPath).concat(this.getReadyCards().map(c=>c.photoPath),this.getDrafts().map(d=>d.photoPath), this.getCleanup(), wx.getStorageSync('nature.export.files')||[],[(wx.getStorageSync('nature.profile.v2')||{}).avatarPath]);
     // Persist cleanup intent before removing records, so partial file failures can be retried.
     wx.setStorageSync('nature.cleanup.v1', [...new Set(photos.filter(Boolean))]);
     const keys = wx.getStorageInfoSync().keys;
-    keys.filter(k=>k.startsWith('nature.') && k !== 'nature.cleanup.v1').forEach(k=>wx.removeStorageSync(k));
+    keys.filter(k=>k.startsWith('nature.') && k !== 'nature.cleanup.v1' && k !== 'nature.cloudCleanup.v1').forEach(k=>wx.removeStorageSync(k));
     return this.retryCleanup();
   },
   exportLocalData() { return {version:1,exportedAt:new Date().toISOString(),cards:this.getCards(),drafts:this.getDrafts(),notes:this.getCards().map(c=>({cardId:c.id,text:wx.getStorageSync('nature.note.'+c.id)||''})),notice:'本地数据备份；照片路径仅在原设备有效，图片请单独导出'}; },

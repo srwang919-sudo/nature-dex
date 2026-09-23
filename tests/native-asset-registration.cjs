@@ -1,9 +1,9 @@
 const assert=require('node:assert/strict'),fs=require('fs'),vm=require('vm'),path=require('path');
-const root=path.join(__dirname,'..'),calls=[];let page;
-const wx={getStorageSync:()=>({version:1,provider:'baidu',acceptedAt:1}),cloud:{
+const root=path.join(__dirname,'..'),calls=[];let page,cleanup=[];
+const wx={getStorageSync:k=>k==='nature.cloudCleanup.v1'?cleanup:{version:1,provider:'baidu',acceptedAt:1},setStorageSync:(k,v)=>cleanup=v,cloud:{
  database(){throw Error('client database must never be used')},
  callFunction:async({name,data})=>{assert.equal(name,'recognizeObservation');calls.push(data);return {result:data.action==='upload_ticket'?{status:'ready',contractVersion:2,cloudPath:'observations/u1/d1.jpg'}:{status:'registered',contractVersion:2}}},
- uploadFile:async({cloudPath})=>({fileID:'cloud://env.bucket/'+cloudPath})
+ uploadFile:async({cloudPath})=>{assert.ok(cleanup.includes('d1'),'durable cleanup precedes upload');return {fileID:'cloud://env.bucket/'+cloudPath}}
 }};
 vm.runInNewContext(fs.readFileSync(path.join(root,'native/pages/observe/index.js'),'utf8'),{Page:p=>page=p,getApp:()=>({finishes:[]}),wx,require:require('module').createRequire(path.join(root,'native/pages/observe/index.js'))});
 (async()=>{

@@ -28,7 +28,7 @@ async function main(event={},deps={}){
  let openid;try{openid=api.getWXContext().OPENID}catch(e){return fail('unauthenticated')}if(!openid)return fail('unauthenticated');
  if(!process.env.BAIDU_API_KEY||!process.env.BAIDU_SECRET_KEY)return fail('not_configured');
  const cloudPath='observations/'+openid+'/'+event.observationId+'.jpg';
- if(event.action==='upload_ticket')return {status:'ready',cloudPath,contractVersion:2};
+ if(event.action==='upload_ticket'){try{return await require('./upload-intent').prepareUpload(api.database(),{owner:openid,observationId:event.observationId,cloudPath},deps.getUploadMetadata,tx=>require('./quota').reserveQuota(tx,openid,'upload'))}catch(e){return fail(['daily_limit','cancelled'].includes(e.message)?e.message:'asset_registry')}}
  if(!event.photoFileId||!event.idempotencyKey)return fail('invalid_request');
  if(!String(event.photoFileId).startsWith('cloud://')||!String(event.photoFileId).endsWith('/'+cloudPath))return fail('forbidden');
  if(event.action==='register_asset'){

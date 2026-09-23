@@ -14,7 +14,7 @@ Page({
  onShow(){this.restore();const cards=app.getCards(),today=new Date().toDateString(),owned=new Set(cards.map(c=>c.speciesId));this.setData({reduceMotion:!!wx.getStorageSync('nature.reduceMotion'),drafts:app.getDrafts().map(d=>({id:d.id,photoPath:d.photoPath,status:d.pendingCard?'待入册卡片':d.mode==='unknown'?'待确认物种':'待鉴别照片'})).reverse(),recent:cards.slice(-3).reverse().map(c=>app.decorate(c)).filter(Boolean),today:cards.filter(c=>c.createdAt&&new Date(c.createdAt).toDateString()===today).map(c=>app.decorate(c)).filter(Boolean),undiscovered:Object.values(app.globalData.species).filter(s=>!owned.has(s.id)).slice(0,2)})},
  restore(){const d=app.getObservation?app.getObservation():app.getDraft();if(d)this.setData({photoPath:d.photoPath,mode:d.mode||'ready',species:null,pending:false});else{const ready=app.getReadyCards&&app.getReadyCards().slice(-1)[0];if(ready){this._readyId=ready.id;this.setData({photoPath:ready.photoPath,pending:true,mode:'ready'})}}},
  onHide(){this._creationToken=(this._creationToken||0)+1;this.setData({busy:false,artProgress:''});this._entrySource='';this.setData({cameraOpen:false,cameraReady:false,aiBusy:false});this._token=(this._token||0)+1;clearTimeout(this._timer);if(this.data.mode==='identifying')this.setData({mode:'ready'})},
- onUnload(){this._unloaded=true;this.onHide();const d=app.getObservation&&app.getObservation();if(d){if(d.photoFileId&&wx.cloud)wx.cloud.callFunction({name:'cleanupObservationAssets',data:{observationId:d.id}}).catch(()=>{});app.discardObservation()}},
+ onUnload(){this._unloaded=true;this.onHide();const d=app.getObservation&&app.getObservation();if(d){app.discardObservation();if(app.retryCloudCleanup)app.retryCloudCleanup().catch(()=>{})}},
  openCamera(){this.setData({cameraOpen:true,cameraReady:false,cameraError:''})},
  newPhoto(){clearTimeout(this._timer);this._token=(this._token||0)+1;this.setData({photoPath:'',mode:'empty',species:null,pending:false})},
  recover(e){clearTimeout(this._timer);this._token=(this._token||0)+1;try{app.selectDraft(e.currentTarget.dataset.id);this.restore();this.setData({showDemo:false})}catch(e){wx.showToast({title:'恢复失败',icon:'none'})}},
@@ -51,6 +51,7 @@ Page({
  async uploadPhoto(draft,filePath){
   if(!hasConsent(wx))throw {code:'consent_required'};
   if(!wx.cloud||!draft)return '';
+  require('../../lib/cloud-cleanup').enqueue(wx,draft.id);
   let ticket;try{ticket=await wx.cloud.callFunction({name:'recognizeObservation',data:{action:'upload_ticket',consent:true,observationId:draft.id}})}catch(e){throw cloudFailure(e,'upload_ticket')}
   if(!ticket.result||ticket.result.status!=='ready')throw {code:ticket.result&&ticket.result.code||'cloud_version'};
   if(ticket.result.contractVersion!==2||!ticket.result.cloudPath)throw {code:'cloud_version'};

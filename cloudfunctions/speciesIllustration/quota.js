@@ -1,5 +1,5 @@
 const {createHash}=require('crypto');
-const DEFAULTS={art:3,watercolor:3,recognition:20};
+const DEFAULTS={art:3,watercolor:3,recognition:20,upload:20};
 async function reserveQuota(tx,owner,kind,now=Date.now()){
  const fallback=DEFAULTS[kind];if(!fallback||!owner)throw Error('quota_unavailable');
  const raw=Number(process.env['NATURE_'+kind.toUpperCase()+'_DAILY_LIMIT']);
