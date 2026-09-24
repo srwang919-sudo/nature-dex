@@ -24,3 +24,11 @@ Tests cover deterministic ordering, duplicate/missing/foreign/gift/deleted rejec
 ## Not ready for purchase or production
 
 No deployment or external changes were performed. Provision `printOrderDrafts` with client reads/writes denied and deploy the createArtCard additions only after review. Test real CloudBase transaction duration/conflicts with 24 records, account erasure and private resource ACL. The quote/draft is not a paid order or manufacturing package: no merchant transaction, address, refund processing, fulfillment, PDF/batch package, or printer API is connected. Actual device PNG quality, all 24 front/back approvals, final server-side print package generation and manufacturing proof are still required. The current preview reads local displayed metadata while the immutable draft uses server metadata; a production renderer must render exclusively from the final snapshot before purchase is enabled. Gift original-photo/source attribution authorization remains explicitly unresolved and disabled. This is a non-purchasable preparation slice, not a launch-ready print service.
+
+## Review correction: illustrative PNG versus server snapshot
+
+The print page now explicitly calls each PNG “本机示意” and states “不是生产文件”. After quote it lists every server name, Discovery Number and position, compares these to the local decorated preview metadata, and flags name/number/order/missing-card differences. Structural mismatch blocks saving a draft; metadata differences stay visibly marked and do not silently rewrite the PNG. No production-image parity is claimed.
+
+Reloaded receipts are labelled “本机缓存 · 待联网重验”, never fresh server confirmation. Quote and draft actions still perform online validation; failure removes the local draft receipt. If local removal itself fails, an explicit warning says the cache is not confirmed valid. Idempotency request keys remain for safe retry after an ambiguous network result.
+
+Correction verification: native print tests 8/8; full worktree and isolated checkout 207/207; native build and official print-page WXML/WXSS compilation passed. No cloud deployment or production print package was produced.
