@@ -8,7 +8,7 @@ Page({
  requestCloudErasure(){if(this.data.privacyBusy)return;wx.showModal({title:'申请清除云端个人数据？',content:'将停止该账号的识别、生成和分享，删除私有照片及非财务个人记录。支付对账记录依法保留；公共物种插画不受影响。本机数据可另行清除。',confirmText:'继续',success:r=>{if(!r.confirm)return;wx.showModal({title:'再次确认云端清除',content:'此操作不可撤销。清理可能分批完成，未完成时请回来继续；不会仅清空本机就宣称成功。',confirmText:'确认申请',success:async final=>{if(final.confirm)await this.runCloudErasure('requestErasure')}})}})},
  async continueCloudErasure(){await this.runCloudErasure('continueErasure')},
  async runCloudErasure(action){if(this.data.privacyBusy)return;this.setData({privacyBusy:true});try{const result=await require('../../lib/cloud-privacy').privacyAction(action);this.setData({privacyStatus:result.status,privacyMessage:result.label})}catch(e){this.setData({privacyMessage:'云端清理未确认完成，请稍后重试。'})}finally{this.setData({privacyBusy:false})}},
- onLoad(q={}){this.setData({section:['privacy','help','about','membership','friends'].includes(q.section)?q.section:'privacy',version:'0.1.0',membership:membershipView(),social:socialView()})},
+ onLoad(q={}){this.setData({section:['privacy','help','about','membership','friends','local'].includes(q.section)?q.section:'privacy',version:'0.1.0',membership:membershipView(),social:socialView()})},
  changeSection(e){this.onLoad({section:e.currentTarget.dataset.section})},
  placeVisibility(e){try{wx.setStorageSync('nature.showLocation',!!e.detail.value);this.setData({showLocation:!!e.detail.value})}catch(e){wx.showToast({title:'设置未保存',icon:'none'})}},
  copyFeedback(){wx.setClipboardData({data:'去大自然里 · 本地反馈模板\n版本：'+this.data.version+'\n问题描述：\n操作步骤：\n预期效果：\n请自行补充后发送给开发者；不要填写照片、精确位置、密码或密钥。'})},

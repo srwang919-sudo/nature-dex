@@ -13,7 +13,7 @@ function membershipClient(api){return {
   if(confirmed.order?.status==='PAID'){api.removeStorageSync('nature.pendingPayment.v1');api.removeStorageSync(key)}
   return {membership,orderStatus:confirmed.order?.status||'UNKNOWN'};
  },
- async reconcile(){const pending=api.getStorageSync('nature.pendingPayment.v1');if(pending?.orderId)await call(api,'natureMembership',{action:'queryOrder',orderId:pending.orderId});return this.status()}
+ async reconcile(){const pending=api.getStorageSync('nature.pendingPayment.v1');let orderStatus='';if(pending?.orderId){const result=await call(api,'natureMembership',{action:'queryOrder',orderId:pending.orderId});orderStatus=result.order?.status||'UNKNOWN'}return {membership:await this.status(),orderStatus}}
 }}
 const socialFields={listFriends:[],listSharedSpecies:[],listCopyRequests:[],listMemorialCopies:[],createInvite:[],acceptInvite:['inviteCode','idempotencyKey'],registerVerifiedSpecies:['observationId'],setSpeciesPublic:['relationshipId','speciesCardId','shared'],revokeSpeciesShare:['shareId'],requestCopy:['shareId','idempotencyKey'],approveCopy:['copyRequestId','idempotencyKey'],rejectCopy:['copyRequestId','idempotencyKey'],revokeFriend:['relationshipId'],blockFriend:['relationshipId']};
 async function socialCall(api,action,data={}){const fields=socialFields[action];if(!fields||Object.keys(data).some(k=>!fields.includes(k)))throw Error('invalid_client_request');return call(api,'natureSocial',{action,...data})}

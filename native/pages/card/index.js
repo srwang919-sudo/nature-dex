@@ -11,6 +11,7 @@ async function decodeBack(canvas,card,current){
  try{const info=await readableImage(wx,src);return await decodeAsset(canvas,info.path,current)}catch(e){if(card.backAssetFileId)throw e;return decodeAsset(canvas,localIllustrationFor(card.speciesId),current).catch(()=>({image:null}))}
 }
 Page({
+ copyScienceSource(){const url=this.data.science?.sourceUrl;if(url)wx.setClipboardData({data:url})},
  data:{card:null,back:false,rx:0,ry:0,turn:0,viewer:false,reduce:false,note:'',isSample:false,dragging:false,flipping:false,flipStage:'idle',exporting:false,exportPath:'',exportWidth:821,exportHeight:1121,exportMode:'',printQuality:'',saveDenied:false},
  onLoad(q){this._unloaded=false;const raw=q.id&&q.id.indexOf('sample_')===0?{id:q.id,speciesId:q.id.slice(7),sample:true}:app.findCard(q.id);this.id=q.id;if(raw)this.setData({card:app.decorate(locationFreeCard(raw)),science:require('../../lib/science-view').scienceView(app.decorate(locationFreeCard(raw))),locationLabel:raw.location?.visibility==='private'&&raw.location.consentAt?raw.location.label:'',locationInput:'',isSample:!!raw.sample,note:wx.getStorageSync('nature.note.'+q.id)||'',reduce:!!wx.getStorageSync('nature.reduceMotion')})},
  editLocation(e){this._locationToken=(this._locationToken||0)+1;this._pickedLocation=null;this.setData({locationInput:e.detail.value})},

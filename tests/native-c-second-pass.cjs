@@ -1,0 +1,13 @@
+const assert=require('node:assert/strict'),fs=require('fs'),path=require('path'),{buildProfile}=require('../native/lib/profile-model');
+assert.equal(buildProfile([{id:'a',speciesId:'kingfisher'},{id:'b',speciesId:'kingfisher'},{speciesId:'ibis',sample:true}]).stats.repeat,1);
+assert.equal(buildProfile([]).stats.repeat,0);
+const read=p=>fs.readFileSync(path.join(__dirname,'..',p),'utf8');
+const profile=read('native/pages/profile/index.wxml');
+for(const label of ['物种','记录','观察','勋章','笔记'])assert.ok(profile.includes(label));
+assert.ok(profile.includes('avatar-picker'));
+assert.ok(read('native/pages/library/index.wxml').includes('card-caption'));
+assert.ok(read('native/pages/home/index.wxml').includes('world-canvas'));
+for(const zone of ['canopy','branch','ground','water'])assert.ok(read('native/pages/home/index.wxml').includes('scene-'+zone));
+assert.ok(read('native/pages/home/index.wxml').includes('world-empty-copy'));
+assert.ok(!read('native/pages/home/index.wxml').includes('exploration-hero.jpg'));
+console.log('PASS Master real repeat statistics, authored world zones and honest empty canvas');
