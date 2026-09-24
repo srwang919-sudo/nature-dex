@@ -78,6 +78,7 @@ function publicSpecies(projection) {
 function publicCopy(copy) {
   return {
     id: copy._id,
+    cardType: 'gifted_collection',
     kind: 'memorial_copy',
     sourceType: 'friend_copy',
     isObservation: false,
@@ -221,6 +222,7 @@ function createSocialService({ repo, now = Date.now, randomToken = () => randomB
           ...(current || {}), owner: openid, recipient, relationshipId: event.relationshipId,
           relationshipGeneration: friendship.generation,
           speciesCardId: event.speciesCardId, species: publicSpecies(card.species),
+          likedByRecipient: current?.relationshipGeneration === friendship.generation && current.likedByRecipient === true,
           status: event.shared ? 'active' : 'revoked', updatedAt,
           createdAt: current?.relationshipGeneration === friendship.generation ? current.createdAt : updatedAt,
         });
@@ -245,10 +247,44 @@ function createSocialService({ repo, now = Date.now, randomToken = () => randomB
       for (const share of shares) {
         const relationship = await repo.get(COLLECTIONS.friendships, share.relationshipId);
         if (relationship?.status === 'active' && relationship.members?.includes(openid) && share.relationshipGeneration === relationship.generation && await sourceStillVerified(repo, share.speciesCardId)) {
-          species.push({ shareId: share._id, relationshipId: share.relationshipId, species: publicSpecies(share.species), sharedAt: share.createdAt });
+          species.push({ shareId: share._id, relationshipId: share.relationshipId, species: publicSpecies(share.species), sharedAt: share.createdAt, liked:share.likedByRecipient===true });
         }
       }
       return ready('ok', { species });
+    },
+
+    async setLike(openid,event){
+      if(!exactEvent(event,['shareId','liked'])||!hexId(event.shareId)||typeof event.liked!=='boolean')deny('invalid_request');
+      return repo.runTransaction(async tx=>{
+        const share=await tx.get(COLLECTIONS.shares,event.shareId);
+        if(!share||share.recipient!==openid)deny('forbidden');
+        if(share.status!=='active')deny('share_inactive');
+        const friendship=await tx.get(COLLECTIONS.friendships,share.relationshipId);requireActive(friendship,openid);
+        if(share.relationshipGeneration!==friendship.generation)deny('share_inactive');
+        if(!await sourceStillVerified(tx,share.speciesCardId))deny('not_verified');
+        await tx.put(COLLECTIONS.shares,event.shareId,{...share,likedByRecipient:event.liked,likeUpdatedAt:now()});
+        return ready('like_updated',{shareId:event.shareId,liked:event.liked});
+      });
+    },
+
+    async cancelCopyRequest(openid,event){
+      if(!exactEvent(event,['copyRequestId'])||!hexId(event.copyRequestId))deny('invalid_request');
+      return repo.runTransaction(async tx=>{
+        const request=await tx.get(COLLECTIONS.copyRequests,event.copyRequestId);
+        if(!request||request.requester!==openid)deny('forbidden');
+        if(request.state==='cancelled')return ready('copy_cancelled',{copyRequestId:event.copyRequestId,state:'cancelled'});
+        if(request.state!=='pending')deny('replay_conflict');
+        await tx.put(COLLECTIONS.copyRequests,event.copyRequestId,{...request,state:'cancelled',decidedAt:now()});
+        const slotId=keys.copySlot(openid,request.shareId),slot=await tx.get(COLLECTIONS.copySlots,slotId);
+        if(slot?.requestId===event.copyRequestId)await tx.put(COLLECTIONS.copySlots,slotId,{...slot,state:'cancelled',updatedAt:now()});
+        return ready('copy_cancelled',{copyRequestId:event.copyRequestId,state:'cancelled'});
+      });
+    },
+
+    async listMyCopyRequests(openid,event){
+      if(!exactEvent(event,[]))deny('invalid_request');
+      const rows=await repo.query(COLLECTIONS.copyRequests,{requester:openid},100);
+      return ready('ok',{requests:rows.map(row=>({copyRequestId:row._id,shareId:row.shareId,species:publicSpecies(row.species),state:row.state==='pending'&&row.expiresAt<=now()?'expired':row.state,expiresAt:row.expiresAt}))});
     },
 
     async requestCopy(openid, event) {
@@ -349,7 +385,7 @@ function createSocialService({ repo, now = Date.now, randomToken = () => randomB
       if (decision === 'rejected') return ready('copy_rejected', { state: 'rejected', copyRequestId: event.copyRequestId });
       const copy = {
         recipient: request.requester, sourceOwner: openid, sourceShareId: request.shareId,
-        kind: 'memorial_copy', sourceType: 'friend_copy', isObservation: false,
+        cardType: 'gifted_collection',kind: 'memorial_copy', sourceType: 'friend_copy', isObservation: false,
         countsForAchievements: false, countsAsDiscovery: false,
         species: publicSpecies(request.species), receivedAt: decidedAt,
       };

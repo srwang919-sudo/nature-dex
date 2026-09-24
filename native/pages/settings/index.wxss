@@ -5,3 +5,4 @@
 .availability-links{display:flex;gap:12rpx;margin-top:24rpx;flex-wrap:wrap}.availability-links button{flex:1;min-width:220rpx;font-size:24rpx;padding:20rpx 12rpx}
 .service-input{height:88rpx;padding:0 20rpx;border:1rpx solid #c9cec5;border-radius:20rpx;font-size:28rpx}.service-row{display:flex;align-items:center;justify-content:space-between;gap:16rpx;margin-top:24rpx}.service-row>text{min-width:0;flex:1;overflow-wrap:anywhere}.service-row button{font-size:24rpx;flex-shrink:0}
 .settings-sections{flex-wrap:wrap}.settings-sections button{flex:1 1 42%;min-height:88rpx}
+.social-card-actions{display:flex;flex-direction:column;gap:12rpx;max-width:52%}.social-card-actions button{white-space:normal;min-height:88rpx}

@@ -7,6 +7,9 @@ const { MemoryRepository } = require('../cloudfunctions/natureSocial/memory-repo
 const { main } = require('../cloudfunctions/natureSocial');
 
 const sha256 = value => createHash('sha256').update(value).digest('hex');
+test('likes are recipient-only, idempotent and reject revoked sources',async()=>{const f=fixture(),s=await registerAndShare(f);for(let i=0;i<2;i++)assert.equal((await f.call('openid_bob','setLike',{shareId:s.shareId,liked:true})).liked,true);assert.equal((await f.call('openid_bob','listSharedSpecies')).species[0].liked,true);assert.equal((await f.call('openid_eve','setLike',{shareId:s.shareId,liked:false})).code,'forbidden');assert.equal((await f.call('openid_bob','setLike',{shareId:s.shareId,liked:false})).liked,false);f.repo.seed('trustedObservations',s.observation._id,{...s.observation,status:'revoked'});assert.equal((await f.call('openid_bob','setLike',{shareId:s.shareId,liked:true})).code,'not_verified')});
+test('requester cancellation is idempotent and owner cannot approve a canceled request',async()=>{const f=fixture(),s=await registerAndShare(f),r=await f.call('openid_bob','requestCopy',{shareId:s.shareId,idempotencyKey:'request_cancel_123456'});assert.equal((await f.call('openid_eve','cancelCopyRequest',{copyRequestId:r.copyRequestId})).code,'forbidden');for(let i=0;i<2;i++)assert.equal((await f.call('openid_bob','cancelCopyRequest',{copyRequestId:r.copyRequestId})).state,'cancelled');assert.equal((await f.call('openid_alice','approveCopy',{copyRequestId:r.copyRequestId,idempotencyKey:'approve_cancel_123456'})).code,'replay_conflict');assert.equal(f.repo.entries('natureMemorialCopies').length,0);assert.equal((await f.call('openid_bob','listMyCopyRequests')).requests[0].state,'cancelled')});
+test('approval and cancellation race yields at most one non-discovery gifted copy',async()=>{const f=fixture(),s=await registerAndShare(f),r=await f.call('openid_bob','requestCopy',{shareId:s.shareId,idempotencyKey:'request_race_12345678'});const results=await Promise.all([f.call('openid_alice','approveCopy',{copyRequestId:r.copyRequestId,idempotencyKey:'approve_race_12345678'}),f.call('openid_bob','cancelCopyRequest',{copyRequestId:r.copyRequestId})]);assert.equal(results.filter(x=>x.status==='ready').length,1);const copies=(await f.call('openid_bob','listMemorialCopies')).copies;assert.equal(copies.length,1);assert.equal(copies[0].cardType,'gifted_collection');assert.equal(copies[0].countsAsDiscovery,false);assert.equal(copies[0].countsForAchievements,false);assert.equal(copies[0].discovery,undefined);assert.equal(copies[0].photoFileId,undefined);assert.equal((await f.repo.get('trustedObservations',s.observation._id)).status,'verified')});
 
 test('revoked source observation hides shares and blocks new copies and pending approval',async()=>{
  const f=fixture(),s=await registerAndShare(f);
@@ -159,7 +162,7 @@ test('requires the recipient to request and the owner to explicitly approve a me
   assert.equal(approved.status, 'ready');
   assert.deepEqual(approved.copy, {
     id: requested.copyRequestId,
-    kind: 'memorial_copy',
+    cardType: 'gifted_collection',kind: 'memorial_copy',
     sourceType: 'friend_copy',
     isObservation: false,
     countsForAchievements: false,
