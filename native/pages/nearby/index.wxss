@@ -9,7 +9,7 @@
 .atlas-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16rpx;margin-top:24rpx}
 .atlas-item{display:flex;flex-direction:column;gap:8rpx;min-width:0;padding:18rpx 16rpx;border:1rpx solid var(--line,#DED8C6);border-radius:18rpx;background:var(--paper,#FFF8E8)}
 .atlas-item.found{border-color:var(--moss,#647B42);background:#F1F4E7}
-.atlas-item.missing{opacity:.72}
+.atlas-item.missing{border-style:dashed;background:transparent;opacity:.85}.atlas-item.missing .atlas-name{color:var(--muted,#586459)}
 .atlas-name{font-size:28rpx;color:var(--ink,#183F36);overflow-wrap:anywhere}
 .atlas-habitat{font-size:22rpx;line-height:1.4;overflow-wrap:anywhere}
 .atlas-places{display:flex;flex-direction:column;gap:14rpx;margin-top:24rpx;padding-top:20rpx;border-top:1rpx solid var(--line,#DED8C6)}

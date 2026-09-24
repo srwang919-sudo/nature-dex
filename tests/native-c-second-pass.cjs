@@ -8,7 +8,9 @@ assert.ok(profile.includes('avatar-picker'));
 assert.ok(read('native/pages/library/index.wxml').includes('collection-card'));
 assert.ok(!read('native/pages/library/index.wxml').includes('card-caption'));
 assert.ok(read('native/pages/home/index.wxml').includes('world-canvas'));
-for(const zone of ['canopy','branch','ground','water'])assert.ok(read('native/pages/home/index.wxml').includes('scene-'+zone));
+// 手绘分层场景（§32）：十件可复用水彩元素按层拼合，替代纯 CSS 色块场景。
+for(const asset of ['sun','cloud','hills-back','tree-lush','tree-autumn','tree-winter','grass-bank','rocks','reeds','mushroom'])assert.ok(read('native/pages/home/index.wxml').includes('/assets/scene/'+asset+'.webp'),'hand-drawn decor missing '+asset);
+assert.ok(read('native/pages/home/index.wxml').includes('zone-{{item.worldZone}}'),'specimens must still be placed by authored ecosystem zones');
 assert.ok(read('native/pages/home/index.wxml').includes('world-empty-copy'));
 assert.ok(!read('native/pages/home/index.wxml').includes('exploration-hero.jpg'));
 console.log('PASS Master real repeat statistics, authored world zones and honest empty canvas');

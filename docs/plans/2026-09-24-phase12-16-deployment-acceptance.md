@@ -31,6 +31,7 @@
 
 ```
 analytics            ← 新增
+analytics-aggregate  ← 新增（25 日凌晨：日聚合/看板/§51 额度监控）
 printAdmin           ← 新增
 recognizeObservation ← 更新（usage-ledger / cost-config）
 speciesIllustration  ← 更新（cost-config / artwork-variants / prompt）
@@ -43,10 +44,12 @@ managePrivacy        ← 更新（analyticsEvents 纳入账号擦除）
 
 | 云函数 | 变量 | 必填 | 说明 |
 |---|---|---|---|
-| `printAdmin` | `NATURE_ADMIN_OPENIDS` | ✅ | 逗号分隔的运营账号 openid。**未配置时后台对所有人关闭**（默认拒绝） |
+| `printAdmin` / `analytics-aggregate` | `NATURE_ADMIN_OPENIDS` | ✅ | 逗号分隔的运营账号 openid。**未配置时后台对所有人关闭**（默认拒绝）。`analytics-aggregate` 另放行定时触发器 |
 | `recognizeObservation` | `NATURE_BAIDU_PLANT_COST` | 可选 | 百度植物识别单价（元/次），默认 0.0029 |
 | `recognizeObservation` | `NATURE_BAIDU_ANIMAL_COST` | 可选 | 百度动物识别单价，默认 0.001 |
 | `speciesIllustration` / `createArtCard` | `NATURE_HUNYUAN_COST` | 可选 | 混元生图单价，默认 0.20 |
+| `analytics` / `analytics-aggregate` | `NATURE_ANALYTICS_TZ` | 可选 | 日聚合时区（小时偏移），默认 8（东八区） |
+| `analytics-aggregate` | `NATURE_HUNYUAN_QUOTA_ALERT` | 可选 | §51 免费额度告警阈值，默认 20000 |
 
 > 环境变量会被 `aiCostConfig/main` 文档覆盖。运营改价无需重新部署。
 
@@ -55,6 +58,7 @@ managePrivacy        ← 更新（analyticsEvents 纳入账号擦除）
 部署后以任意已登录账号调用一次 `initCollections`。本轮新增集合：
 
 - `analyticsEvents`（埋点事件，`_id` = 前端生成的 eventId，天然幂等）
+- `analyticsDaily`（日聚合结果，`_id` = 'YYYY-MM-DD'，只含计数不含身份）
 - `printOrders`（履约订单，`_id` = `sha256('print-order|' + draftId)`）
 - `aiCostConfig`（成本后台配置，固定文档 `main`）
 
@@ -104,9 +108,25 @@ managePrivacy        ← 更新（analyticsEvents 纳入账号擦除）
 
 > 抽查方式：真机跑一遍「拍一张 → 识别 → 确认 → 制卡 → 回看首页 → 打印选卡」，然后在控制台查 `analyticsEvents` 是否出现对应事件、`props` 里是否只有基本类型。
 
-### 3.4 待配置
+### 3.4 看板与日聚合（已实现：`analytics-aggregate`）
 
-- **指标看板**：本轮只做采集与落库。看板可用云开发定时触发器做日聚合，或用控制台手查。**尚未实现**，属已知开放项。
+| 动作 | 说明 | 权限 |
+|---|---|---|
+| `aggregate_day` | 聚合某日（默认今天）事件为 `analyticsDaily/{date}`，幂等覆盖 | 定时触发器 / 运营白名单 |
+| `dashboard` | 查询 `from~to` 区间汇总：事件总量、DAU 均值/峰值、§111 派生比率、打印漏斗、AI 成本 | 运营白名单 |
+| `quota` | §51 Hunyuan 免费额度：真实用量计数 + 可配置总额 + 余量/耗尽预估/告警 | 定时触发器 / 运营白名单 |
+| `backfill` | 按日期区间补聚合（≤60 天） | 运营白名单 |
+
+**定时触发器配置**（云开发控制台 → analytics-aggregate → 触发器）：
+
+```json
+{ "triggers": [{ "name": "dailyAggregate", "type": "timer", "config": "0 30 1 * * * *" }] }
+```
+
+> 每天 01:30 聚合「昨天」。触发器事件自带 `Type:Timer` 标记，函数据此放行（定时器没有 openid）。
+> 口径：`MAU/留存/付费用户数/订阅收入` 刻意不在此计算——聚合文档不存 openid、不存金额，
+> 与其给出看起来漂亮的数字，不如明确标注口径缺失（`notComputed` 字段）。
+> 隐私验收必查：`analyticsDaily` 文档序列化后不得包含任何 openid。
 
 ---
 
@@ -208,10 +228,10 @@ draft ──accept_order──▶ accepted ──mark_produced──▶ in_produ
 | # | 项 | 状态 | 说明 |
 |---|---|---|---|
 | 1 | Artwork 缩略图/主图派生管线（§5 剩余部分） | ⏳ 未实现 | 设计见下 |
-| 2 | Analytics 指标看板/日聚合 | ⏳ 未实现 | 目前只有采集落库 |
+| 2 | Analytics 指标看板/日聚合 | ✅ 已实现 | `analytics-aggregate`（25 日凌晨），见 §3.4 |
 | 3 | 订阅商户配置与支付实测 | ⏳ 依赖外部资质 | 代码就绪，见 §5 |
 | 4 | 好友双账号实测 | ⏳ 依赖两个微信号 | 代码就绪，见 §6 |
-| 5 | 地形/场景美术资产替换 | ⏳ 待定稿 | 首页场景目前为 CSS 布局层；风格试稿已产出，待确认方向 |
+| 5 | 地形/场景美术资产 | ✅ 已落地 | 十件套手绘水彩分层元素（`assets/scene/*.webp`，488KB，25 日凌晨上线；加载失败自动退回 CSS 场景） |
 
 ### 缩略图管线为什么没有随手实现
 

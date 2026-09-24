@@ -18,6 +18,20 @@ const KNOWN_EVENTS = new Set([
 
 const MAX_EVENTS = 20;
 
+// 按配置时区把时间戳落到 'YYYY-MM-DD' 桶，供 analytics-aggregate 按日查询。
+// 与 analytics-aggregate/analytics-events.js 的 dayOf 必须保持一致（由漂移测试守护）。
+function tzHours() {
+  const raw = Number(process.env.NATURE_ANALYTICS_TZ);
+  return Number.isFinite(raw) ? raw : 8;
+}
+const pad = n => (n < 10 ? '0' + n : String(n));
+function dayOf(ts, tz = tzHours()) {
+  const t = Number(ts);
+  if (!Number.isFinite(t)) return '';
+  const d = new Date(t + tz * 3600000);
+  return d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' + pad(d.getUTCDate());
+}
+
 function sanitizeProps(props) {
   if (!props || typeof props !== 'object') return {};
   const out = {};
@@ -53,7 +67,7 @@ async function main(event = {}, dependencies = {}) {
   // 逐条写入；eventId 作为 _id 天然幂等（重复上报覆盖同一条）。
   try {
     for (const e of valid) {
-      const doc = { owner: openid, event: e.event, eventId: e.eventId, props: sanitizeProps(e.props), clientTs: e.ts, receivedAt: now };
+      const doc = { owner: openid, event: e.event, eventId: e.eventId, props: sanitizeProps(e.props), clientTs: e.ts, day: dayOf(e.ts), receivedAt: now };
       await db.collection('analyticsEvents').doc(e.eventId).set({ data: doc });
     }
     return { status: 'ok', accepted: valid.length };
@@ -62,4 +76,4 @@ async function main(event = {}, dependencies = {}) {
   }
 }
 
-module.exports = { main };
+module.exports = { main, dayOf };

@@ -1,20 +1,44 @@
 .explore-top{display:flex;justify-content:space-between;align-items:center;gap:24rpx}.brand{font-size:30rpx;font-weight:600}.eyebrow{font-size:24rpx;color:var(--muted);letter-spacing:.06em}
 .record-area{display:flex;align-items:center;gap:24rpx;margin:8rpx 0 32rpx}.home-record{flex:1;font-size:30rpx}.album-entry{background:none;min-height:88rpx;padding:16rpx 0;font-size:26rpx;color:var(--ink)}
 .today-heading{margin-top:24rpx}.today-heading .link{flex:none}.today-scroll{width:100%;height:380rpx}.today-strip{display:flex;gap:20rpx;padding:12rpx 0 20rpx}.today-card{width:248rpx;height:348rpx;flex:none}.today-empty{display:flex;flex-direction:column;gap:12rpx;padding:28rpx 0;border-top:1rpx solid var(--line);border-bottom:1rpx solid var(--line);font-size:28rpx}.recent-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24rpx;margin-top:24rpx}.recent-card{aspect-ratio:5/7;min-width:0}.quiet-empty{padding:24rpx 0;color:var(--muted);font-size:28rpx;line-height:1.65}
+/* 继续探索（§85）：本季地区图鉴进度卡 */
+.explore-card{padding:26rpx;border:1rpx solid var(--line);border-radius:var(--radius-card,24rpx);background:var(--surface)}
+.explore-count{font-family:'DIN Alternate','PingFang SC',sans-serif;font-size:30rpx;font-weight:600;color:var(--moss)}
+.explore-card .track{margin-bottom:0}
 .past-section{margin-top:56rpx;padding-top:28rpx;border-top:1rpx solid var(--line)}.past-section>.section{margin:12rpx 0 20rpx}.memory-row{display:flex;align-items:center;gap:24rpx;margin-top:24rpx;font-size:30rpx}.memory-row>view:last-child{flex:1;min-width:0}.memory-card{width:188rpx;height:264rpx;flex:none}
 .return-top{position:fixed;right:24rpx;bottom:calc(156rpx + env(safe-area-inset-bottom));z-index:19;min-height:88rpx;padding:20rpx 24rpx;background:var(--surface);border:1rpx solid var(--line);border-radius:22rpx;color:var(--ink);font-size:24rpx}
 .reduce-motion .home-record{transition:none;transform:none}
-.world-canvas{position:relative;min-height:48vh;display:flex;flex-direction:column;margin:24rpx -8rpx 32rpx;padding:28rpx 20rpx 20rpx;background:#EBEDE2;border-radius:28rpx;overflow:hidden}.world-heading{position:relative;z-index:1}.world-heading .title{margin:12rpx 0;font-size:44rpx}.world-heading>.sub{display:block;max-width:30ch}.world-caption{position:relative;font-size:22rpx;color:#586459;margin-top:auto;overflow-wrap:anywhere}.world-ecosystem{position:relative;flex:1;min-height:470rpx;margin:12rpx -8rpx 16rpx}.scene-canopy{position:absolute;top:5%;left:0;width:62%;height:43%;border:1rpx solid #C3CCB9;border-radius:48% 55% 38% 50%;background:#E0E6D8}.scene-branch{position:absolute;left:29%;top:34%;height:35%;width:30%;border-bottom:2rpx solid #B6BEAC;border-left:2rpx solid #B6BEAC;border-radius:0 0 0 20rpx}.scene-ground{position:absolute;bottom:1%;left:-12%;height:28%;width:125%;border-top:1rpx solid #BBC6AF;border-radius:50% 50% 0 0;background:#E1E5D5}.scene-water{position:absolute;bottom:3%;right:-7%;width:43%;height:19%;border:1rpx solid #BECDD0;border-radius:50%;background:#DBE5E4}.world-specimen{position:absolute;width:23%;height:37%;min-width:0;z-index:1}.zone-canopy{left:7%;top:4%}.zone-canopy.slot-1{left:32%;top:9%}.zone-branch{left:51%;top:29%}.zone-branch.slot-1{left:75%;top:24%}.zone-ground{left:6%;bottom:0}.zone-ground.slot-1{left:31%;bottom:0}.zone-water{right:15%;bottom:0}.zone-water.slot-1{right:0;bottom:18%}.world-empty-copy{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14rpx;font-size:28rpx;padding:24rpx;text-align:center}.world-empty-copy>.sub{max-width:25ch}
-@media(max-width:390px){.world-heading .title{font-size:40rpx}.world-ecosystem{min-height:450rpx}.world-caption{font-size:24rpx;line-height:1.5}}
-@media(max-width:320px){.world-canvas{padding:24rpx 16rpx}.world-ecosystem{min-height:490rpx}.world-heading .title{font-size:38rpx}.world-specimen{width:25%;height:35%}.record-area{gap:16rpx}.album-entry{font-size:28rpx}}
+.world-canvas{position:relative;min-height:48vh;display:flex;flex-direction:column;margin:24rpx -8rpx 32rpx;padding:28rpx 20rpx 20rpx;background:#EBEDE2;border-radius:28rpx;overflow:hidden}.world-heading{position:relative;z-index:1}.world-heading .title{margin:12rpx 0;font-size:44rpx}.world-heading>.sub{display:block;max-width:30ch}.world-caption{position:relative;font-size:22rpx;color:#586459;margin-top:auto;overflow-wrap:anywhere}.world-ecosystem{position:relative;flex:1;min-height:470rpx;margin:12rpx -8rpx 16rpx}.scene-ground{position:absolute;bottom:1%;left:-12%;height:24%;width:125%;border-top:1rpx solid #BBC6AF;border-radius:50% 50% 0 0;background:#E1E5D5}.scene-water{position:absolute;bottom:2%;right:6%;width:30%;height:13%;border:1rpx solid #BECDD0;border-radius:50%;background:#DBE5E4}.world-specimen{position:absolute;width:23%;height:37%;min-width:0;z-index:2}.zone-canopy{left:7%;top:4%}.zone-canopy.slot-1{left:32%;top:9%}.zone-branch{left:51%;top:29%}.zone-branch.slot-1{left:75%;top:24%}.zone-ground{left:6%;bottom:0}.zone-ground.slot-1{left:31%;bottom:0}.zone-water{right:15%;bottom:0}.zone-water.slot-1{right:0;bottom:18%}.world-empty-copy{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14rpx;font-size:28rpx;padding:24rpx;text-align:center}.world-empty-copy>.sub{max-width:25ch}
+/* ===== 手绘分层场景装饰（§32：可复用元素拼合，非整张 AI 场景）===== */
+/* 全部图片装饰都是纯氛围层：不响应点击，加载失败整层退回 CSS 场景。 */
+.deco{position:absolute;pointer-events:none;will-change:opacity}
+.deco-sun{width:150rpx;left:7%;top:5%;opacity:.9;transition:opacity .8s ease}
+.deco-cloud{width:230rpx;right:3%;top:7%;opacity:.92;transition:opacity .8s ease}
+.deco-hills{width:112%;left:-6%;bottom:24%;opacity:.92}
+.deco-tree{width:200rpx;left:8%;bottom:13%;opacity:0;transition:opacity .7s ease}
+.deco-grass{width:104%;left:-2%;bottom:-6rpx;opacity:.96}
+.deco-rocks{width:104rpx;right:6%;bottom:3%}
+.deco-reeds{width:64rpx;right:19%;bottom:1%}
+.deco-mushroom{width:52rpx;left:33%;bottom:5%}
+/* 季节决定哪棵树在场：春/夏茂绿、秋金、冬枯枝（§40） */
+.season-spring .tree-lush,.season-summer .tree-lush{opacity:1}
+.season-autumn .tree-autumn{opacity:1}
+.season-winter .tree-winter{opacity:1}
+/* 时间氛围（§41）：黄昏日头低垂，夜晚日隐云淡 */
+.phase-dusk .deco-sun{opacity:.5}
+.phase-night .deco-sun{opacity:0}
+.phase-night .deco-cloud{opacity:.3}
+.phase-night .deco{filter:brightness(.94) saturate(.9)}
+@media(max-width:390px){.world-heading .title{font-size:40rpx}.world-ecosystem{min-height:450rpx}.world-caption{font-size:24rpx;line-height:1.5}.deco-tree{width:180rpx}.deco-cloud{width:200rpx}}
+@media(max-width:320px){.world-canvas{padding:24rpx 16rpx}.world-ecosystem{min-height:490rpx}.world-heading .title{font-size:38rpx}.world-specimen{width:25%;height:35%}.record-area{gap:16rpx}.album-entry{font-size:28rpx}.deco-tree{width:165rpx}.deco-sun{width:120rpx}.deco-cloud{width:170rpx}.deco-mushroom{width:44rpx}.deco-rocks{width:88rpx}}
 /* ===== 自然世界四季氛围（§40–41）===== */
 /* 场景层默认颜色由季节变量驱动；base 为春（柔和）默认值 */
 .world-canvas{--season-canvas:#EBEDE2;--season-canopy:#E0E6D8;--season-canopy-line:#C3CCB9;--season-ground:#E1E5D5;--season-ground-line:#BBC6AF;--season-water:#DBE5E4;--season-water-line:#BECDD0;--season-branch:#B6BEAC;--season-sky:#E9EDE6;--season-accent:#E7A9B8;--season-accent2:#D98E4A;transition:background .6s ease}
 .world-canvas .scene-sky{position:absolute;top:0;left:0;right:0;height:46%;background:var(--season-sky);border-radius:24rpx 24rpx 0 0;transition:background .6s ease}
-.world-canvas .scene-canopy{background:var(--season-canopy);border-color:var(--season-canopy-line);transition:background .6s ease,border-color .6s ease}
+.world-canvas .scene-ground{background:var(--season-ground);border-color:var(--season-ground-line);transition:background .6s ease,border-color .6s ease}
 .world-canvas .scene-ground{background:var(--season-ground);border-color:var(--season-ground-line);transition:background .6s ease,border-color .6s ease}
 .world-canvas .scene-water{background:var(--season-water);border-color:var(--season-water-line);transition:background .6s ease,border-color .6s ease}
-.world-canvas .scene-branch{border-color:var(--season-branch);transition:border-color .6s ease}
+/* 树冠色相随季节微调地面与水面的色线（树本体由手绘图层表现） */
 .world-canvas{background:var(--season-canvas)}
 /* 季节细节层：由 background-image 叠加绘制，不同季节切换 */
 .season-layer{position:absolute;inset:0;pointer-events:none;z-index:0;background-repeat:no-repeat;transition:opacity .6s ease;opacity:1}
@@ -39,7 +63,7 @@
 /* 夜晚把物种卡也轻微压暗，保持可读但不刺眼 */
 .world-canvas.phase-night .world-specimen{filter:brightness(.9)}
 /* reduce-motion：关闭过渡动效 */
-.reduce-motion .world-canvas,.reduce-motion .season-layer,.reduce-motion .atmosphere-layer,.reduce-motion .scene-sky,.reduce-motion .scene-canopy,.reduce-motion .scene-ground,.reduce-motion .scene-water{transition:none}
+.reduce-motion .world-canvas,.reduce-motion .season-layer,.reduce-motion .atmosphere-layer,.reduce-motion .scene-sky,.reduce-motion .scene-ground,.reduce-motion .scene-water,.reduce-motion .deco,.reduce-motion .deco-tree{transition:none}
 /* ===== 自然世界物种信息弹层（§10 点击信息层）===== */
 .world-sheet-mask{position:fixed;inset:0;z-index:30;display:flex;align-items:flex-end;justify-content:center;background:rgba(24,48,40,.34);padding:24rpx}
 .world-sheet{width:100%;max-width:640rpx;padding:32rpx 28rpx calc(28rpx + env(safe-area-inset-bottom));background:var(--surface,#FFFCF4);border:1rpx solid var(--line,#DED8C6);border-radius:28rpx;box-shadow:0 -8rpx 32rpx rgba(24,48,40,.16)}

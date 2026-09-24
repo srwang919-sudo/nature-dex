@@ -5,14 +5,14 @@
 .back-tagline-copy{font-family:'Kaiti SC','STKaiti','PingFang SC',serif;font-size:21rpx;line-height:1.4;color:#2f6659;display:block}
 .fact-item{margin-top:12rpx}
 .fact-item .record-label{font-size:19rpx}
-.fact-title{display:block;margin-top:2rpx;font-size:23rpx;line-height:1.35;font-weight:500;color:#17352d}
+.fact-title{display:block;margin-top:2rpx;font-size:23rpx;line-height:1.35;font-weight:500;color:var(--ink)}
 .fact-detail{display:block;margin-top:2rpx;font-size:19rpx;line-height:1.4;color:#58655d;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
 .knowledge-field{margin-top:13rpx;padding:10rpx 12rpx;background:#f7f4ea;border-radius:12rpx;max-width:96%}
 .knowledge-field .record-label{font-size:19rpx}
 .knowledge-value{display:block;margin-top:3rpx;font-size:19rpx;line-height:1.45;color:#31453f;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .stats-row{display:flex;gap:9rpx;margin-top:13rpx;max-width:96%}
 .stats-cell{flex:1;min-width:0;display:flex;flex-direction:column;gap:2rpx;align-items:center;text-align:center;padding:8rpx 4rpx;background:#f2efe4;border-radius:12rpx}
-.stats-val{font-family:'DIN Alternate','PingFang SC',sans-serif;font-size:20rpx;font-weight:600;color:#174f42;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.stats-val{font-family:'DIN Alternate','PingFang SC',sans-serif;font-size:20rpx;font-weight:600;color:var(--moss);white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .stats-key{font-size:16rpx;color:#7a857d;white-space:nowrap}
 .record-content{padding:13rpx 8rpx 0 0}
 .record-field{margin-top:11rpx}

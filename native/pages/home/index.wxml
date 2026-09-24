@@ -2,7 +2,23 @@
  <view class="explore-top"><text class="brand">去大自然里</text><text class="sub">{{dateLabel}}</text></view>
  <view class="world-canvas season-{{season}} phase-{{dayPhase}}">
   <view class="world-heading"><text class="eyebrow">{{seasonLabel}} · 按当前月份</text><view class="title">你的自然世界</view><text class="sub">每一次遇见，都留下自己的位置。</text></view>
-  <view class="world-ecosystem"><view class="scene-sky"/><view class="scene-canopy"/><view class="scene-branch"/><view class="scene-ground"/><view class="scene-water"/><view class="season-layer" aria-hidden="true"/><view class="atmosphere-layer" aria-hidden="true"/>
+  <view class="world-ecosystem"><view class="scene-sky"/>
+   <block wx:if="{{!sceneDecorBroken}}">
+    <image class="deco deco-sun" src="/assets/scene/sun.webp" mode="widthFix" aria-hidden="true" binderror="hideSceneDecor"/>
+    <image class="deco deco-cloud" src="/assets/scene/cloud.webp" mode="widthFix" aria-hidden="true" binderror="hideSceneDecor"/>
+    <image class="deco deco-hills" src="/assets/scene/hills-back.webp" mode="widthFix" aria-hidden="true" binderror="hideSceneDecor"/>
+   </block>
+   <view class="scene-ground"/><view class="scene-water"/>
+   <block wx:if="{{!sceneDecorBroken}}">
+    <image class="deco deco-tree tree-lush" src="/assets/scene/tree-lush.webp" mode="widthFix" aria-hidden="true" binderror="hideSceneDecor"/>
+    <image class="deco deco-tree tree-autumn" src="/assets/scene/tree-autumn.webp" mode="widthFix" aria-hidden="true" binderror="hideSceneDecor"/>
+    <image class="deco deco-tree tree-winter" src="/assets/scene/tree-winter.webp" mode="widthFix" aria-hidden="true" binderror="hideSceneDecor"/>
+    <image class="deco deco-grass" src="/assets/scene/grass-bank.webp" mode="widthFix" aria-hidden="true" binderror="hideSceneDecor"/>
+    <image class="deco deco-rocks" src="/assets/scene/rocks.webp" mode="widthFix" aria-hidden="true" binderror="hideSceneDecor"/>
+    <image class="deco deco-reeds" src="/assets/scene/reeds.webp" mode="widthFix" aria-hidden="true" binderror="hideSceneDecor"/>
+    <image class="deco deco-mushroom" src="/assets/scene/mushroom.webp" mode="widthFix" aria-hidden="true" binderror="hideSceneDecor"/>
+   </block>
+   <view class="season-layer" aria-hidden="true"/><view class="atmosphere-layer" aria-hidden="true"/>
    <view wx:for="{{worldCards}}" wx:key="id" class="world-specimen zone-{{item.worldZone}} slot-{{item.worldSlot}}" data-id="{{item.id}}" bindtap="tapWorld" aria-role="button" aria-label="{{'查看真实收藏：'+item.zh}}"><collectible card="{{item}}" scene="{{true}}"/></view>
    <view wx:if="{{!worldCards.length}}" class="world-empty-copy"><text>这里，等着你的第一次发现</text><text class="sub">尚无真实收藏，画布为你留白。</text></view>
   </view>
@@ -25,6 +41,11 @@
  <view class="row between today-heading"><text class="section">今天的遇见</text><button class="link" bindtap="library">看图鉴</button></view>
  <scroll-view wx:if="{{today.length}}" class="today-scroll" scroll-x="true"><view class="today-strip"><view wx:for="{{today}}" wx:key="id" class="today-card" data-id="{{item.id}}" bindtap="openCard" aria-role="button" aria-label="{{'查看'+item.zh}}"><collectible card="{{item}}"/></view></view></scroll-view>
  <view wx:else class="today-empty"><text>拍下下一次遇见</text><text class="sub">今天还没有新记录。不必赶路，留意身边就好。</text></view>
+ <view wx:if="{{explore}}" class="explore-card spaced" bindtap="openNearby" aria-role="button" aria-label="查看本季地区图鉴进度">
+  <view class="row between"><text class="section">继续探索</text><text class="explore-count">{{explore.found}}/{{explore.total}}</text></view>
+  <view class="sub">本季{{explore.seasonLabel}}季图鉴 · 出门走走，把下一位也收进图鉴</view>
+  <view class="track"><view class="fill" style="width:{{explore.coverage}}%"></view></view>
+ </view>
  <view class="section spaced">最近的发现</view>
  <view wx:if="{{recent.length}}" class="recent-grid"><view wx:for="{{recent}}" wx:key="id" class="recent-card" data-id="{{item.id}}" bindtap="openCard" aria-role="button" aria-label="{{'回看'+item.zh}}"><collectible card="{{item}}"/></view></view>
  <view wx:else class="quiet-empty">收藏成功的卡片，会在这里慢慢汇成一册。</view>
