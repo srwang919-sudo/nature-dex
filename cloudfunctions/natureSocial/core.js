@@ -10,14 +10,16 @@ const COLLECTIONS = Object.freeze({
   copyRequests: 'natureCopyRequests',
   copySlots: 'natureCopySlots',
   copies: 'natureMemorialCopies',
+  profiles: 'natureSocialProfiles',
 });
 
 const INVITE_TTL = 15 * 60 * 1000;
 const COPY_TTL = 7 * 24 * 60 * 60 * 1000;
 const sha256 = value => createHash('sha256').update(String(value)).digest('hex');
-const pageSignature=(owner,id)=>createHmac('sha256',owner).update('sent-share-v1|'+id).digest('hex');
-const pageCursor=(owner,id)=>Buffer.from(id+'.'+pageSignature(owner,id)).toString('base64url');
-function pageAfter(owner,value){if(!value)return '';if(typeof value!=='string'||value.length>200)deny('invalid_request');const [id,sig]=Buffer.from(value,'base64url').toString().split('.');if(!hexId(id)||!hexId(sig)||!timingSafeEqual(Buffer.from(sig),Buffer.from(pageSignature(owner,id))))deny('invalid_request');return id}
+const pageSignature=(owner,id,purpose='sent-share-v1')=>createHmac('sha256',owner).update(purpose+'|'+id).digest('hex');
+const pageCursor=(owner,id,purpose)=>Buffer.from(id+'.'+pageSignature(owner,id,purpose)).toString('base64url');
+function pageAfter(owner,value,purpose){if(!value)return '';if(typeof value!=='string'||value.length>200)deny('invalid_request');const [id,sig]=Buffer.from(value,'base64url').toString().split('.');if(!hexId(id)||!hexId(sig)||!timingSafeEqual(Buffer.from(sig),Buffer.from(pageSignature(owner,id,purpose))))deny('invalid_request');return id}
+function publicProfile(row){return row?.enabled===true?{enabled:true,nickname:row.nickname,avatarSymbol:row.avatarSymbol}:{enabled:false,nickname:'匿名自然观察者',avatarSymbol:'leaf'}}
 const keys = Object.freeze({
   trustedObservation: (owner, observationId) => sha256(`${owner}|${observationId}`),
   relationship: (a, b) => sha256(`friend-v1|${[a, b].sort().join('|')}`),
@@ -113,11 +115,26 @@ function createSocialService({ repo, now = Date.now, randomToken = () => randomB
   async function sourceStillVerified(store, speciesCardId) {
     const card = await store.get(COLLECTIONS.cards, speciesCardId);
     if (!card) return false;
+    if((await store.get(COLLECTIONS.profiles,sha256(card.owner)))?.enabled!==true)return false;
     const record = await store.get(COLLECTIONS.observations, keys.trustedObservation(card.owner, card.observationId));
     return !!(record && record.owner === card.owner && record.observationId === card.observationId && record.status === 'verified' && record.confirmed === true && record.attestationVersion === 1);
   }
 
   const actions = {
+    async getMySocialProfile(openid,event){if(!exactEvent(event,[]))deny('invalid_request');return ready('ok',{profile:publicProfile(await repo.get(COLLECTIONS.profiles,sha256(openid)))})},
+    async setSocialProfile(openid,event){
+      if(!exactEvent(event,['enabled','nickname','avatarSymbol'])||typeof event.enabled!=='boolean')deny('invalid_request');
+      if(event.enabled&&(typeof event.nickname!=='string'||!event.nickname.trim()||event.nickname.trim().length>24||/[<>\u0000-\u001f]/.test(event.nickname)||!['leaf','bird','sun','mountain'].includes(event.avatarSymbol)))deny('invalid_request');
+      const row={owner:openid,enabled:event.enabled,updatedAt:now(),...(event.enabled?{nickname:event.nickname.trim(),avatarSymbol:event.avatarSymbol,consentVersion:1,consentedAt:now()}:{})};
+      await repo.put(COLLECTIONS.profiles,sha256(openid),row);return ready('ok',{profile:publicProfile(row)});
+    },
+    async setShareFeatured(openid,event){if(!exactEvent(event,['shareId','featured'])||!hexId(event.shareId)||typeof event.featured!=='boolean')deny('invalid_request');return repo.runTransaction(async tx=>{const share=await tx.get(COLLECTIONS.shares,event.shareId);if(!share||share.owner!==openid)deny('forbidden');if(share.status!=='active'||!await sourceStillVerified(tx,share.speciesCardId))deny('share_inactive');await tx.put(COLLECTIONS.shares,event.shareId,{...share,featured:event.featured});return ready('ok',{shareId:event.shareId,featured:event.featured})})},
+    async getFriendMuseum(openid,event){
+      if(!exactEvent(event,['relationshipId','cursor'])||!hexId(event.relationshipId))deny('invalid_request');
+      const relationship=await repo.get(COLLECTIONS.friendships,event.relationshipId),owner=requireActive(relationship,openid),purpose='museum-v1|'+event.relationshipId+'|'+relationship.generation;
+      const page=await repo.page(COLLECTIONS.shares,{owner,recipient:openid,relationshipId:event.relationshipId,status:'active'},pageAfter(openid,event.cursor,purpose),20);
+      return repo.runTransaction(async tx=>{const current=await tx.get(COLLECTIONS.friendships,event.relationshipId);if(requireActive(current,openid)!==owner||current.generation!==relationship.generation)deny('relationship_inactive');const profile=publicProfile(await tx.get(COLLECTIONS.profiles,sha256(owner))),cards=[];if(!profile.enabled)return ready('ok',{profile,cards,badgeCount:null,nextCursor:'',countsScope:'loaded_explicit_shares'});for(const row of page.rows){const share=await tx.get(COLLECTIONS.shares,row._id);if(share?.status==='active'&&share.owner===owner&&share.recipient===openid&&share.relationshipGeneration===current.generation&&await sourceStillVerified(tx,share.speciesCardId))cards.push({shareId:row._id,species:publicSpecies(share.species),sharedAt:share.createdAt,featured:share.featured===true,liked:share.likedByRecipient===true})}return ready('ok',{profile,cards,badgeCount:null,nextCursor:page.hasMore?pageCursor(openid,page.lastId,purpose):'',countsScope:'loaded_explicit_shares'})});
+    },
     async getProfile(openid, event) {
       if (!exactEvent(event, [])) deny('invalid_request');
       const edges = await repo.query(COLLECTIONS.edges, { owner: openid }, 100);
@@ -237,7 +254,7 @@ function createSocialService({ repo, now = Date.now, randomToken = () => randomB
     async listSentShares(openid,event){
       if(!exactEvent(event,['cursor']))deny('invalid_request');
       const page=await repo.page(COLLECTIONS.shares,{owner:openid},pageAfter(openid,event.cursor),20);
-      const shares=[];for(const row of page.rows){const slot=await repo.get(COLLECTIONS.copySlots,keys.copySlot(row.recipient,row._id)),copy=slot?.state==='approved'?await repo.get(COLLECTIONS.copies,slot.requestId):null;shares.push({shareId:row._id,relationshipId:row.relationshipId,species:publicSpecies(row.species),shared:row.status==='active',liked:row.likedByRecipient===true,sharedAt:row.createdAt,giftedCopyId:copy&&copy.sourceOwner===openid&&copy.status!=='removed'?copy._id:''})}
+      const shares=[];for(const row of page.rows){const slot=await repo.get(COLLECTIONS.copySlots,keys.copySlot(row.recipient,row._id)),copy=slot?.state==='approved'?await repo.get(COLLECTIONS.copies,slot.requestId):null;shares.push({shareId:row._id,relationshipId:row.relationshipId,species:publicSpecies(row.species),shared:row.status==='active',liked:row.likedByRecipient===true,featured:row.featured===true,sharedAt:row.createdAt,giftedCopyId:copy&&copy.sourceOwner===openid&&copy.status!=='removed'?copy._id:''})}
       return ready('ok',{shares,nextCursor:page.hasMore?pageCursor(openid,page.lastId):''});
     },
 

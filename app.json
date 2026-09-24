@@ -10,6 +10,7 @@
     "native/pages/nearby/index",
     "native/pages/note/index",
     "native/pages/settings/index",
+    "native/pages/friend-museum/index",
     "native/pages/setup/index"
   ],
   "window": {

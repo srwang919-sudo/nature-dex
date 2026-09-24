@@ -1,0 +1,2 @@
+function museumView(cards=[],hasMore=false){const unique=[...new Map(cards.map(c=>[c.shareId,c])).values()],species=new Set(unique.map(c=>c.species.canonicalSpeciesId||c.species.speciesId));return {cards:unique,speciesCount:species.size,cardCount:unique.length,countSuffix:hasMore?'+':'',featured:unique.filter(c=>c.featured).slice(0,3),recent:unique.slice().sort((a,b)=>(b.sharedAt||0)-(a.sharedAt||0)||a.shareId.localeCompare(b.shareId)).slice(0,3)}}
+module.exports={museumView};

@@ -3,6 +3,7 @@ const key=owner=>createHash('sha256').update(owner).digest('hex');
 const absent=e=>!/collection/i.test(e.message||'')&&/not found|not exist|DATABASE_DOCUMENT_NOT_EXIST/i.test(e.message||'');
 // Fixed owner-derived fields only. Finance and public watercolor are deliberately absent.
 const PERSONAL=Object.freeze([
+ ['natureSocialProfiles','owner'],
  ['natureFriendInvites','issuer'],['natureFriendInvites','recipient'],['natureFriendEdges','owner'],['natureSpeciesCards','owner'],
  ['natureSpeciesShares','owner'],['natureSpeciesShares','recipient'],['natureCopyRequests','owner'],
  ['natureCopyRequests','requester'],['natureCopySlots','requester'],['natureMemorialCopies','recipient'],

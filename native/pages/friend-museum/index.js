@@ -1,0 +1,12 @@
+const {socialCall,requestKey}=require('../../lib/account-services'),{museumView}=require('../../lib/friend-museum');
+Page({
+ data:{busy:false,cards:[],featured:[],recent:[],profile:null,error:'',nextCursor:'',speciesCount:0,cardCount:0,countSuffix:''},
+ onLoad(q){this.relationshipId=q.relationshipId},
+ onShow(){this.load()},
+ onHide(){this._token=(this._token||0)+1;this.setData({busy:false,cards:[],featured:[],recent:[],profile:null})},
+ onUnload(){this._token=(this._token||0)+1},
+ async load(e){if(this.data.busy)return;const append=e?.currentTarget?.dataset?.more===true,token=this._token=(this._token||0)+1;this.setData({busy:true,error:''});try{const r=await socialCall(wx,'getFriendMuseum',{relationshipId:this.relationshipId,cursor:append?this.data.nextCursor:''});if(token!==this._token)return;const cards=r.profile.enabled?[...(append?this.data.cards:[]),...(r.cards||[])]:[];this.setData({...museumView(cards,!!r.nextCursor),profile:r.profile,nextCursor:r.profile.enabled?r.nextCursor:'',avatarLabel:({leaf:'叶',bird:'羽',sun:'光',mountain:'山'})[r.profile.avatarSymbol]||'叶'})}catch(e){if(token===this._token)this.setData({...museumView([]),profile:null,nextCursor:'',error:e.message||'暂时无法读取好友自然馆。'})}finally{if(token===this._token)this.setData({busy:false})}},
+ async like(e){if(this.data.busy)return;const row=this.data.cards.find(c=>c.shareId===e.currentTarget.dataset.id);if(!row)return;const token=this._token=(this._token||0)+1;this.setData({busy:true,error:''});try{const r=await socialCall(wx,'setLike',{shareId:row.shareId,liked:!row.liked});if(token===this._token)this.setData(museumView(this.data.cards.map(c=>c.shareId===row.shareId?{...c,liked:r.liked}:c),!!this.data.nextCursor))}catch(e){if(token===this._token)this.setData({...museumView([]),profile:null,nextCursor:'',message:'',error:e.message})}finally{if(token===this._token)this.setData({busy:false})}},
+ async request(e){if(this.data.busy)return;const shareId=e.currentTarget.dataset.id,token=this._token=(this._token||0)+1;this.setData({busy:true,error:''});try{const r=await socialCall(wx,'requestCopy',{shareId,idempotencyKey:requestKey(wx,'nature.social.copy.'+shareId)});if(token===this._token)this.setData({message:r.state==='pending'?'已发送申请，等待持有人批准。':'已有申请，请在好友设置查看状态。'})}catch(e){if(token===this._token)this.setData({error:e.message})}finally{if(token===this._token)this.setData({busy:false})}},
+ back(){wx.navigateBack({fail:()=>wx.reLaunch({url:'/native/pages/profile/index'})})}
+});

@@ -18,5 +18,6 @@ function membershipClient(api){return {
 }}
 const socialFields={listFriends:[],listSharedSpecies:[],listCopyRequests:[],listMemorialCopies:[],createInvite:[],acceptInvite:['inviteCode','idempotencyKey'],registerVerifiedSpecies:['observationId'],setSpeciesPublic:['relationshipId','speciesCardId','shared'],revokeSpeciesShare:['shareId'],requestCopy:['shareId','idempotencyKey'],approveCopy:['copyRequestId','idempotencyKey'],rejectCopy:['copyRequestId','idempotencyKey'],revokeFriend:['relationshipId'],blockFriend:['relationshipId']};
 Object.assign(socialFields,{setLike:['shareId','liked'],cancelCopyRequest:['copyRequestId'],listMyCopyRequests:[],listSentShares:['cursor'],deleteGiftedCopy:['copyId'],revokeGiftedCopy:['copyId']});
+Object.assign(socialFields,{getMySocialProfile:[],setSocialProfile:['enabled','nickname','avatarSymbol'],getFriendMuseum:['relationshipId','cursor'],setShareFeatured:['shareId','featured']});
 async function socialCall(api,action,data={}){const fields=socialFields[action];if(!fields||Object.keys(data).some(k=>!fields.includes(k)))throw Error('invalid_client_request');return call(api,'natureSocial',{action,...data})}
 module.exports={membershipClient,socialCall,requestKey};

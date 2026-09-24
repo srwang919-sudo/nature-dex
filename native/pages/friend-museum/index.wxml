@@ -1,0 +1,16 @@
+<view class="page museum-page">
+ <view class="row between"><view class="title">好友自然馆</view><button class="link" bindtap="back">返回</button></view>
+ <view wx:if="{{busy}}" class="sub spaced" aria-live="polite">正在读取对你公开的收藏…</view>
+ <view wx:if="{{error}}" class="notice spaced" aria-live="polite">{{error}}<button class="secondary" disabled="{{busy}}" bindtap="load">重新查询</button></view>
+ <block wx:if="{{profile}}">
+  <view class="museum-identity"><view class="museum-avatar" aria-label="原创头像符号">{{avatarLabel}}</view><view><view class="section">{{profile.nickname}}</view><text class="sub">{{profile.enabled?'只展示对你主动分享的资料':'资料分享已关闭'}}</text></view></view>
+  <view wx:if="{{!profile.enabled}}" class="panel spaced">对方尚未开启资料分享，或已撤回授权。这里没有公开收藏。</view>
+  <block wx:else>
+   <view class="museum-stats"><view><text>{{speciesCount}}{{countSuffix}}</text><text class="sub">公开发现物种</text></view><view><text>{{cardCount}}{{countSuffix}}</text><text class="sub">公开收藏卡</text></view><view><text>暂不公开</text><text class="sub">徽章</text></view></view><view class="sub">数量仅统计已载入、对你明确分享且仍有效的记录；不代表对方全部收藏。没有可信云端徽章统计，不展示估算值。</view>
+   <view class="section spaced">近期分享 · 最多三条</view><view wx:if="{{!recent.length}}" class="sub spaced">还没有向你分享的发现。</view><view wx:for="{{recent}}" wx:key="shareId" class="museum-recent">{{item.species.speciesName}}</view>
+   <view class="section spaced">精选收藏</view><view wx:if="{{!featured.length}}" class="sub spaced">已载入内容中没有精选收藏。</view><view wx:for="{{featured}}" wx:key="shareId" class="museum-recent">{{item.species.speciesName}} · 持有人精选</view>
+   <view class="section spaced">向你分享的资料卡</view><view class="museum-grid"><view wx:for="{{cards}}" wx:key="shareId" class="museum-card"><view class="section">{{item.species.speciesName}}</view><text wx:if="{{item.species.scientificName}}" class="museum-latin">{{item.species.scientificName}}</text><text class="sub">物种资料 · 不含原照片</text><button class="secondary" disabled="{{busy}}" data-id="{{item.shareId}}" bindtap="like">{{item.liked?'已赞 · 取消':'点赞'}}</button><button class="primary" disabled="{{busy}}" data-id="{{item.shareId}}" bindtap="request">请求收藏</button></view></view>
+   <button wx:if="{{nextCursor}}" class="secondary spaced" disabled="{{busy}}" data-more="{{true}}" bindtap="load">继续载入公开收藏</button><view wx:if="{{message}}" class="sub spaced" aria-live="polite">{{message}}</view>
+  </block>
+ </block>
+</view>
