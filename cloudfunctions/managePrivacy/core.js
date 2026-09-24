@@ -4,6 +4,7 @@ const absent=e=>!/collection/i.test(e.message||'')&&/not found|not exist|DATABAS
 // Fixed owner-derived fields only. Finance and public watercolor are deliberately absent.
 const PERSONAL=Object.freeze([
  ['natureSocialProfiles','owner'],
+ ['printOrderDrafts','owner'],
  ['natureFriendInvites','issuer'],['natureFriendInvites','recipient'],['natureFriendEdges','owner'],['natureSpeciesCards','owner'],
  ['natureSpeciesShares','owner'],['natureSpeciesShares','recipient'],['natureCopyRequests','owner'],
  ['natureCopyRequests','requester'],['natureCopySlots','requester'],['natureMemorialCopies','recipient'],

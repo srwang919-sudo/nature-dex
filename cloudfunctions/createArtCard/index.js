@@ -3,6 +3,7 @@ async function main(event={},deps={}){
  const api=deps.cloud||cloud,fail=code=>({status:'failed',code,retryable:false});
  if(!api)return fail('runtime_unavailable');
  const owner=api.getWXContext().OPENID;if(!owner)return fail('unauthenticated');
+ if(['print_quote','print_draft'].includes(event.action)){try{return await require('./print-draft').printOrder({db:api.database(),owner,event})}catch(e){return fail(['invalid_request','account_erasing','card_unavailable','print_asset_unavailable','quote_changed','draft_closed','idempotency_conflict','print_draft_limit'].includes(e.message)?e.message:'print_service_unavailable')}}
  if(event.action==='set_sync_consent'){try{return await require('./recovery-consent').setRecoveryConsent(api.database(),owner,event)}catch(e){return fail(['invalid_request','account_erasing'].includes(e.message)?e.message:'sync_consent_unavailable')}}
  if(['list_owned','card_resource'].includes(event.action)){try{return await require('./owned-cards').ownedCards(api,event)}catch(e){return fail(['invalid_request','account_erasing','sync_consent_required','card_unavailable','card_resource_unavailable'].includes(e.message)?e.message:'card_sync_unavailable')}}
  // Custom photo-derived generation is closed until its isolated attempt flow is available.

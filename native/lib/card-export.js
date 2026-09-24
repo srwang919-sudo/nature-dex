@@ -1,18 +1,19 @@
 const {presentCard}=require('./card-presentation');
 const {lineArtFor}=require('./species-line-art');
 const {illustrationFor}=require('./species-illustration');
-const PRINT_SPEC=Object.freeze({width:821,height:1121,trimWidth:750,trimHeight:1050,bleedMm:3,dpi:300});
+const PRINT_SPEC=Object.freeze({width:815,height:1110,trimWidth:744,trimHeight:1039,bleedMm:3,dpi:300});
 function publicShare(card){const id=card.speciesId||card.id;return {title:'去大自然里 · '+card.zh+'的自然档案',path:'/native/pages/card/index?id=sample_'+encodeURIComponent(id),imageUrl:'/assets/theme/share-safe-leaf.png'};}
-function exportPlan(card,mode){const backs=mode==='share'&&!!card.protection;return {mode,width:821,height:backs?2282:1121,backs,print:mode.indexOf('print')===0};}
+function exportPlan(card,mode){const backs=mode==='share'&&!!card.protection,print=mode.indexOf('print')===0;return {mode,width:print?PRINT_SPEC.width:821,height:print?PRINT_SPEC.height:backs?2282:1121,backs,print};}
 const COLORS={standard:'#FFFFFF',holo:'#DEF0FC',alt:'#FCE3DE',numbered:'#FFF3D6'};
 function printQuality(image,mode,card={}){
  if(mode==='printBack'&&card.schemaVersion!==2)return {qualified:true,effectiveDpi:null,message:'卡背为文字绘制，按目标 300dpi 像素规格导出'};
- const dpi=Math.floor(Math.min(Number(image.width)/(mode==='printBack'?750:821),Number(image.height)/(mode==='printBack'?970:855))*300);
+ const dpi=Math.floor(Math.min(Number(image.width)/((mode==='printBack'?750:821)*PRINT_SPEC.width/821),Number(image.height)/((mode==='printBack'?925:855)*PRINT_SPEC.height/1121))*300);
  const qualified=Number.isFinite(dpi)&&dpi>=300;
  return {qualified,effectiveDpi:Number.isFinite(dpi)?dpi:0,message:qualified?'照片有效分辨率约 '+dpi+'dpi，达到目标 300dpi':'清晰度提醒：照片有效分辨率约 '+(Number.isFinite(dpi)?dpi:0)+'dpi，低于目标 300dpi；导出像素不能补回细节'};
 }
 function text(ctx,value,x,y,width,size,lineHeight,maxLines,color){
  if(!value)return y;ctx.setFillStyle(color||'#26352E');ctx.setFontSize(size);
+ if(ctx._naturePrint){x=Math.max(72,x);width=Math.min(width,821-72-x)}
  const chars=Array.from(String(value)),lines=[];let line='';
  for(const ch of chars){if(ctx.measureText(line+ch).width>width&&line){lines.push(line);line=ch}else line+=ch}if(line)lines.push(line);
  const visible=lines.slice(0,maxLines);if(lines.length>maxLines&&visible.length)visible[visible.length-1]=visible[visible.length-1].slice(0,-1)+'…';
@@ -34,9 +35,9 @@ function back(ctx,card,offset,illustration){
  if(card.schemaVersion===2){
   if(!illustration)throw Object.assign(Error('original_missing'),{code:'image_missing'});
   ctx.setFillStyle('#FFFBF2');ctx.fillRect(0,offset,821,1121);
-  const ratio=Math.max(750/illustration.width,970/illustration.height),dw=illustration.width*ratio,dh=illustration.height*ratio;
-  ctx.save();ctx.beginPath();ctx.rect(36,offset+36,750,970);ctx.clip();ctx.drawImage(illustration,36+(750-dw)/2,offset+36+(970-dh)/2,dw,dh);ctx.restore();
-  text(ctx,'实拍原照 · 地点未公开',71,offset+1042,679,24,30,1,'#58655D');text(ctx,card.date,71,offset+1080,679,20,24,1,'#58655D');return;
+  const photoHeight=ctx._naturePrint?925:970,ratio=Math.max(750/illustration.width,photoHeight/illustration.height),dw=illustration.width*ratio,dh=illustration.height*ratio;
+  ctx.save();ctx.beginPath();ctx.rect(36,offset+36,750,photoHeight);ctx.clip();ctx.drawImage(illustration,36+(750-dw)/2,offset+36+(photoHeight-dh)/2,dw,dh);ctx.restore();
+  text(ctx,'实拍原照 · 地点未公开',71,offset+(ctx._naturePrint?1008:1042),679,24,30,1,'#58655D');text(ctx,card.date,71,offset+(ctx._naturePrint?1040:1080),679,20,24,1,'#58655D');return;
  }
  ctx.setFillStyle('#FFFBF2');ctx.fillRect(0,offset,821,1121);
  text(ctx,'去大自然里 · 自然博物志',71,offset+100,679,27,35,1);
@@ -50,7 +51,7 @@ function back(ctx,card,offset,illustration){
  text(ctx,[presentCard(card).back.no,!card.sample&&card.createdAt?card.date:''].filter(Boolean).join(' · '),71,offset+1042,679,24,30,1,'#58655D');
 }
 function drawLineArt(ctx,id,x,y,scale){const commands=lineArtFor(id);if(!commands.length)return;ctx.setStrokeStyle('#58655D');ctx.setLineWidth(1.3);ctx.beginPath();commands.forEach(({op,points:p})=>{if(op==='M')ctx.moveTo(x+p[0]*scale,y+p[1]*scale);else if(op==='L')ctx.lineTo(x+p[0]*scale,y+p[1]*scale);else if(op==='Q'&&ctx.quadraticCurveTo)ctx.quadraticCurveTo(x+p[0]*scale,y+p[1]*scale,x+p[2]*scale,y+p[3]*scale);else if(op==='C'&&ctx.bezierCurveTo)ctx.bezierCurveTo(x+p[0]*scale,y+p[1]*scale,x+p[2]*scale,y+p[3]*scale,x+p[4]*scale,y+p[5]*scale)});ctx.stroke();}
-function cropMarks(ctx,offset){const x=(821-750)/2,y=offset+(1121-1050)/2;ctx.setStrokeStyle('#58655D');ctx.setLineWidth(1);for(const [cx,cy,sx,sy]of [[x,y,-1,-1],[x+750,y,1,-1],[x,y+1050,-1,1],[x+750,y+1050,1,1]]){ctx.beginPath();ctx.moveTo(cx+sx*8,cy);ctx.lineTo(cx+sx*25,cy);ctx.moveTo(cx,cy+sy*8);ctx.lineTo(cx,cy+sy*25);ctx.stroke();}}
+function cropMarks(ctx,offset){const {width,height,trimWidth:w,trimHeight:h}=PRINT_SPEC,x=(width-w)/2,y=offset+(height-h)/2;ctx.setStrokeStyle('#58655D');ctx.setLineWidth(1);for(const [cx,cy,sx,sy]of [[x,y,-1,-1],[x+w,y,1,-1],[x,y+h,-1,1],[x+w,y+h,1,1]]){ctx.beginPath();ctx.moveTo(cx+sx*8,cy);ctx.lineTo(cx+sx*25,cy);ctx.moveTo(cx,cy+sy*8);ctx.lineTo(cx,cy+sy*25);ctx.stroke();}}
 function adapt2d(ctx){if(!ctx.setFillStyle)ctx.setFillStyle=v=>{ctx.fillStyle=v};if(!ctx.setStrokeStyle)ctx.setStrokeStyle=v=>{ctx.strokeStyle=v};if(!ctx.setFontSize)ctx.setFontSize=v=>{ctx.font=v+'px sans-serif'};if(!ctx.setLineWidth)ctx.setLineWidth=v=>{ctx.lineWidth=v};if(!ctx.setTextBaseline)ctx.setTextBaseline=v=>{ctx.textBaseline=v};return ctx;}
-function render(ctx,card,plan,image,illustration){ctx=adapt2d(ctx);ctx.setTextBaseline('alphabetic');if(plan.mode==='printBack')back(ctx,card,0,illustration);else front(ctx,card,0,image);if(plan.backs)back(ctx,card,1161,illustration);if(plan.print)cropMarks(ctx,0);}
+function render(ctx,card,plan,image,illustration){ctx=adapt2d(ctx);ctx.setTextBaseline('alphabetic');ctx._naturePrint=!!plan.print;if(plan.print){ctx.save();ctx.scale(PRINT_SPEC.width/821,PRINT_SPEC.height/1121)}try{if(plan.mode==='printBack')back(ctx,card,0,illustration);else front(ctx,card,0,image);if(plan.backs)back(ctx,card,1161,illustration)}finally{ctx._naturePrint=false;if(plan.print)ctx.restore()}if(plan.print)cropMarks(ctx,0)}
 module.exports={PRINT_SPEC,publicShare,exportPlan,printQuality,render,drawLineArt,illustrationFor};
