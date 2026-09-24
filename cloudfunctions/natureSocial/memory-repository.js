@@ -37,6 +37,7 @@ class MemoryRepository {
     this.bucket(collection).set(id, clone({ ...document, _id: id }));
   }
   async page(collection,where,after,limit=20){const all=[...this.bucket(collection).values()].filter(row=>matches(row,where)&&(!after||row._id>after)).sort((a,b)=>a._id.localeCompare(b._id)),rows=all.slice(0,limit).map(clone);return {rows,lastId:rows.at(-1)?._id||'',hasMore:all.length>limit}}
+  async recentPage(collection,where,after,limit=20){const all=[...this.bucket(collection).values()].filter(row=>matches(row,where)&&(!after||row.createdAt<after.createdAt||(row.createdAt===after.createdAt&&row._id>after.id))).sort((a,b)=>b.createdAt-a.createdAt||a._id.localeCompare(b._id));return {rows:all.slice(0,limit).map(clone),hasMore:all.length>limit}}
 
   async runTransaction(work) {
     const previous = this.tail;

@@ -8,6 +8,7 @@ function accountGate(repo,owner){
   get:async(c,id)=>visible(store,await store.get(c,id),lock),
   query:async(c,q,n)=>{const rows=await store.query(c,q,n);const result=[];for(const row of rows){const value=await visible(store,row,lock);if(value)result.push(value)}return result},
   page:async(c,q,after,n)=>{if(lock)throw Error('pagination_outside_transaction_only');const page=await store.page(c,q,after,n),rows=[];for(const row of page.rows){const value=await visible(store,row,false);if(value)rows.push(value)}return {...page,rows}},
+  recentPage:async(c,q,after,n)=>{if(lock)throw Error('pagination_outside_transaction_only');return store.recentPage(c,q,after,n)},
   put:(...args)=>store.put(...args)
  });
  const transaction=work=>repo.runTransaction(async tx=>{await check(tx,true);return work(facade(tx,true))});

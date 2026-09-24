@@ -19,6 +19,8 @@ const sha256 = value => createHash('sha256').update(String(value)).digest('hex')
 const pageSignature=(owner,id,purpose='sent-share-v1')=>createHmac('sha256',owner).update(purpose+'|'+id).digest('hex');
 const pageCursor=(owner,id,purpose)=>Buffer.from(id+'.'+pageSignature(owner,id,purpose)).toString('base64url');
 function pageAfter(owner,value,purpose){if(!value)return '';if(typeof value!=='string'||value.length>200)deny('invalid_request');const [id,sig]=Buffer.from(value,'base64url').toString().split('.');if(!hexId(id)||!hexId(sig)||!timingSafeEqual(Buffer.from(sig),Buffer.from(pageSignature(owner,id,purpose))))deny('invalid_request');return id}
+const recentCursor=(owner,row)=>{const value=JSON.stringify({createdAt:row.createdAt,id:row._id});return Buffer.from(value+'.'+pageSignature(owner,value,'recent-v1')).toString('base64url')};
+function recentAfter(owner,cursor){if(!cursor)return null;if(typeof cursor!=='string'||cursor.length>400)deny('invalid_request');try{const decoded=Buffer.from(cursor,'base64url').toString(),split=decoded.lastIndexOf('.'),value=decoded.slice(0,split),sig=decoded.slice(split+1);if(!hexId(sig)||!timingSafeEqual(Buffer.from(sig),Buffer.from(pageSignature(owner,value,'recent-v1'))))deny('invalid_request');const after=JSON.parse(value);if(!hexId(after.id)||!Number.isSafeInteger(after.createdAt)||after.createdAt<0)deny('invalid_request');return after}catch(_){deny('invalid_request')}}
 function publicProfile(row){return row?.enabled===true?{enabled:true,nickname:row.nickname,avatarSymbol:row.avatarSymbol}:{enabled:false,nickname:'匿名自然观察者',avatarSymbol:'leaf'}}
 const keys = Object.freeze({
   trustedObservation: (owner, observationId) => sha256(`${owner}|${observationId}`),
@@ -265,6 +267,21 @@ function createSocialService({ repo, now = Date.now, randomToken = () => randomB
         if (!share || share.owner !== openid) deny('forbidden');
         await tx.put(COLLECTIONS.shares, event.shareId, { ...share, status: 'revoked', updatedAt: now() });
         return ready('share_revoked', { shareId: event.shareId, shared: false });
+      });
+    },
+
+    async listRecentSharedSpecies(openid,event){
+      if(!exactEvent(event,['cursor']))deny('invalid_request');
+      // Raw bounded rows remain internal; every result is re-read through account fences.
+      const page=await repo.recentPage(COLLECTIONS.shares,{recipient:openid,status:'active'},recentAfter(openid,event.cursor),20);
+      return repo.runTransaction(async tx=>{
+        const species=[];let last;
+        for(const row of page.rows){last=row;const share=await tx.get(COLLECTIONS.shares,row._id);if(!share||share.recipient!==openid||share.status!=='active')continue;
+          const relationship=await tx.get(COLLECTIONS.friendships,share.relationshipId);
+          if(relationship?.status==='active'&&relationship.members?.includes(openid)&&share.relationshipGeneration===relationship.generation&&await sourceStillVerified(tx,share.speciesCardId))species.push({shareId:row._id,relationshipId:share.relationshipId,species:publicSpecies(share.species),sharedAt:share.createdAt,liked:share.likedByRecipient===true});
+          if(species.length===3)break;
+        }
+        return ready('ok',{species,nextCursor:species.length<3&&page.hasMore&&last?recentCursor(openid,last):''});
       });
     },
 

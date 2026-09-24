@@ -36,6 +36,12 @@ function facade(database) {
       const rows=(result.data||[]).slice(0,limit);
       return {rows,lastId:rows.at(-1)?._id||'',hasMore:(result.data||[]).length>limit};
     },
+    async recentPage(collection,where,after,limit=20){
+      const _=database.command;
+      const query=after?_.and([where,_.or([{createdAt:_.lt(after.createdAt)},{createdAt:after.createdAt,_id:_.gt(after.id)}])]):where;
+      const result=await database.collection(collection).where(query).orderBy('createdAt','desc').orderBy('_id','asc').limit(limit+1).get();
+      return {rows:(result.data||[]).slice(0,limit),hasMore:(result.data||[]).length>limit};
+    },
     async put(collection, id, document) {
       await database.collection(collection).doc(id).set({ data: stored(document) });
     },
