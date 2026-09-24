@@ -123,6 +123,34 @@ function createSocialService({ repo, now = Date.now, randomToken = () => randomB
   }
 
   const actions = {
+    async listReceivedLikes(openid,event){
+      if(!exactEvent(event,['cursor']))deny('invalid_request');
+      const purpose='received-likes-v1',after=pageAfter(openid,event.cursor,purpose);
+      const page=await repo.page(COLLECTIONS.shares,{owner:openid,status:'active',likedByRecipient:true},after,10);
+      return repo.runTransaction(async tx=>{
+        const likes=[];
+        for(const row of page.rows){
+          const share=await tx.get(COLLECTIONS.shares,row._id);
+          if(!share||share.owner!==openid||share.status!=='active'||share.likedByRecipient!==true)continue;
+          const friendship=await tx.get(COLLECTIONS.friendships,share.relationshipId);
+          if(friendship?.status!=='active'||!friendship.members?.includes(openid)||!friendship.members.includes(share.recipient)||share.relationshipGeneration!==friendship.generation)continue;
+          const card=await tx.get(COLLECTIONS.cards,share.speciesCardId);
+          if(card?.owner!==openid||!await sourceStillVerified(tx,share.speciesCardId))continue;
+          // Deletion writes this same document: a stale snapshot cannot publish a projection.
+          const fenceId=keys.trustedObservation(openid,card.observationId),fence=await tx.get(COLLECTIONS.observations,fenceId);
+          await tx.put(COLLECTIONS.observations,fenceId,{...fence,generation:(fence.generation||0)+1});
+          // Also serialize changes to share, friendship and profile privacy with this projection.
+          await tx.put(COLLECTIONS.shares,row._id,share);
+          await tx.put(COLLECTIONS.friendships,share.relationshipId,friendship);
+          const profileId=sha256(share.recipient),profile=await tx.get(COLLECTIONS.profiles,profileId);
+          if(profile)await tx.put(COLLECTIONS.profiles,profileId,profile);
+          const ownerProfile=await tx.get(COLLECTIONS.profiles,sha256(openid));
+          await tx.put(COLLECTIONS.profiles,sha256(openid),ownerProfile);
+          likes.push({shareId:row._id,species:publicSpecies(share.species),liker:{nickname:profile?.enabled===true?profile.nickname:'匿名好友',anonymous:profile?.enabled!==true}});
+        }
+        return ready('ok',{likes,nextCursor:page.hasMore?pageCursor(openid,page.lastId,purpose):''});
+      });
+    },
     async getMySocialProfile(openid,event){if(!exactEvent(event,[]))deny('invalid_request');return ready('ok',{profile:publicProfile(await repo.get(COLLECTIONS.profiles,sha256(openid)))})},
     async setSocialProfile(openid,event){
       if(!exactEvent(event,['enabled','nickname','avatarSymbol'])||typeof event.enabled!=='boolean')deny('invalid_request');

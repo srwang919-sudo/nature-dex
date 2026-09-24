@@ -25,6 +25,12 @@
 </view>
 <view wx:if="{{section==='friends'}}" class="panel spaced">
  <view class="section">好友与纪念卡</view><view class="sub spaced">主动连接后使用微信身份查询本人好友。仅分享你明确选择的物种资料；原照片、地点、笔记保持私有。纪念副本须持有人批准，不计发现数量。</view>
+ <view class="section spaced">喜欢你的发现</view>
+ <view class="sub">仅你可查看有效分享上的好友点赞。这是手动查询，不是通知或公开热度；对方未开启资料分享时显示匿名。</view>
+ <button class="secondary spaced" disabled="{{serviceBusy}}" bindtap="loadReceivedLikes">查看 / 刷新好友点赞</button>
+ <view wx:if="{{receivedLikesLoaded&&!receivedLikes.length}}" class="sub">本页暂无有效点赞。分享撤回、来源删除或好友关系变化后不再返回。</view>
+ <view wx:for="{{receivedLikes}}" wx:key="shareId" class="service-row"><view>{{item.liker.nickname}}<view class="sub">喜欢你的「{{item.species.speciesName}}」</view></view></view>
+ <button wx:if="{{receivedLikesCursor}}" class="secondary spaced" disabled="{{serviceBusy}}" data-more="{{true}}" bindtap="loadReceivedLikes">查看下一页点赞</button>
  <view class="section spaced">我的资料分享</view><view class="sub">默认关闭。头像是原创符号，不上传本机头像照片；昵称由你主动填写，不自动获取微信资料。</view><button class="secondary spaced" disabled="{{serviceBusy}}" bindtap="loadSharedProfile">查询我的分享设置</button><block wx:if="{{sharedProfile}}"><input class="service-input spaced" maxlength="24" value="{{profileNickname}}" bindinput="profileNicknameInput" placeholder="主动设置昵称，不填写联系方式" aria-label="向好友公开的昵称"/><view class="row spaced"><button class="secondary grow" data-symbol="leaf" bindtap="profileAvatarChoose">叶</button><button class="secondary grow" data-symbol="bird" bindtap="profileAvatarChoose">羽</button><button class="secondary grow" data-symbol="sun" bindtap="profileAvatarChoose">光</button><button class="secondary grow" data-symbol="mountain" bindtap="profileAvatarChoose">山</button></view><view class="sub">头像符号：{{profileAvatar}}</view><view class="setting-card"><text>允许好友查看资料与明确分享的收藏</text><switch checked="{{sharedProfile.enabled}}" disabled="{{serviceBusy}}" bindchange="profileSharingChange" aria-label="允许好友查看主动分享的资料"/></view><button wx:if="{{sharedProfile.enabled}}" class="secondary" disabled="{{serviceBusy}}" data-save-profile="{{true}}" bindtap="saveSharedProfile">保存昵称与符号修改</button></block><button class="secondary spaced" disabled="{{serviceBusy}}" bindtap="connectFriends">连接 / 刷新好友服务</button>
  <block wx:if="{{socialConnected}}">
   <view class="help-copy">已连接 {{friends.length}} 位好友</view><button class="secondary" disabled="{{serviceBusy}}" bindtap="createFriendInvite">生成15分钟邀请码</button><button wx:if="{{inviteCode}}" class="secondary spaced" bindtap="copyFriendInvite">复制邀请码</button><view class="sub">{{inviteMessage}}</view>
