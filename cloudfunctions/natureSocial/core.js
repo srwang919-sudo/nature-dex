@@ -93,6 +93,7 @@ function publicCopy(copy) {
     countsAsDiscovery: false,
     species: publicSpecies(copy.species),
     receivedAt: copy.receivedAt,
+    printAuthorized: copy.printAuthorization?.version==='gift-print-v1'&&copy.status!=='removed',
     provenance: {kind:'approved_friend_copy',contributor:'匿名收藏者',speciesId:copy.species.speciesId},
   };
 }
@@ -438,11 +439,11 @@ function createSocialService({ repo, now = Date.now, randomToken = () => randomB
   }
 
   async function decideCopy(openid, event, decision) {
-    if (!exactEvent(event, ['copyRequestId', 'idempotencyKey']) || !hexId(event.copyRequestId) || !idempotencyKey(event.idempotencyKey)) deny('invalid_request');
+    if (!exactEvent(event, ['copyRequestId', 'idempotencyKey','printConsent']) || !hexId(event.copyRequestId) || !idempotencyKey(event.idempotencyKey)||event.printConsent!==undefined&&(decision!=='approved'||event.printConsent!=='gift-print-v1')) deny('invalid_request');
     return repo.runTransaction(async tx => {
       const request = await tx.get(COLLECTIONS.copyRequests, event.copyRequestId);
       if (!request || request.owner !== openid) deny('forbidden');
-      const decisionKeyHash = sha256(event.idempotencyKey);
+      const decisionKeyHash = sha256(event.idempotencyKey+(event.printConsent?'|'+event.printConsent:''));
       if (request.state !== 'pending') {
         if (request.state === decision && request.decisionKeyHash === decisionKeyHash) {
           if (decision === 'approved') {
@@ -467,11 +468,16 @@ function createSocialService({ repo, now = Date.now, randomToken = () => randomB
       if (decision === 'rejected') return ready('copy_rejected', { state: 'rejected', copyRequestId: event.copyRequestId });
       const originalCard=await tx.get(COLLECTIONS.cards,share.speciesCardId);
       if(!originalCard||originalCard.owner!==openid)deny('not_verified');
+      const sourceCardId=keys.trustedObservation(openid,originalCard.observationId),sourceFence=await tx.get(COLLECTIONS.observations,sourceCardId);
+      if(sourceFence?.status!=='verified')deny('not_verified');
+      await tx.put(COLLECTIONS.observations,sourceCardId,{...sourceFence,generation:(sourceFence.generation||0)+1});
+      if(event.printConsent){const source=await tx.get('natureCards',sourceCardId);if(!source||source.owner!==openid||source.status!=='saved'||source.cardType!=='original_observation'||source.observationId!==originalCard.observationId||source.speciesId!==originalCard.species.speciesId||await tx.get('observationDeletions',sourceCardId))deny('not_verified')}
       const copy = {
         recipient: request.requester, sourceOwner: openid, sourceShareId: request.shareId,
         cardType: 'gifted_collection',kind: 'memorial_copy', sourceType: 'friend_copy', isObservation: false,
         countsForAchievements: false, countsAsDiscovery: false,
         species: publicSpecies(originalCard.species), receivedAt: decidedAt,
+        ...(event.printConsent?{sourceCardId,printAuthorization:{version:'gift-print-v1',grantedAt:decidedAt}}:{}),
       };
       await tx.put(COLLECTIONS.copies, event.copyRequestId, copy);
       return ready('copy_approved', { state: 'approved', copy: publicCopy({ ...copy, _id: event.copyRequestId }) });

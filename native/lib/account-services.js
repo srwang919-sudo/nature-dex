@@ -20,5 +20,6 @@ const socialFields={listFriends:[],listSharedSpecies:[],listCopyRequests:[],list
 Object.assign(socialFields,{setLike:['shareId','liked'],cancelCopyRequest:['copyRequestId'],listMyCopyRequests:[],listSentShares:['cursor'],deleteGiftedCopy:['copyId'],revokeGiftedCopy:['copyId']});
 Object.assign(socialFields,{getMySocialProfile:[],setSocialProfile:['enabled','nickname','avatarSymbol'],getFriendMuseum:['relationshipId','cursor'],setShareFeatured:['shareId','featured']});
 Object.assign(socialFields,{listRecentSharedSpecies:['cursor'],listReceivedLikes:['cursor']});
+socialFields.approveCopy=['copyRequestId','idempotencyKey','printConsent'];
 async function socialCall(api,action,data={}){const fields=socialFields[action];if(!fields||Object.keys(data).some(k=>!fields.includes(k)))throw Error('invalid_client_request');return call(api,'natureSocial',{action,...data})}
 module.exports={membershipClient,socialCall,requestKey};
