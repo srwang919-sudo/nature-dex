@@ -9,7 +9,7 @@ Page({
  async continueCloudErasure(){await this.runCloudErasure('continueErasure')},
  async runCloudErasure(action){if(this.data.privacyBusy)return;this.setData({privacyBusy:true});try{const result=await require('../../lib/cloud-privacy').privacyAction(action);this.setData({privacyStatus:result.status,privacyMessage:result.label})}catch(e){this.setData({privacyMessage:'云端清理未确认完成，请稍后重试。'})}finally{this.setData({privacyBusy:false})}},
  onLoad(q={}){this.setData({section:['privacy','help','about','membership','friends','local'].includes(q.section)?q.section:'privacy',version:'0.1.0',membership:membershipView(),social:socialView()})},
- changeSection(e){this.onLoad({section:e.currentTarget.dataset.section})},
+ changeSection(e){this._serviceToken=(this._serviceToken||0)+1;this.setData({serviceBusy:false,serviceError:'',paymentLabel:'',shareMessage:''});this.onLoad({section:e.currentTarget.dataset.section})},
  placeVisibility(e){try{wx.setStorageSync('nature.showLocation',!!e.detail.value);this.setData({showLocation:!!e.detail.value})}catch(e){wx.showToast({title:'设置未保存',icon:'none'})}},
  copyFeedback(){wx.setClipboardData({data:'去大自然里 · 本地反馈模板\n版本：'+this.data.version+'\n问题描述：\n操作步骤：\n预期效果：\n请自行补充后发送给开发者；不要填写照片、精确位置、密码或密钥。'})},
  data:{section:'privacy',version:'0.1.0',showLocation:false,count:0,species:0,days:0,reduce:false,drafts:[],recent:[],notes:[],cleanup:0,clearing:false,exportPath:'',exportBusy:false},
