@@ -1,0 +1,45 @@
+<view class="page print-admin">
+ <view class="title">打印履约</view>
+ <view class="sub">仅限授权运营账号。这里可以取打印清单、登记物流单号并推进生产状态；地址只能由卡片持有人提供。</view>
+ <view wx:if="{{error}}" class="admin-error spaced">{{error}}</view>
+
+ <view class="row between spaced"><text class="section">待受理草稿</text><text class="admin-count">{{drafts.length}}</text></view>
+ <view wx:if="{{drafts.length}}" class="admin-list">
+  <view wx:for="{{drafts}}" wx:key="draftId" class="admin-card">
+   <view class="row between"><text class="admin-title">{{item.cardCount}} 张 · ¥{{item.totalYuan}}</text><text class="admin-pill">草稿</text></view>
+   <view class="sub">生成：{{item.createdAtLabel}}</view>
+   <button class="secondary spaced" data-draft="{{item.draftId}}" bindtap="accept" disabled="{{busy}}">受理并生成订单</button>
+  </view>
+ </view>
+ <view wx:else class="sub spaced">暂无待受理草稿。打印页生成草稿后，草稿会出现在这里。</view>
+
+ <view class="row between spaced"><text class="section">履约订单</text><text class="admin-count">{{rows.length}}</text></view>
+ <view wx:if="{{rows.length}}" class="admin-list">
+  <view wx:for="{{rows}}" wx:key="orderId" class="admin-card">
+   <view class="row between"><text class="admin-title">{{item.cardCount}} 张 · ¥{{item.totalYuan}}</text><text class="admin-pill">{{item.statusLabel}}</text></view>
+   <view class="sub">下单：{{item.createdAtLabel}} · 物流：{{item.carrierLabel}}</view>
+   <view class="sub">单号：{{item.trackingNo||'未登记'}}</view>
+   <view class="admin-actions">
+    <button class="secondary grow" data-id="{{item.orderId}}" bindtap="pkg" disabled="{{busy}}">打印清单</button>
+    <button wx:if="{{item.status==='accepted'}}" class="secondary grow" data-id="{{item.orderId}}" bindtap="markProduced" disabled="{{busy}}">已开印</button>
+    <button wx:if="{{item.status==='in_production'}}" class="primary grow" data-id="{{item.orderId}}" bindtap="ship" disabled="{{busy}}">标记发货</button>
+   </view>
+   <view class="admin-tracking">
+    <picker range="{{carrierLabels}}" data-id="{{item.orderId}}" bindchange="carrierChange"><view class="admin-picker">快递：{{item.carrierLabel}}</view></picker>
+    <input class="admin-input" placeholder="物流单号" value="{{item.trackingNo}}" data-id="{{item.orderId}}" bindinput="trackingInput"/>
+    <button class="secondary" data-id="{{item.orderId}}" bindtap="saveTracking" disabled="{{busy}}">保存</button>
+   </view>
+  </view>
+ </view>
+ <view wx:else class="sub spaced">暂无履约订单。</view>
+ <button wx:if="{{nextCursor}}" class="secondary spaced" bindtap="more" disabled="{{busy}}">加载更多</button>
+
+ <view wx:if="{{pkgView}}" class="admin-card spaced">
+  <view class="section">打印包</view>
+  <view class="sub spaced">manifest.csv 含 {{pkgView.manifestLines}} 行卡片记录与正反面资源地址；不含原照片内容，也不含持有人身份。</view>
+  <button class="secondary spaced" data-key="manifest.csv" bindtap="copy">复制 manifest.csv</button>
+  <button class="secondary spaced" data-key="order.json" bindtap="copy">复制 order.json</button>
+  <button class="secondary spaced" data-key="shipping.json" bindtap="copy">复制 shipping.json</button>
+ </view>
+ <navigation active="me"/>
+</view>

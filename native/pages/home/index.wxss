@@ -40,3 +40,14 @@
 .world-canvas.phase-night .world-specimen{filter:brightness(.9)}
 /* reduce-motion：关闭过渡动效 */
 .reduce-motion .world-canvas,.reduce-motion .season-layer,.reduce-motion .atmosphere-layer,.reduce-motion .scene-sky,.reduce-motion .scene-canopy,.reduce-motion .scene-ground,.reduce-motion .scene-water{transition:none}
+/* ===== 自然世界物种信息弹层（§10 点击信息层）===== */
+.world-sheet-mask{position:fixed;inset:0;z-index:30;display:flex;align-items:flex-end;justify-content:center;background:rgba(24,48,40,.34);padding:24rpx}
+.world-sheet{width:100%;max-width:640rpx;padding:32rpx 28rpx calc(28rpx + env(safe-area-inset-bottom));background:var(--surface,#FFFCF4);border:1rpx solid var(--line,#DED8C6);border-radius:28rpx;box-shadow:0 -8rpx 32rpx rgba(24,48,40,.16)}
+.world-sheet .sheet-head{display:flex;flex-direction:column;gap:8rpx}
+.world-sheet .sheet-head .section{font-size:36rpx}
+.world-sheet .latin-row{font-style:italic;overflow-wrap:anywhere}
+.world-sheet .sheet-stats{display:flex;gap:16rpx;margin-top:24rpx}
+.world-sheet .sheet-stat{flex:1;min-width:0;display:flex;flex-direction:column;gap:8rpx;padding:20rpx 16rpx;background:var(--paper,#FFF8E8);border:1rpx solid var(--line,#DED8C6);border-radius:20rpx}
+.world-sheet .stat-value{font-size:32rpx;color:var(--ink,#183F36)}
+.world-sheet .stat-value.sheet-date{font-size:24rpx;line-height:1.4;overflow-wrap:anywhere}
+.world-sheet button{margin-top:20rpx}

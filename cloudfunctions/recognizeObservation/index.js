@@ -57,6 +57,7 @@ async function main(event={},deps={}){
   if(!owner.data||!owner.data.length)return fail('forbidden');
   stage='quota_unavailable';const receipt=await claimReceipt(db,receiptInput,tx=>require('./quota').reserveQuota(tx,openid,'recognition'));
   if(!receipt.claimed)return receipt.result;claimed=true;
+  const started=Date.now();
   stage='photo_download';const file=await api.downloadFile({fileID:event.photoFileId});
   if(!file.fileContent||file.fileContent.length>4*1024*1024)return await finish(fail('photo_unavailable'));
   const send=deps.request||request;
@@ -71,10 +72,11 @@ async function main(event={},deps={}){
    return {route:kind,rows:body.result};
   }catch(e){return {failure:fail(/timeout/i.test(e.message||'')?'timeout':'provider_response')}}}));
   const warnings=responses.filter(x=>x.failure).map(x=>x.failure),rows=responses.flatMap(x=>x.rows||[]);
-  if(!rows.length&&warnings.length)return await finish(warnings[0]);
+  if(!rows.length&&warnings.length){await require('./usage-ledger').recordRecognition(db,{owner:openid,operationId:event.observationId,kind:event.kind,status:'failed',durationMs:Date.now()-started,error:warnings[0].code});return await finish(warnings[0])}
   const result=mergeCandidateRoutes(responses,normalizeRecognition);
+  await require('./usage-ledger').recordRecognition(db,{owner:openid,operationId:event.observationId,kind:event.kind,status:'success',durationMs:Date.now()-started});
   return await finish({...result,contractVersion:2});
- }catch(e){const result=fail(['daily_limit','cancelled','receipt_conflict','account_erasing'].includes(e.message)?e.message:/timeout/i.test(e.message||'')?'timeout':stage);if(claimed){try{return await finish(result)}catch(ignore){}}return result}
+ }catch(e){const result=fail(['daily_limit','cancelled','receipt_conflict','account_erasing'].includes(e.message)?e.message:/timeout/i.test(e.message||'')?'timeout':stage);if(claimed){try{return await finish(result)}catch(ignore){}}await require('./usage-ledger').recordRecognition(db,{owner:openid,operationId:event.observationId,kind:event.kind,status:'error',durationMs:Date.now()-started,error:result.code}).catch(()=>{});return result}
 }
 function baiduErrorCode(n){if(n===216101)return 'provider_missing_parameter';if(n===6)return 'provider_permission';if(n===17||n===19)return 'provider_quota';if(n===18)return 'provider_rate_limit';if(n===110||n===111)return 'provider_token';if([216200,216201,216202,216203].includes(n))return 'provider_image';return 'provider_error'}
 module.exports={main,normalizeRecognition,request,baiduErrorCode,imageForm};

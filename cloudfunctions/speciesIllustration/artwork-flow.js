@@ -1,6 +1,7 @@
 const {createHash}=require('crypto'),{assertActive}=require('./account-gate'),{confirmedCandidate}=require('./observation');
 const {officialArtwork}=require('./artwork-repository'),{reserveCreation,settleCreation}=require('./creation-wallet');
 const {buildPublicSpeciesPrompt}=require('./prompt');
+const {variantForSpecies}=require('./artwork-variants');
 const hash=x=>createHash('sha256').update(x).digest('hex');
 const read=async d=>{try{return (await d.get()).data}catch(e){if(!/collection/i.test(e.message||'')&&/DATABASE_DOCUMENT_NOT_EXIST|not found|not exist/i.test(e.message||''))return null;throw e}};
 async function observationFence(tx,owner,observationId){const key=hash(owner+'|'+observationId);if(await read(tx.collection('observationDeletions').doc(key)))throw Error('cancelled');const doc=tx.collection('trustedObservations').doc(key),old=await read(doc);await doc.set({data:{...old,owner,observationId,status:old?.status||'pending',generation:(old?.generation||0)+1}})}
@@ -34,6 +35,8 @@ async function artworkFlow(api,event,deps={}){
   return result(await read(opDoc));
  }
  if(!['resolve','generate'].includes(event.action)||event.confirmed!==true||Object.keys(event).some(k=>!['action','operationId','photoObservationId','speciesId','confirmed','consent','artConsent'].includes(k)))throw Error('invalid_request');
+ // 只在真正需要计费的链路预热成本配置：事务内无法发起读取，所以在这里先取一次。
+ try{await require('./cost-config').loadCostConfig(db)}catch(e){/* 配置不可用时回落到默认值 */}
  const claim=await transaction(db,async tx=>{
   await assertActive(tx,owner,true);const observationKey=hash(owner+'|'+event.photoObservationId),receiptDoc=tx.collection('recognitionReceipts').doc(observationKey),receipt=await read(receiptDoc);
   await observationFence(tx,owner,event.photoObservationId);
@@ -59,13 +62,15 @@ async function artworkFlow(api,event,deps={}){
   const intended=(await metadata({cloudPath:path}))?.data?.fileId;if(!intended?.startsWith('cloud://')||!intended.endsWith('/'+path))throw Error('asset_invalid');
   await transaction(db,async tx=>{await assertActive(tx,owner,true);await observationFence(tx,owner,op.photoObservationId);const d=tx.collection('artOperations').doc(op.artworkId),current=await read(d);if(current?.status!=='processing')throw Error('cancelled');await d.set({data:{...current,assetFileId:intended,uploadPending:true}})});
   fileId=intended;
-  const generated=await (deps.generate||require('./provider').generate)(api,{prompt:buildPublicSpeciesPrompt(op.speciesId),path});if(generated!==intended)throw Error('asset_invalid');
+  // 变体由服务端按物种稳定推导（§5），客户端无法伪造，默认变体保持旧提示词不变。
+  const variant=variantForSpecies(op.speciesId);
+  const generated=await (deps.generate||require('./provider').generate)(api,{prompt:buildPublicSpeciesPrompt(op.speciesId,variant),path,variant});if(generated!==intended)throw Error('asset_invalid');
   await transaction(db,async tx=>{
    await assertActive(tx,owner,true);const d=tx.collection('artOperations').doc(id),live=await read(d);
    await observationFence(tx,owner,op.photoObservationId);
    if(live?.status!=='processing'||live.walletAttempt!==op.walletAttempt)throw Error('cancelled');
    await settleCreation(tx,{owner,operationId:event.operationId,attempt:op.walletAttempt,outcome:'commit',now:now()});
-   await tx.collection('speciesArtworks').doc(op.artworkId).set({data:{owner,observationId:op.photoObservationId,speciesId:op.speciesId,status:'candidate',is_official:false,is_default:false,source:'user_first_unlock',styleVersion:'museum-pencil-watercolor-v1',assetFileId:fileId,createdAt:now()}});
+   await tx.collection('speciesArtworks').doc(op.artworkId).set({data:{owner,observationId:op.photoObservationId,speciesId:op.speciesId,status:'candidate',is_official:false,is_default:false,source:'user_first_unlock',styleVersion:'museum-pencil-watercolor-v1',variant:variantForSpecies(op.speciesId),assetFileId:fileId,createdAt:now()}});
    await d.set({data:{...live,status:'ready',leaseExpiresAt:0}});await tx.collection('artOperations').doc(op.artworkId).set({data:{...op,claimed:false,isAttempt:true,status:'ready',assetFileId:fileId,leaseExpiresAt:0}});
   });return result(await read(opDoc));
  }catch(e){

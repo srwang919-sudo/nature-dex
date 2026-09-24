@@ -12,6 +12,7 @@
     "native/pages/settings/index",
     "native/pages/friend-museum/index",
     "native/pages/print/index",
+    "native/pages/print-admin/index",
     "native/pages/setup/index"
   ],
   "window": {

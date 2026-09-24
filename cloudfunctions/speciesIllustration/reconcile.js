@@ -6,6 +6,7 @@ async function reconcile(api,event,deps={}){
  if(!token||typeof event.token!=='string'||!timingSafeEqual(digest(token),digest(event.token)))throw Error('operator_required');
  if(Object.keys(event).some(k=>!['action','token'].includes(k)))throw Error('invalid_request');
  const db=api.database(),now=(deps.now||Date.now)();let released=0,cleaned=0,failed=0;
+ try{await require('./cost-config').loadCostConfig(db,now)}catch(e){/* 配置不可用时回落到默认值 */}
  const pending=(await db.collection('creationReservations').where({status:'reserved',expiresAt:db.command.lte(now)}).limit(20).get()).data||[];
  for(const row of pending)try{await db.runTransaction(async tx=>{await require('./account-gate').assertActive(tx,row.owner,true);const current=(await tx.collection('creationReservations').doc(row._id).get()).data;if(current.status==='reserved'&&current.expiresAt<=now){await settleCreation(tx,{owner:current.owner,operationId:current.operationId,attempt:current.attempt,outcome:'release',now});const id=digest(current.owner+'|'+current.operationId).toString('hex');for(const key of [id,id+'_'+current.attempt]){const d=tx.collection('artOperations').doc(key),op=await read(d);if(op?.status==='processing'&&op.walletAttempt===current.attempt)await d.update({data:{status:key===id?'failed':'cancelled',code:'generation_timeout',leaseExpiresAt:0}})}}});released++}catch(e){failed++}
  const attempts=(await db.collection('artOperations').where({isAttempt:true,status:'cancelled',assetFileId:db.command.neq('')}).limit(20).get()).data||[];

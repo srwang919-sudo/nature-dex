@@ -89,6 +89,10 @@
         "type": "folder"
       },
       {
+        "value": "design-assets",
+        "type": "folder"
+      },
+      {
         "value": ".swc",
         "type": "folder"
       }

@@ -1,0 +1,16 @@
+/* 打印履约后台（§14）：内部工具页，沿用设计 token，不做动效。 */
+.print-admin{display:flex;flex-direction:column;gap:8rpx}
+.print-admin .title{font-size:40rpx;color:var(--ink,#183F36)}
+.print-admin .section{font-size:30rpx;color:var(--ink,#183F36)}
+.admin-count{flex:none;font-size:26rpx;color:var(--moss,#647B42)}
+.admin-error{padding:20rpx 24rpx;background:#FBEDE8;border:1rpx solid #E7B9A8;border-radius:20rpx;color:#8C3A22;font-size:26rpx;line-height:1.6;overflow-wrap:anywhere}
+.admin-list{display:flex;flex-direction:column;gap:20rpx}
+.admin-card{padding:24rpx;background:var(--surface,#FFFCF4);border:1rpx solid var(--line,#DED8C6);border-radius:22rpx}
+.admin-title{font-size:30rpx;color:var(--ink,#183F36)}
+.admin-pill{flex:none;font-size:22rpx;padding:6rpx 14rpx;border:1rpx solid var(--line,#DED8C6);border-radius:999rpx;color:var(--moss,#647B42)}
+.admin-actions{display:flex;gap:16rpx;margin-top:20rpx}
+.admin-actions .grow{flex:1;min-width:0}
+.admin-tracking{display:flex;align-items:center;gap:12rpx;margin-top:16rpx}
+.admin-picker{min-height:76rpx;padding:18rpx 16rpx;font-size:26rpx;color:var(--ink,#183F36);background:var(--paper,#FFF8E8);border:1rpx solid var(--line,#DED8C6);border-radius:18rpx}
+.admin-input{flex:1;min-width:0;min-height:76rpx;padding:16rpx;font-size:26rpx;background:var(--paper,#FFF8E8);border:1rpx solid var(--line,#DED8C6);border-radius:18rpx}
+.print-admin button{min-height:80rpx}
