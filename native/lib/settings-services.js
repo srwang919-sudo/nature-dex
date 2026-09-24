@@ -1,0 +1,24 @@
+const {membershipClient,socialCall,requestKey}=require('./account-services');
+function serviceMethods(api,app){
+ const confirm=(title,content)=>new Promise(resolve=>api.showModal({title,content,success:r=>resolve(!!r.confirm),fail:()=>resolve(false)}));
+ const choose=items=>new Promise(resolve=>api.showActionSheet({itemList:items,success:r=>resolve(r.tapIndex),fail:()=>resolve(-1)}));
+ return {
+  async serviceRun(job){if(this.data.serviceBusy)return;const token=this._serviceToken=(this._serviceToken||0)+1;this.setData({serviceBusy:true,serviceError:''});try{const patch=await job();if(token===this._serviceToken)this.setData(patch||{})}catch(e){if(token===this._serviceToken)this.setData({serviceError:e.code?e.message:'操作未确认成功，请检查网络后重试。'})}finally{if(token===this._serviceToken)this.setData({serviceBusy:false})}},
+  onHide(){this._serviceToken=(this._serviceToken||0)+1;this.setData({serviceBusy:false})},
+  onUnload(){this._serviceToken=(this._serviceToken||0)+1},
+  connectMembership(){return this.serviceRun(async()=>{const membershipState=await membershipClient(api).reconcile();return {membershipConnected:true,membershipState,membershipLabel:membershipState.status==='ACTIVE'?'服务端已确认会员有效':membershipState.status==='EXPIRED'?'会员已到期':'当前未开通会员'}})},
+  async buyMembership(e){if(!this.data.membershipConnected||this.data.serviceBusy)return;const plan=e.currentTarget.dataset.plan;if(!['monthly','annual'].includes(plan))return;if(!await confirm('确认购买会员？',plan==='monthly'?'月度会员 ¥19.9；仅在微信支付及服务端查单确认后生效。':'年度会员 ¥198；仅在微信支付及服务端查单确认后生效。'))return;return this.serviceRun(async()=>{const r=await membershipClient(api).purchase(plan);return {membershipState:r.membership,membershipLabel:r.membership.status==='ACTIVE'?'服务端已确认会员有效':'支付尚未确认生效，可点击查询重试。'}})},
+  async socialSnapshot(){const [f,s,r,c]=await Promise.all(['listFriends','listSharedSpecies','listCopyRequests','listMemorialCopies'].map(action=>socialCall(api,action)));return {socialConnected:true,friends:f.friends||[],sharedSpecies:s.species||[],copyRequests:r.requests||[],memorialCopies:c.copies||[]}},
+  connectFriends(){return this.serviceRun(()=>this.socialSnapshot())},
+  createFriendInvite(){return this.serviceRun(async()=>{const r=await socialCall(api,'createInvite');return {inviteCode:r.inviteCode,inviteMessage:'邀请码有效期15分钟，仅向你信任的人发送。'}})},
+  copyFriendInvite(){if(this.data.inviteCode)api.setClipboardData({data:this.data.inviteCode})},
+  inviteInput(e){this.setData({enteredInvite:String(e.detail.value||'').trim()})},
+  acceptFriendInvite(){return this.serviceRun(async()=>{const inviteCode=this.data.enteredInvite;if(!/^[A-Za-z0-9_-]{24,128}$/.test(inviteCode||''))throw Object.assign(Error('请输入完整邀请码。'),{code:'invalid_invite'});await socialCall(api,'acceptInvite',{inviteCode,idempotencyKey:requestKey(api,'nature.social.accept.'+inviteCode)});return {...await this.socialSnapshot(),enteredInvite:''}})},
+  async shareSpecies(){if(this.data.serviceBusy)return;const friends=this.data.friends||[],cards=app.getCards().filter(c=>c.serverCardId&&c.observationId&&c.kind!=='memorial_copy'&&!c.sample);if(!friends.length||!cards.length){this.setData({serviceError:'需要已连接好友及至少一条云端核验的真实观察。'});return}const fi=await choose(friends.map((_,i)=>'好友 '+(i+1)));if(fi<0)return;const ci=await choose(cards.slice(0,6).map(c=>(c.zh||c.speciesName||c.speciesId)+' · 物种资料'));if(ci<0)return;if(!await confirm('仅向这位好友分享物种？','只分享物种名称与资料，不发送你的原照片、地点、笔记。纪念副本仍需你另行批准。'))return;return this.serviceRun(async()=>{const card=cards[ci],r=await socialCall(api,'registerVerifiedSpecies',{observationId:card.observationId});const shared=await socialCall(api,'setSpeciesPublic',{relationshipId:friends[fi].relationshipId,speciesCardId:r.speciesCard.id,shared:true});return {lastShareId:shared.shareId,shareMessage:'已向所选好友分享物种资料。'}})},
+  revokeLastShare(){return this.serviceRun(async()=>{if(!this.data.lastShareId)return {};await socialCall(api,'revokeSpeciesShare',{shareId:this.data.lastShareId});return {lastShareId:'',shareMessage:'已撤回本次分享。'}})},
+  requestMemorial(e){return this.serviceRun(async()=>{const shareId=e.currentTarget.dataset.id;await socialCall(api,'requestCopy',{shareId,idempotencyKey:requestKey(api,'nature.social.copy.'+shareId)});return {shareMessage:'已请求纪念副本，等待持有人批准。'}})},
+  async decideCopy(e){const {id,decision}=e.currentTarget.dataset;if(!['approveCopy','rejectCopy'].includes(decision)||!await confirm(decision==='approveCopy'?'批准纪念副本？':'拒绝请求？','纪念副本不包含原照片、位置、笔记，也不计入发现或观察成就。'))return;return this.serviceRun(async()=>{await socialCall(api,decision,{copyRequestId:id,idempotencyKey:requestKey(api,'nature.social.'+decision+'.'+id)});return this.socialSnapshot()})},
+  async removeFriend(e){if(!await confirm('解除好友关系？','撤回双方现有物种分享；已获批准的纪念副本保留为历史记录。'))return;return this.serviceRun(async()=>{await socialCall(api,'revokeFriend',{relationshipId:e.currentTarget.dataset.id});return this.socialSnapshot()})}
+ };
+}
+module.exports={serviceMethods};

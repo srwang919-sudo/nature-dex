@@ -7,7 +7,7 @@ test('cloud erasure never substitutes local clear or treats partial failure as s
 });
 test('settings requires two explicit confirmations before requesting remote erasure',()=>{
  const fs=require('fs'),vm=require('vm'),dialogs=[];let page,calls=0;
- vm.runInNewContext(fs.readFileSync(require('path').join(__dirname,'../native/pages/settings/index.js'),'utf8'),{getApp:()=>({}),Page:p=>page=p,require:()=>({}),wx:{showModal:args=>dialogs.push(args)}});
+ vm.runInNewContext(fs.readFileSync(require('path').join(__dirname,'../native/pages/settings/index.js'),'utf8'),{getApp:()=>({}),Page:p=>page=p,require:()=>({serviceMethods:()=>({})}),wx:{showModal:args=>dialogs.push(args)}});
  const ctx={data:{},runCloudErasure:()=>calls++};page.requestCloudErasure.call(ctx);assert.equal(dialogs.length,1);assert.equal(calls,0);
  dialogs.shift().success({confirm:false});assert.equal(calls,0);
  page.requestCloudErasure.call(ctx);dialogs.shift().success({confirm:true});assert.equal(dialogs.length,1);assert.equal(calls,0);
