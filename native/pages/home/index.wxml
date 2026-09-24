@@ -1,8 +1,8 @@
 <view class="page explore {{reduceMotion?'reduce-motion':''}}">
  <view class="explore-top"><text class="brand">去大自然里</text><text class="sub">{{dateLabel}}</text></view>
- <view class="world-canvas">
+ <view class="world-canvas season-{{season}} phase-{{dayPhase}}">
   <view class="world-heading"><text class="eyebrow">{{seasonLabel}} · 按当前月份</text><view class="title">你的自然世界</view><text class="sub">每一次遇见，都留下自己的位置。</text></view>
-  <view class="world-ecosystem"><view class="scene-canopy"/><view class="scene-branch"/><view class="scene-ground"/><view class="scene-water"/>
+  <view class="world-ecosystem"><view class="scene-sky"/><view class="scene-canopy"/><view class="scene-branch"/><view class="scene-ground"/><view class="scene-water"/><view class="season-layer" aria-hidden="true"/><view class="atmosphere-layer" aria-hidden="true"/>
    <view wx:for="{{worldCards}}" wx:key="id" class="world-specimen zone-{{item.worldZone}} slot-{{item.worldSlot}}" data-id="{{item.id}}" bindtap="openCard" aria-role="button" aria-label="{{'查看真实收藏：'+item.zh}}"><collectible card="{{item}}" scene="{{true}}"/></view>
    <view wx:if="{{!worldCards.length}}" class="world-empty-copy"><text>这里，等着你的第一次发现</text><text class="sub">尚无真实收藏，画布为你留白。</text></view>
   </view>
