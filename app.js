@@ -181,7 +181,7 @@ App({
     this.saveDraft(Object.assign({}, draft, { pendingCard: card }));
     return card;
   },
-  getReadyCards(){const cards=wx.getStorageSync('nature.readyCards.v1'),old=wx.getStorageSync('nature.readyCard.v1');return Array.isArray(cards)?cards:old?[old]:[]},
+  getReadyCards(){let cards=wx.getStorageSync('nature.readyCards.v1');const old=wx.getStorageSync('nature.readyCard.v1');if(!Array.isArray(cards))cards=old?[old]:[];const clean=cards.filter(c=>c&&c.id);if(clean.length!==cards.length){try{wx.setStorageSync('nature.readyCards.v1',clean)}catch(e){}}return clean},
   commitObservationCard(card){if(card.schemaVersion===2?card.artStatus!=='ready'||!card.artAsset?.localPath||!card.originalPhotoAsset?.localPath||!card.scienceSnapshot:!card.backAssetFileId||!card.photoPath)throw Error('卡片资源未完成');wx.setStorageSync('nature.readyCards.v1',this.getReadyCards().filter(c=>c.id!==card.id).concat([card]));this._observation=null;return card},
   findCard(id) { const saved = this.getCards().find(c => c.id === id),ready=this.getReadyCards().find(c=>c.id===id);if(ready)return saved||ready; const draft = this.getDrafts().find(d=>d.pendingCard && d.pendingCard.id===id); return saved || (draft ? draft.pendingCard : null) },
   updateCard(card) { const ready=this.getReadyCards();if(ready.some(c=>c.id===card.id)){wx.setStorageSync('nature.readyCards.v1',ready.map(c=>c.id===card.id?card:c));return} const draft = this.getDrafts().find(d=>d.pendingCard && d.pendingCard.id===card.id); if(draft)this.saveDraft(Object.assign({},draft,{pendingCard:card})); else this.saveCards(this.getCards().map(c=>c.id===card.id?card:c)); },

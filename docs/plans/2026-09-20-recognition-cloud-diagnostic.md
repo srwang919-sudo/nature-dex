@@ -1,0 +1,11 @@
+# cloud_call 调查记录
+
+当前证据：app.js固定wx.cloud.init env=nature-prod-d0gufarx064489f0f；2026-09-20通过微信官方CLI cloud functions list查询该环境，成功返回recognizeObservation、speciesIllustration、createArtCard、cleanupObservationAssets、initCollections、natureAI2。函数存在，不能由旧cloud_call断言未部署。未查询环境变量或密钥。
+
+确定性代码问题：upload_ticket、register_asset拒绝回调丢弃errCode/requestId，识别调用拒绝同样被压成cloud_call，导致网络、运行时、环境权限等故障不可区分。修复只透传整数cloudCode、三个白名单阶段和80字符内字母数字连字符requestId。原始errMsg、响应体、URL、token完全不展示。实际调用失败根因仍需要更新后的错误或同请求运行日志，当前无证据判定百度密钥错误或函数依赖缺失。
+
+相关函数：upload_ticket在获取OPENID和检查配置后返回contractVersion=2，尚未上传照片或调用百度；若此阶段拒绝，问题发生在CloudBase调用层。若正常返回not_configured等业务错误，则原有精确映射继续生效。
+
+验证：47/47全量tests通过，build:weapp通过，recognizeObservation语法检查通过。仅修改recognition-errors.js、observe/index.js、recognition-errors测试及本文档，未部署或修改云端。
+
+下一步：重新编译本地小程序并确保手机打开更新版本，再点一次已同意的开始识别；提供完整识别码/云码/阶段/请求编号，不发照片或密钥。在nature-prod→云函数→recognizeObservation→调用日志按请求编号/触发时间筛选。如果upload_ticket根本没有函数调用日志，则查看客户端Console同一时刻CloudBase传输错误；不要先改数据库公开权限。
