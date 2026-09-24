@@ -30,6 +30,12 @@ function facade(database) {
       const result = await database.collection(collection).where(where).limit(Math.min(Math.max(limit, 1), 100)).get();
       return (result.data || []).map(row => ({ ...row, _id: row._id }));
     },
+    async page(collection,where,after,limit=20){
+      const query={...where};if(after)query._id=database.command.gt(after);
+      const result=await database.collection(collection).where(query).orderBy('_id','asc').limit(limit+1).get();
+      const rows=(result.data||[]).slice(0,limit);
+      return {rows,lastId:rows.at(-1)?._id||'',hasMore:(result.data||[]).length>limit};
+    },
     async put(collection, id, document) {
       await database.collection(collection).doc(id).set({ data: stored(document) });
     },

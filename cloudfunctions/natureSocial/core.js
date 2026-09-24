@@ -1,4 +1,4 @@
-const { createHash, randomBytes } = require('node:crypto');
+const { createHash, createHmac, timingSafeEqual, randomBytes } = require('node:crypto');
 
 const COLLECTIONS = Object.freeze({
   observations: 'trustedObservations',
@@ -15,6 +15,9 @@ const COLLECTIONS = Object.freeze({
 const INVITE_TTL = 15 * 60 * 1000;
 const COPY_TTL = 7 * 24 * 60 * 60 * 1000;
 const sha256 = value => createHash('sha256').update(String(value)).digest('hex');
+const pageSignature=(owner,id)=>createHmac('sha256',owner).update('sent-share-v1|'+id).digest('hex');
+const pageCursor=(owner,id)=>Buffer.from(id+'.'+pageSignature(owner,id)).toString('base64url');
+function pageAfter(owner,value){if(!value)return '';if(typeof value!=='string'||value.length>200)deny('invalid_request');const [id,sig]=Buffer.from(value,'base64url').toString().split('.');if(!hexId(id)||!hexId(sig)||!timingSafeEqual(Buffer.from(sig),Buffer.from(pageSignature(owner,id))))deny('invalid_request');return id}
 const keys = Object.freeze({
   trustedObservation: (owner, observationId) => sha256(`${owner}|${observationId}`),
   relationship: (a, b) => sha256(`friend-v1|${[a, b].sort().join('|')}`),
@@ -86,6 +89,7 @@ function publicCopy(copy) {
     countsAsDiscovery: false,
     species: publicSpecies(copy.species),
     receivedAt: copy.receivedAt,
+    provenance: {kind:'approved_friend_copy',contributor:'匿名收藏者',speciesId:copy.species.speciesId},
   };
 }
 
@@ -230,6 +234,13 @@ function createSocialService({ repo, now = Date.now, randomToken = () => randomB
       });
     },
 
+    async listSentShares(openid,event){
+      if(!exactEvent(event,['cursor']))deny('invalid_request');
+      const page=await repo.page(COLLECTIONS.shares,{owner:openid},pageAfter(openid,event.cursor),20);
+      const shares=[];for(const row of page.rows){const slot=await repo.get(COLLECTIONS.copySlots,keys.copySlot(row.recipient,row._id)),copy=slot?.state==='approved'?await repo.get(COLLECTIONS.copies,slot.requestId):null;shares.push({shareId:row._id,relationshipId:row.relationshipId,species:publicSpecies(row.species),shared:row.status==='active',liked:row.likedByRecipient===true,sharedAt:row.createdAt,giftedCopyId:copy&&copy.sourceOwner===openid&&copy.status!=='removed'?copy._id:''})}
+      return ready('ok',{shares,nextCursor:page.hasMore?pageCursor(openid,page.lastId):''});
+    },
+
     async revokeSpeciesShare(openid, event) {
       if (!exactEvent(event, ['shareId']) || !hexId(event.shareId)) deny('invalid_request');
       return repo.runTransaction(async tx => {
@@ -345,8 +356,11 @@ function createSocialService({ repo, now = Date.now, randomToken = () => randomB
     async listMemorialCopies(openid, event) {
       if (!exactEvent(event, [])) deny('invalid_request');
       const copies = await repo.query(COLLECTIONS.copies, { recipient: openid }, 100);
-      return ready('ok', { copies: copies.map(publicCopy) });
+      return ready('ok', { copies: copies.filter(copy=>copy.status!=='removed').map(publicCopy) });
     },
+
+    async deleteGiftedCopy(openid,event){return removeCopy(openid,event,false)},
+    async revokeGiftedCopy(openid,event){return removeCopy(openid,event,true)},
 
     async approveCopy(openid, event) { return decideCopy(openid, event, 'approved'); },
     async rejectCopy(openid, event) { return decideCopy(openid, event, 'rejected'); },
@@ -355,6 +369,11 @@ function createSocialService({ repo, now = Date.now, randomToken = () => randomB
     async blockFriend(openid, event) { return changeFriendship(openid, event, 'block'); },
     async unblockFriend(openid, event) { return changeFriendship(openid, event, 'unblock'); },
   };
+
+  async function removeCopy(openid,event,bySource){
+    if(!exactEvent(event,['copyId'])||!hexId(event.copyId))deny('invalid_request');
+    return repo.runTransaction(async tx=>{const copy=await tx.get(COLLECTIONS.copies,event.copyId);if(!copy||(bySource?copy.sourceOwner:copy.recipient)!==openid)deny('forbidden');if(copy.status!=='removed')await tx.put(COLLECTIONS.copies,event.copyId,{recipient:copy.recipient,sourceOwner:copy.sourceOwner,status:'removed',removedAt:now(),removedBy:bySource?'source':'recipient',cardType:'gifted_collection',kind:'memorial_copy',isObservation:false,countsAsDiscovery:false,countsForAchievements:false});return ready('copy_removed',{copyId:event.copyId,state:'removed'})});
+  }
 
   async function decideCopy(openid, event, decision) {
     if (!exactEvent(event, ['copyRequestId', 'idempotencyKey']) || !hexId(event.copyRequestId) || !idempotencyKey(event.idempotencyKey)) deny('invalid_request');
@@ -366,6 +385,7 @@ function createSocialService({ repo, now = Date.now, randomToken = () => randomB
         if (request.state === decision && request.decisionKeyHash === decisionKeyHash) {
           if (decision === 'approved') {
             const copy = await tx.get(COLLECTIONS.copies, event.copyRequestId);
+            if(!copy||copy.status==='removed')return ready('copy_removed',{copyRequestId:event.copyRequestId,state:'removed'});
             return ready('copy_approved', { state: 'approved', copy: publicCopy(copy) });
           }
           return ready('copy_rejected', { state: 'rejected', copyRequestId: event.copyRequestId });
@@ -383,11 +403,13 @@ function createSocialService({ repo, now = Date.now, randomToken = () => randomB
       await tx.put(COLLECTIONS.copyRequests, event.copyRequestId, { ...request, state: decision, decisionKeyHash, decidedAt });
       await tx.put(COLLECTIONS.copySlots, keys.copySlot(request.requester, request.shareId), { requester: request.requester, shareId: request.shareId, requestId: event.copyRequestId, state: decision, updatedAt: decidedAt });
       if (decision === 'rejected') return ready('copy_rejected', { state: 'rejected', copyRequestId: event.copyRequestId });
+      const originalCard=await tx.get(COLLECTIONS.cards,share.speciesCardId);
+      if(!originalCard||originalCard.owner!==openid)deny('not_verified');
       const copy = {
         recipient: request.requester, sourceOwner: openid, sourceShareId: request.shareId,
         cardType: 'gifted_collection',kind: 'memorial_copy', sourceType: 'friend_copy', isObservation: false,
         countsForAchievements: false, countsAsDiscovery: false,
-        species: publicSpecies(request.species), receivedAt: decidedAt,
+        species: publicSpecies(originalCard.species), receivedAt: decidedAt,
       };
       await tx.put(COLLECTIONS.copies, event.copyRequestId, copy);
       return ready('copy_approved', { state: 'approved', copy: publicCopy({ ...copy, _id: event.copyRequestId }) });
