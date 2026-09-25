@@ -1,13 +1,46 @@
-.enamel{width:100%;height:100%;padding:8%;box-sizing:border-box;background:#C99B48;border-radius:50%;box-shadow:inset 0 0 0 1px #AE8443}.rim{position:relative;width:100%;height:100%;border:1px solid #E8C886;box-sizing:border-box;border-radius:50%;background:#49634E}.motif{position:absolute;inset:14%;color:#FFF5D7}.part{position:absolute;box-sizing:border-box}.locked{filter:grayscale(1);background:#B9BEB6}.locked .rim{background:#606C60;border-color:#DDE1D7}.earned{box-shadow:inset 0 0 0 2px #936D29,inset 0 3px 0 3px #FFE3A2}.earned .rim{border-width:2px;border-color:#F5DE9E}.large{box-shadow:inset 0 0 0 2px #AE8443}
-.motif-first .a{inset:22%;border:2px solid currentColor;border-radius:50%}.motif-first .b{left:48%;top:0;width:4%;height:100%;background:currentColor}.motif-first .c{left:0;top:48%;width:100%;height:4%;background:currentColor}.motif-first .d{inset:32%;border-radius:50%;background:#C99B48}
+/* 徽章：金属外环 + 珐琅内圈 + 手绘图案。
+   等级靠金属色与珐琅色双重区分；未解锁保留轮廓，让"还没拿到的"可见。 */
+.enamel{position:relative;width:100%;height:100%;box-sizing:border-box;border-radius:50%;padding:7%;
+ --metal:#B87333;--metal-hi:#E2A96D;--metal-lo:#8A5426;--enamel:#4A7C59;--enamel-2:#3A6449;
+ background:linear-gradient(145deg,var(--metal-hi),var(--metal) 44%,var(--metal-lo));
+ box-shadow:0 4rpx 10rpx rgba(44,62,53,.18),inset 0 0 0 1rpx rgba(255,255,255,.28);
+ transition:transform .3s cubic-bezier(.22,1,.36,1),filter .3s ease}
+/* 金属高光：斜向反光带 */
+.enamel::after{content:'';position:absolute;inset:5%;border-radius:50%;pointer-events:none;
+ background:linear-gradient(125deg,rgba(255,255,255,.44) 0%,rgba(255,255,255,0) 36%,rgba(255,255,255,0) 64%,rgba(255,255,255,.18) 100%)}
+/* 珐琅内圈 */
+.rim{position:relative;width:100%;height:100%;border-radius:50%;box-sizing:border-box;overflow:hidden;
+ background:radial-gradient(circle at 34% 28%,var(--enamel),var(--enamel-2));
+ box-shadow:inset 0 2rpx 6rpx rgba(0,0,0,.24),inset 0 0 0 2rpx rgba(255,255,255,.16)}
+/* 珐琅颗粒纹理 */
+.rim::before{content:'';position:absolute;inset:0;border-radius:50%;opacity:.14;
+ background-image:radial-gradient(rgba(255,255,255,.55) .6rpx,transparent .7rpx);background-size:9rpx 9rpx}
+.motif{position:absolute;inset:14%;color:var(--color-on-dark,#F7F5EC)}
+.part{position:absolute;box-sizing:border-box}
+
+/* ---- 等级：铜 → 银 → 金 → 铂 ---- */
+.tier-silver{--metal:#C0C0C0;--metal-hi:#EAEAEA;--metal-lo:#8C8C8C;--enamel:#4A7A96;--enamel-2:#38607C}
+.tier-gold{--metal:#E8B84B;--metal-hi:#F9E0A0;--metal-lo:#B4882A;--enamel:#6B5535;--enamel-2:#513F27}
+.tier-platinum{--metal:#D8DEE2;--metal-hi:#F6F9FB;--metal-lo:#A0ACB6;--enamel:#3F5A5F;--enamel-2:#2C4247}
+
+/* ---- 状态 ---- */
+.locked{filter:grayscale(.9) brightness(.98);opacity:.7}
+.locked::before{content:'';position:absolute;inset:0;border-radius:50%;border:2rpx dashed rgba(44,62,53,.3);z-index:2}
+.earned{box-shadow:0 6rpx 16rpx rgba(44,62,53,.24),inset 0 0 0 1rpx rgba(255,255,255,.42)}
+.large{padding:8%}
+.large .rim{box-shadow:inset 0 4rpx 12rpx rgba(0,0,0,.26),inset 0 0 0 3rpx rgba(255,255,255,.18)}
+.reduce-motion .enamel{transition:none}
+
+/* ---- 图案：手绘线稿风格，色块改用 currentColor 以免绑定单一金属色 ---- */
+.motif-first .a{inset:22%;border:2px solid currentColor;border-radius:50%}.motif-first .b{left:48%;top:0;width:4%;height:100%;background:currentColor}.motif-first .c{left:0;top:48%;width:100%;height:4%;background:currentColor}.motif-first .d{inset:32%;border-radius:50%;background:currentColor;opacity:.5}
 .motif-plants .a,.motif-plants .b,.motif-plants .c{width:36%;height:58%;border:2px solid currentColor;border-radius:90% 0 90% 0;left:33%;top:5%;transform:rotate(-40deg)}.motif-plants .b{left:5%;top:32%;transform:rotate(-80deg)}.motif-plants .c{left:59%;top:32%;transform:rotate(5deg)}
 .motif-birds .a,.motif-birds .b{width:58%;height:44%;border-top:3px solid currentColor;border-radius:60%;top:30%;transform:rotate(22deg)}.motif-birds .b{right:0;transform:rotate(-22deg)}.motif-birds .c{width:5%;height:26%;background:currentColor;left:48%;top:35%}
 .motif-insects .a{width:25%;height:64%;left:38%;top:18%;border:2px solid currentColor;border-radius:50%}.motif-insects .b,.motif-insects .c{width:36%;height:58%;border:2px solid currentColor;border-radius:50%;left:4%;top:17%}.motif-insects .c{left:62%}.motif-insects .d{width:42%;height:2px;left:29%;top:8%;background:currentColor}
 .motif-repeat .a,.motif-repeat .b{width:66%;height:66%;border:3px solid currentColor;border-radius:50%;left:0;top:17%}.motif-repeat .b{left:34%}
 .motif-notes .a{inset:8% 20%;border:2px solid currentColor;border-radius:5%}.motif-notes .b,.motif-notes .c,.motif-notes .d{left:32%;width:36%;height:2px;background:currentColor;top:32%}.motif-notes .c{top:50%}.motif-notes .d{top:68%}
-.motif-dates .a{inset:8%;border:2px solid currentColor;border-radius:50%}.motif-dates .b{top:10%;bottom:10%;left:49%;width:2px;background:currentColor}.motif-dates .c{left:10%;right:10%;top:49%;height:2px;background:currentColor}.motif-dates .d{inset:22% 52% 52% 22%;border-radius:50%;background:#C99B48}
-.motif-places .a,.motif-places .b{width:55%;height:55%;border-top:2px solid currentColor;border-left:2px solid currentColor;transform:rotate(45deg);top:36%;left:9%}.motif-places .b{width:36%;height:36%;left:52%;top:51%}.motif-places .c{width:16%;height:16%;border-radius:50%;background:#C99B48;top:8%;right:15%}
+.motif-dates .a{inset:8%;border:2px solid currentColor;border-radius:50%}.motif-dates .b{top:10%;bottom:10%;left:49%;width:2px;background:currentColor}.motif-dates .c{left:10%;right:10%;top:49%;height:2px;background:currentColor}.motif-dates .d{inset:22% 52% 52% 22%;border-radius:50%;background:currentColor;opacity:.5}
+.motif-places .a,.motif-places .b{width:55%;height:55%;border-top:2px solid currentColor;border-left:2px solid currentColor;transform:rotate(45deg);top:36%;left:9%}.motif-places .b{width:36%;height:36%;left:52%;top:51%}.motif-places .c{width:16%;height:16%;border-radius:50%;background:currentColor;opacity:.5;top:8%;right:15%}
 .motif-ten .a,.motif-ten .b{top:19%;height:66%;width:40%;border:2px solid currentColor;border-radius:8% 8% 0 0;left:10%}.motif-ten .b{left:50%}.motif-ten .c{height:2px;width:23%;left:18%;top:36%;background:currentColor}
-.motif-twenty .a{inset:5%;border:2px solid currentColor;border-radius:50%}.motif-twenty .b{inset:25%;border:2px solid currentColor;border-radius:50%}.motif-twenty .c{inset:42%;background:#C99B48;transform:rotate(45deg)}.motif-twenty .d{left:45%;top:0;width:10%;height:10%;background:currentColor;border-radius:50%}
-.motif-puzzle .part{width:36%;height:36%;border:2px solid currentColor;left:9%;top:9%;border-radius:10%}.motif-puzzle .b{left:55%}.motif-puzzle .c{top:55%}.motif-puzzle .d{left:55%;top:55%;background:#C99B48}
-.motif-read .a{inset:24% 4%;border:2px solid currentColor;border-radius:70% 5%;transform:rotate(45deg)}.motif-read .b{inset:35%;border:2px solid currentColor;border-radius:50%}.motif-read .c{inset:45%;border-radius:50%;background:#C99B48}
+.motif-twenty .a{inset:5%;border:2px solid currentColor;border-radius:50%}.motif-twenty .b{inset:25%;border:2px solid currentColor;border-radius:50%}.motif-twenty .c{inset:42%;background:currentColor;opacity:.5;transform:rotate(45deg)}.motif-twenty .d{left:45%;top:0;width:10%;height:10%;background:currentColor;border-radius:50%}
+.motif-puzzle .part{width:36%;height:36%;border:2px solid currentColor;left:9%;top:9%;border-radius:10%}.motif-puzzle .b{left:55%}.motif-puzzle .c{top:55%}.motif-puzzle .d{left:55%;top:55%;background:currentColor;opacity:.5}
+.motif-read .a{inset:24% 4%;border:2px solid currentColor;border-radius:70% 5%;transform:rotate(45deg)}.motif-read .b{inset:35%;border:2px solid currentColor;border-radius:50%}.motif-read .c{inset:45%;border-radius:50%;background:currentColor;opacity:.5}

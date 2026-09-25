@@ -12,3 +12,12 @@
 .badge-preview-mask{position:fixed;inset:0;z-index:100;background:rgba(20,43,34,.68);display:flex;align-items:center;justify-content:center;padding:32rpx;box-sizing:border-box}.badge-preview-panel{width:100%;max-height:calc(100vh - 80rpx);overflow:auto;padding:24rpx 28rpx 40rpx;box-sizing:border-box;border-radius:28rpx;background:var(--paper);text-align:center;display:flex;flex-direction:column;align-items:center;padding-bottom:calc(40rpx + env(safe-area-inset-bottom))}.badge-preview-close{align-self:flex-end;min-width:110rpx;min-height:88rpx;font-size:26rpx;color:var(--ink);background:transparent}.badge-preview-image{width:420rpx;height:420rpx;max-width:100%;flex-shrink:0}.badge-preview-rule{font-size:28rpx;line-height:1.6;margin:16rpx 0;word-break:break-all}.badge-preview-progress,.badge-preview-state{font-size:26rpx;color:var(--moss);margin:14rpx 0}.badge-preview-fallback{padding:70rpx 20rpx;line-height:1.6;font-size:26rpx}
 .badge-preview-panel{height:calc(100vh - 120rpx);display:block}.badge-preview-panel text{display:block}.badge-preview-close{margin-left:auto}.badge-preview-image{display:block;margin:0 auto}
 @media(max-width:340px){.species-badge-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:28rpx 20rpx}.species-badge-image{width:128rpx;height:128rpx}.species-badge-name{font-size:28rpx}.species-badge-state{font-size:24rpx}}
+/* 徽章等级标签与收集引导：未获得的保留轮廓与进度，让下一步看得见 */
+.species-badge-tier{display:inline-block;margin-left:8rpx;padding:2rpx 10rpx;border-radius:999rpx;font-size:18rpx;font-weight:500;color:var(--color-text-secondary);background:var(--color-surface-3);border:1rpx solid var(--color-border);vertical-align:middle}
+.tier-silver .species-badge-tier{color:#5A6B78;background:#EDF2F6;border-color:#CFDCE4}
+.tier-gold .species-badge-tier{color:#7A5F1B;background:#FAF1D9;border-color:#E8D49A}
+.tier-platinum .species-badge-tier{color:#4A5A5E;background:#EEF2F3;border-color:#CCD7DB}
+.species-badge-image{position:relative}
+.species-badge:not(.earned) .species-badge-state{color:var(--color-text-tertiary)}
+.badge-heading .track{margin:12rpx 0 0;height:12rpx}
+.badge-heading .fill{background:var(--color-accent)}

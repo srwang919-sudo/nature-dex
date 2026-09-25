@@ -75,6 +75,11 @@ page{
   --text-xl:40rpx;
   --text-title:46rpx;
 
+  /* ---- 徽章尺寸 ---- */
+  --badge-sm:64rpx;
+  --badge-md:96rpx;
+  --badge-lg:192rpx;
+
   /* ---- 触控（微信规范 ≥88rpx）---- */
   --tap-min:88rpx;
 

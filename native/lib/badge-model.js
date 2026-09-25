@@ -13,7 +13,10 @@ const rows=[
  ['puzzle','拼图成画',1,'使用一次卡架布局（原拼图布局）'],
  ['read','守护目光',10,'主动阅读 10 种物种科普']
 ];
-const definitions=Object.freeze(rows.map(([id,name,target,desc])=>Object.freeze({id,key:id,name,target,desc,motif:id})));
+// 徽章等级由达成难度推导：越高阶越稀有，视觉上金属与珐琅都不同。
+const TIERS=Object.freeze({copper:'铜',silver:'银',gold:'金',platinum:'铂'});
+const tierOf=target=>target>=20?'platinum':target>=10?'gold':target>=4?'silver':'copper';
+const definitions=Object.freeze(rows.map(([id,name,target,desc])=>Object.freeze({id,key:id,name,target,desc,motif:id,tier:tierOf(target),tierLabel:TIERS[tierOf(target)]})));
 const keyOf=c=>String(c.canonicalSpeciesId||c.speciesId||'').trim();
 const known={kingfisher:'bird',egret:'bird',ibis:'bird',pheasant:'bird',sparrow:'bird',moth:'insect',camellia:'plant'};
 function dateOf(c){const value=c.localDate||(c.observedAt!==undefined?c.observedAt:c.createdAt);if(value===undefined||value===null||value==='')return '';const d=new Date(value);return Number.isFinite(d.getTime())?d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate():''}
@@ -26,4 +29,4 @@ function buildAchievements(cards,context={}){
  return definitions.map(d=>Object.assign({},d,{progress:Math.min(d.target,values[d.id]),earned:values[d.id]>=d.target}));
 }
 function firstUnlockedBadge(before,after,context={}){const earned=new Set(buildAchievements(before,context).filter(b=>b.earned).map(b=>b.id));return buildAchievements(after,context).find(b=>b.earned&&!earned.has(b.id))||null}
-module.exports={definitions,buildAchievements,firstUnlockedBadge,dateOf,keyOf};
+module.exports={definitions,buildAchievements,firstUnlockedBadge,dateOf,keyOf,tierOf,TIERS};
