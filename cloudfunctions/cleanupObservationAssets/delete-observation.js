@@ -7,13 +7,25 @@ async function main(event={},deps={}){
  const owner=api.getWXContext().OPENID,observationId=event.observationId;
  if(!owner||typeof observationId!=='string'||!/^[a-zA-Z0-9_-]{1,100}$/.test(observationId)||Object.keys(event).some(k=>k!=='observationId'))return fail('invalid_request');
  const db=api.database(),key=createHash('sha256').update(owner+'|'+observationId).digest('hex'),marker=db.collection('observationDeletions').doc(key);
+ // Read before revocation: revocation rewrites the row as deleted, which would hide its prior state.
+ let known=null;
+ try{known=(await db.collection('natureObservations').doc(key).get()).data}catch(e){if(!absent(e))throw e}
  try{
   // A durable tombstone serializes registration, generation claims and publishing.
   const alreadyDeleted=await db.runTransaction(async tx=>{if(deps.requireUnfinished){let observation;try{observation=(await tx.collection('natureObservations').doc(key).get()).data}catch(e){if(!absent(e))throw e}if(observation?.owner===owner&&observation.status==='saved')throw Error('observation_saved')}const d=tx.collection('observationDeletions').doc(key);let old;try{old=(await d.get()).data}catch(e){if(!absent(e))throw e}if(!old)await d.set({data:{owner,observationId,status:'deleting',createdAt:Date.now()}});await tx.collection('trustedObservations').doc(key).set({data:{owner,observationId,status:'revoked',revokedAt:Date.now(),attestationVersion:1}});return old?.status==='deleted'});
   await require('./domain').revokeDomain(db,owner,observationId);
   const rows=(await db.collection('assets').where({_openid:owner,observationId,purpose:'recognition'}).limit(100).get()).data;
-  // Missing registry cannot prove that a private source file is absent.
-  if(!rows.length)return alreadyDeleted?{status:'deleted'}:fail('asset_registry_missing');
+  if(!rows.length){
+   // A private source file can only exist when the observation was once registered.
+   // Local-first cards never upload a photo, so an unregistered observation has
+   // nothing to erase and must not block deleting the local card.
+   if(alreadyDeleted||!known||known.status==='deleted'){
+    await db.collection('observationDeletions').doc(key).set({data:{owner,observationId,status:'deleted',mode:'no_cloud_asset',deletedAt:Date.now()}});
+    return {status:'deleted',mode:'no_cloud_asset'};
+   }
+   // Missing registry cannot prove that a private source file is absent.
+   return fail('asset_registry_missing');
+  }
   if(rows.length===100)return fail('deletion_batch_limit');
   const files=[],operations=[];let pending=false;
   for(const asset of rows){

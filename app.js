@@ -44,17 +44,40 @@ App({
   async retryCloudCleanup(){const protectedIds=new Set(this.getCards().concat(this.getReadyCards()).map(c=>c.photoObservationId).filter(Boolean));if(this._observation)protectedIds.add(this._observation.id);return require('./native/lib/cloud-cleanup').drain(wx,protectedIds)},
   async removeCard(cardId) {
     const card = this.getCards().find(c => c.id === cardId)
-    if (!card) return
-    this._dataEpoch = this.getDataEpoch() + 1;
+    if (!card) return {status:'deleted',mode:'missing'}
     const fileId=card.photoFileId||card.originalPhotoAsset?.fileId||card.artAssetFileId||card.artAsset?.fileId
-    if(fileId){
-      if(!card.photoObservationId||!wx.cloud?.callFunction)throw Error('cloud_delete_unavailable')
-      const reply=await wx.cloud.callFunction({name:'deleteObservationAssets',data:{observationId:card.photoObservationId}})
-      if(reply.result?.status!=='deleted')throw Error(reply.result?.code||'cloud_delete_failed')
-    }
+    const observationId=card.photoObservationId
+    // Nothing was ever uploaded under this card, so there is no cloud copy to erase.
+    if(!fileId||!observationId)return this.eraseCard(cardId,'local_only')
+    if(!wx.cloud?.callFunction)return this.blockCardRemoval(cardId,'cloud_delete_unavailable')
+    try{
+      const reply=await wx.cloud.callFunction({name:'deleteObservationAssets',data:{observationId}})
+      const code=require('./native/lib/card-delete').classify({result:reply&&reply.result})
+      if(code)return this.blockCardRemoval(cardId,code)
+      return this.eraseCard(cardId,(reply.result&&reply.result.mode)||'cloud')
+    }catch(e){return this.blockCardRemoval(cardId,require('./native/lib/card-delete').classify({error:e}))}
+  },
+  // Escape hatch: the local copy goes away and any cloud cleanup stays queued for retry.
+  async forceRemoveCard(cardId) {
+    const card = this.getCards().find(c => c.id === cardId)
+    if(card&&card.photoObservationId)this.queueCloudCleanup(card.photoObservationId)
+    return this.eraseCard(cardId,'forced')
+  },
+  blockCardRemoval(cardId,code){
+    const card=this.getCards().find(c=>c.id===cardId)
+    const queued=card&&card.photoObservationId?this.queueCloudCleanup(card.photoObservationId):false
+    return {status:'blocked',code,message:require('./native/lib/card-delete').messageFor(code),queued}
+  },
+  queueCloudCleanup(observationId){
+    try{require('./native/lib/cloud-cleanup').enqueue(wx,observationId);return true}catch(e){return false}
+  },
+  async eraseCard(cardId,mode){
+    const card=this.getCards().find(c=>c.id===cardId)||{}
+    this._dataEpoch = this.getDataEpoch() + 1;
     this.saveCards(this.getCards().filter(c => c.id !== cardId))
     try { wx.removeStorageSync('nature.note.' + cardId) } catch (e) {}
     await this.cleanupPaths([card.photoPath,card.originalPhotoAsset?.localPath,card.artPhotoPath].filter(p=>p&&!p.startsWith('cloud://')))
+    return {status:'deleted',mode}
   },
   achievementContext() {const cards=this.getCards(),notesByCard={};cards.forEach(c=>{notesByCard[c.id]=wx.getStorageSync('nature.note.'+c.id)||''});return {notesByCard,events:{shelfUsed:!!(wx.getStorageSync('nature.collection.v1')||{}).shelfUsed,puzzleUsed:!!(wx.getStorageSync('nature.collection.v1')||{}).puzzleUsed,scienceReadSpecies:wx.getStorageSync('nature.scienceReads.v1')||[]}}},
   getBadges() { return {badges:require('./native/lib/badge-model').buildAchievements(this.getCards(),this.achievementContext())} },

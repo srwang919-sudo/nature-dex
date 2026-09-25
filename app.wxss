@@ -1,30 +1,85 @@
 /* ============================================================
    《去大自然里》设计系统 — Master Plan §100–109
-   纸白为底、墨绿为骨：现代 UI 负责操作效率，手绘世界负责情绪与品牌。
-   色彩令牌与 §103 对齐；品牌绿只用于主按钮/当前状态/进度/少量关键图标。
+   温暖自然色系：米白为底、苔藓绿为骨、暖阳金为珍。
+   品牌绿只用于主按钮/当前状态/进度/少量关键图标。
+   令牌分三层：基础色 → 语义色 → 尺寸节奏。页面只消费语义层。
    ============================================================ */
 page{
-  --paper:#F5F2E9;          /* 主背景 · 自然纸张白 */
-  --surface:#FCFAF3;        /* 卡片面 · 比纸更亮半度 */
-  --ink:#243028;            /* 正文 · 墨绿黑 */
-  --muted:#5C675C;          /* 次级文字 · 苔灰 */
-  --moss:#49634E;           /* 品牌主绿（§103：主按钮/当前状态/Progress/关键 Icon） */
-  --lake:#64869A;           /* 鸟类 · 水色 */
-  --sun:#C99B48;            /* 奖励色（First Discovery / 特殊收藏 / 高级徽章） */
-  --orange:#B88752;         /* 昆虫 · 暖琥珀（点缀用，不作主按钮） */
-  --line:#DDD8C6;           /* 1px 边线（§106：优先边线与留白，而非阴影） */
+  /* ---- 基础色（温暖自然）---- */
+  --paper:#FAF9F6;          /* 主背景 · 米白纸感 */
+  --surface:#FFFFFF;        /* 卡片面 · 比纸更亮半度 */
+  --ink:#2C3E35;            /* 正文 · 深炭绿 */
+  --muted:#66756B;          /* 次级文字 · 苔灰（对比度 ≥4.5:1） */
+  --moss:#4A7C59;           /* 品牌主绿（主按钮/当前状态/Progress/关键 Icon） */
+  --lake:#5B8BC7;           /* 鸟类 · 天空蓝 */
+  --sun:#D4A574;            /* 奖励色（首发现 / 特殊收藏 / 高级徽章） */
+  --orange:#C98A5A;         /* 昆虫 · 暖琥珀（点缀，不作主按钮） */
+  --line:#E5E3DA;           /* 1px 边线（§106：优先边线与留白） */
   /* 类别色（§103） */
-  --c-plant:#6F8A63;
-  --c-bird:#64869A;
-  --c-insect:#B88752;
-  --c-fungi:#A86B67;
-  --c-aqua:#638E91;
-  /* 形状与节奏（§105） */
-  --radius-card:24rpx;
-  --radius-action:20rpx;
-  --space-section:48rpx;
-  background:var(--paper);
-  color:var(--ink);
+  --c-plant:#5E8F6B;
+  --c-bird:#5B8BC7;
+  --c-insect:#C98A5A;
+  --c-fungi:#B06B67;
+  --c-aqua:#5E9496;
+
+  /* ---- 语义色：页面与组件只消费这一层 ---- */
+  --color-bg:var(--paper);
+  --color-surface-1:#FFFFFF;      /* 卡片 */
+  --color-surface-2:#F5F5F0;      /* 面板 */
+  --color-surface-3:#EFEFE8;      /* 悬浮/凹陷底 */
+  --color-text:var(--ink);
+  --color-text-secondary:var(--muted);
+  --color-text-tertiary:#9AA5A0;
+  --color-border:var(--line);
+  --color-primary:var(--moss);
+  --color-primary-hover:#3F6A4C;
+  --color-primary-light:#EAF1E9;  /* 选中底 / 已达成态 */
+  --color-accent:var(--sun);
+  --color-success:#4A7C59;
+  --color-warning:#D4A574;
+  --color-danger:#C75B5B;         /* 危险红统一出口 */
+  --color-danger-surface:#FBEDEC;
+  --color-danger-border:#EDC7BC;
+  --color-danger-text:#8C3A22;
+  --color-info:#5B8BC7;
+  --color-info-surface:#EDF3F9;
+  --color-info-border:#BFD4E4;
+  --color-info-text:#2A6280;
+  --color-on-dark:#F7F5EC;       /* 深色遮罩/卡面上的浅色文字 */
+
+  /* ---- 阴影（三级层次，替代散落的硬编码投影）---- */
+  --shadow-sm:0 2rpx 8rpx rgba(44,62,53,.05);
+  --shadow-md:0 6rpx 18rpx rgba(44,62,53,.08);
+  --shadow-lg:0 12rpx 32rpx rgba(44,62,53,.14);
+
+  /* ---- 圆角 ---- */
+  --radius-sm:12rpx;
+  --radius-md:18rpx;
+  --radius-lg:24rpx;
+  --radius-xl:32rpx;
+  --radius-card:var(--radius-lg);   /* 兼容旧名 */
+  --radius-action:var(--radius-md); /* 兼容旧名 */
+
+  /* ---- 间距 ---- */
+  --space-xs:8rpx;
+  --space-sm:16rpx;
+  --space-md:24rpx;
+  --space-lg:32rpx;
+  --space-xl:48rpx;
+
+  /* ---- 字号 ---- */
+  --text-xs:23rpx;
+  --text-sm:25rpx;
+  --text-base:28rpx;
+  --text-lg:32rpx;
+  --text-xl:40rpx;
+  --text-title:46rpx;
+
+  /* ---- 触控（微信规范 ≥88rpx）---- */
+  --tap-min:88rpx;
+
+  background:var(--color-bg);
+  color:var(--color-text);
   font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;
   font-size:30rpx;
   line-height:1.6;
@@ -36,39 +91,39 @@ button::after{border:none}
 
 /* ---- 版式 ---- */
 .page{padding:32rpx 32rpx calc(184rpx + env(safe-area-inset-bottom))}
-.row{display:flex;align-items:center;gap:16rpx}
+.row{display:flex;align-items:center;gap:var(--space-sm)}
 .between{justify-content:space-between}
 .grow{flex:1;min-width:0}
-.title{font-size:46rpx;font-weight:600;line-height:1.28;letter-spacing:.5rpx}
+.title{font-size:var(--text-title);font-weight:600;line-height:1.28;letter-spacing:.5rpx}
 .section{font-size:34rpx;font-weight:600;line-height:1.4}
 .brand{font-size:30rpx;font-weight:600;letter-spacing:1rpx}
-.sub,.hint{font-size:25rpx;color:var(--muted);line-height:1.65}
-.muted{color:var(--muted)}
-.small{font-size:23rpx}
-.green{color:var(--moss)}
+.sub,.hint{font-size:var(--text-sm);color:var(--color-text-secondary);line-height:1.65}
+.muted{color:var(--color-text-secondary)}
+.small{font-size:var(--text-xs)}
+.green{color:var(--color-primary)}
 .latin{font-family:Georgia,'Times New Roman',serif;font-style:italic}
 .font-number,.number,.stats{font-family:'DIN Alternate','PingFang SC',-apple-system,sans-serif;font-variant-numeric:tabular-nums}
 
 /* ---- 面板与容器 ---- */
-.panel{background:var(--surface);border:1rpx solid var(--line);border-radius:var(--radius-card);padding:26rpx}
-.spaced{margin-top:32rpx}
-.pill{padding:10rpx 20rpx;border-radius:999rpx;background:var(--surface);border:1rpx solid var(--line);font-size:23rpx;color:var(--ink);white-space:nowrap}
-.pill.on{background:#E6EBDD;border-color:#C9D4BC;color:#31473A}
-.empty{text-align:center;padding:56rpx 28rpx;color:var(--muted);background:var(--surface);border:1rpx dashed var(--line);border-radius:var(--radius-card);font-size:26rpx;line-height:1.7}
+.panel{background:var(--color-surface-1);border:1rpx solid var(--color-border);border-radius:var(--radius-card);padding:26rpx}
+.spaced{margin-top:var(--space-lg)}
+.pill{padding:10rpx 20rpx;border-radius:999rpx;background:var(--color-surface-1);border:1rpx solid var(--color-border);font-size:var(--text-xs);color:var(--color-text);white-space:nowrap}
+.pill.on{background:var(--color-primary-light);border-color:#C9DCC7;color:#2F4A38}
+.empty{text-align:center;padding:56rpx 28rpx;color:var(--color-text-secondary);background:var(--color-surface-1);border:1rpx dashed var(--color-border);border-radius:var(--radius-card);font-size:26rpx;line-height:1.7}
 
 /* ---- 操作（§102：现代 UI 负责效率；触控区 ≥88rpx）---- */
-.primary,.secondary{display:flex;align-items:center;justify-content:center;min-height:88rpx;padding:20rpx 28rpx;border-radius:var(--radius-action);text-align:center;font-size:29rpx;transition:transform .18s cubic-bezier(.22,1,.36,1),opacity .18s ease}
-.primary{background:var(--moss);color:#F7F5EC;font-weight:600}
-.secondary{background:var(--surface);color:var(--ink);border:1rpx solid var(--line)}
-.primary[disabled],.secondary[disabled]{opacity:1;background:#EAE6D9;color:#8B937F;border-color:var(--line)}
+.primary,.secondary{display:flex;align-items:center;justify-content:center;min-height:var(--tap-min);padding:20rpx 28rpx;border-radius:var(--radius-action);text-align:center;font-size:29rpx;transition:transform .18s cubic-bezier(.22,1,.36,1),opacity .18s ease}
+.primary{background:var(--color-primary);color:#FFFFFF;font-weight:600}
+.secondary{background:var(--color-surface-1);color:var(--color-text);border:1rpx solid var(--color-border)}
+.primary[disabled],.secondary[disabled]{opacity:1;background:var(--color-surface-3);color:var(--color-text-tertiary);border-color:var(--color-border)}
 .primary:active,.secondary:active{transform:scale(.98)}
-.secondary.danger{color:#A8442F;border-color:#E3CFC4}
-.link{color:var(--moss);font-size:25rpx;background:none;padding:14rpx 8rpx;min-height:88rpx}
+.secondary.danger{color:var(--color-danger);border-color:#EED9D5}
+.link{color:var(--color-primary);font-size:var(--text-sm);background:none;padding:14rpx 8rpx;min-height:var(--tap-min)}
 
 /* ---- 数据与反馈 ---- */
-.track{height:18rpx;background:#E9E5D6;border-radius:999rpx;overflow:hidden;margin:20rpx 0 12rpx}
-.fill{height:100%;background:var(--moss);border-radius:999rpx;transition:width .5s ease}
-.notice{padding:22rpx 26rpx;border-radius:20rpx;background:#F3EBD3;border:1rpx solid #E4D6AE;font-size:25rpx;line-height:1.65;color:#5A4A28}
+.track{height:18rpx;background:var(--color-surface-3);border-radius:999rpx;overflow:hidden;margin:20rpx 0 12rpx}
+.fill{height:100%;background:var(--color-primary);border-radius:999rpx;transition:width .5s ease}
+.notice{padding:22rpx 26rpx;border-radius:var(--radius-md);background:#FAF3E4;border:1rpx solid #EFE0BE;font-size:var(--text-sm);line-height:1.65;color:#5A4A28}
 
 /* ---- 动效（§108：生长/呼吸，不用 bounce/pop；尊重系统减弱动态）---- */
 .reduce-motion .primary,.reduce-motion .secondary,.reduce-motion .fill{transition:none}

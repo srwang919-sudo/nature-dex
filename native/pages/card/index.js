@@ -72,8 +72,19 @@ Page({
  removeCard(){
   wx.showModal({title:'删除这张卡？',content:'删除本机卡片、笔记及此观察的私有云照片和彩绘。云端删除确认前会保留本机卡片以便重试。',confirmText:'删除',confirmColor:'#b03a26',success:async r=>{
     if(!r.confirm)return;
-    try{await app.removeCard(this.id);wx.showToast({title:'已删除'});setTimeout(()=>wx.navigateBack(),600)}catch(e){wx.showToast({title:'删除未确认，请稍后重试',icon:'none'})}
+    let result;
+    try{result=await app.removeCard(this.id)}catch(e){wx.showToast({title:'删除失败，请稍后重试',icon:'none'});return}
+    if(result&&result.status==='blocked'){this.showDeleteBlocked(result);return}
+    wx.showToast({title:'已删除'});setTimeout(()=>wx.navigateBack(),600)
   }})
+ },
+ showDeleteBlocked(result){
+  const {messageFor}=require('../../lib/card-delete');
+  const queued=result.queued?'；已把这条观察加入后台清理队列，稍后会自动重试':'';
+  wx.showModal({title:'云端清理未确认',content:messageFor(result.code)+'。本机卡片已保留'+queued+'。',confirmText:'仍要删除本机',cancelText:'稍后重试',success:r=>{if(r.confirm)this.forceRemoveCard()}})
+ },
+ async forceRemoveCard(){
+  try{await app.forceRemoveCard(this.id);wx.showToast({title:'本机数据已删除'});setTimeout(()=>wx.navigateBack(),600)}catch(e){wx.showToast({title:'删除失败，请重试',icon:'none'})}
  },
  previewExport(){if(this.data.exportPath)wx.previewImage({urls:[this.data.exportPath],current:this.data.exportPath})},
  saveExport(){if(!this.data.exportPath)return;wx.saveImageToPhotosAlbum({filePath:this.data.exportPath,success:()=>this.setData({saveDenied:false},()=>wx.showToast({title:'已保存图片'})),fail:()=>this.setData({saveDenied:true},()=>wx.showModal({title:'未保存到相册',content:'请允许保存图片权限后重试；生成的图片仍可预览。',confirmText:'打开设置',cancelText:'稍后',success:r=>{if(r.confirm)this.openPhotoSettings()}}))})},

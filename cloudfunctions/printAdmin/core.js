@@ -5,15 +5,16 @@
 //  3) 地址不在这里补全 —— 由持有人在支付流程中提供，运营侧只能读取；
 //  4) 所有状态推进都写审计事件，重复调用幂等。
 const {createHash}=require('crypto');
+const {isOperator:dbIsOperator}=require('./operator');
 const hash=value=>createHash('sha256').update(value).digest('hex');
-const ADMIN_ENV='NATURE_ADMIN_OPENIDS';
 const CARRIERS=Object.freeze(['SF','YTO','ZTO','STO','YUNDA','EMS','JD','OTHER']);
+function envOperators(){return String(process.env.NATURE_ADMIN_OPENIDS||'').split(',').map(v=>v.trim()).filter(Boolean)}
+// 向后兼容：单参数调用 isOperator(owner) 为同步 env 判断；双参数 isOperator(db,owner) 为异步数据库+env 判断。
+function isOperator(db,openid){if(arguments.length<2){const list=envOperators();return typeof db==='string'&&db.length>0&&list.includes(db)}return dbIsOperator(db,openid)}
 // 状态机固定在服务端：客户端只能点名动作，不能自己声明从哪个状态出发。
 const TRANSITIONS=Object.freeze({mark_produced:{from:'accepted',to:'in_production',production:'in_production'},mark_shipped:{from:'in_production',to:'shipped',production:'shipped'}});
 const MAX_ROWS=20,MAX_EVENTS=50;
 const read=async doc=>{try{return (await doc.get()).data}catch(e){if(/not found|not exist|DATABASE_DOCUMENT_NOT_EXIST|collection/i.test(e.message||'')&&!/already/i.test(e.message||''))return null;throw e}};
-function operators(){return String(process.env[ADMIN_ENV]||'').split(',').map(v=>v.trim()).filter(Boolean)}
-function isOperator(owner){const list=operators();return typeof owner==='string'&&owner.length>0&&list.includes(owner)}
 function csvCell(value){const text=String(value==null?'':value);return /[",\n\r]/.test(text)?'"'+text.replace(/"/g,'""')+'"':text}
 // 交给印刷方的是匿名清单：正反面资源用 assetRef 指代，不带账号标识与存储路径。
 const assetRef=position=>'a'+String(position).padStart(2,'0');
@@ -127,7 +128,6 @@ async function getPackage(db,event){
 
 async function printAdmin({db,owner,event={},now=Date.now}={}){
  if(!db)throw Error('runtime_unavailable');
- if(!isOperator(owner))throw Error('operator_required');
  if(!event||typeof event!=='object'||typeof event.action!=='string')throw Error('invalid_request');
  const allowed={
   list_orders:['action','cursor','limit','status'],
@@ -138,8 +138,11 @@ async function printAdmin({db,owner,event={},now=Date.now}={}){
   set_tracking:['action','orderId','carrier','trackingNo'],
   get_package:['action','orderId']
  };
+ // claim_operator 不需要既有运营权限，否则新用户无法自助激活。
+ if(event.action==='claim_operator')return await require('./operator').claimOperator({db,openid:owner,code:event.code,now});
  const fields=allowed[event.action];
  if(!fields||Object.keys(event).some(k=>!fields.includes(k)))throw Error('invalid_request');
+ if(!(await isOperator(db,owner)))throw Error('operator_required');
  if(event.action==='list_orders')return await listOrders(db,event);
  if(event.action==='list_drafts')return await listDrafts(db,event);
  if(event.action==='accept_order')return await acceptOrder(db,event,owner,now);
@@ -147,4 +150,4 @@ async function printAdmin({db,owner,event={},now=Date.now}={}){
  if(event.action==='get_package')return await getPackage(db,event);
  return await advance(db,event,owner,now);
 }
-module.exports={printAdmin,isOperator,operators,manifestCsv,orderJson,shippingJson,publicOrder,publicDraft,listDrafts,assetRef,CARRIERS,ADMIN_ENV};
+module.exports={printAdmin,isOperator,manifestCsv,orderJson,shippingJson,publicOrder,publicDraft,listDrafts,assetRef,CARRIERS};
