@@ -28,7 +28,7 @@
 | 2 | 核心数据架构 | ✅ | 五集合 + 事务写入 |
 | 3 | Discovery Number | ✅ | 原子分配 / 唯一约束 / First Discovery |
 | 4 | Official Artwork Library | ✅ | 候选/批准/驳回/复用/Contributor |
-| 5 | Artwork Visual System | ✅(V1) | Prompt 模板 + 4 呈现变体（服务端稳定推导、默认变体逐字节兼容）；**缩略图派生管线待真实 COS 验证**（见 §3） |
+| 5 | Artwork Visual System | ✅(V1) | Prompt 模板 + 4 呈现变体（服务端稳定推导、默认变体逐字节兼容）+ 缩略图派生管线（**默认关闭，验证后开启**） |
 | 6 | Recognition Pipeline | ✅ | 三路线 + 幂等 + 隐私 |
 | 7 | Hunyuan Pipeline | ✅ | 官方缺失→候选→审核→复用；Custom Artwork |
 | 8 | AI Quota + Ledger | ✅ | 配额幂等 + `aiUsageEvents`（provider/model/cost/duration）+ `aiCostConfig` |
@@ -60,7 +60,7 @@
 | A1 | 订阅支付实测（Phase 12） | 微信支付商户号 + 证书 + 回调登记 | Phase 12–16 手册 §5 验收矩阵 |
 | A2 | 好友双账号实测（Phase 13） | 两个真实微信号 | 手册 §6 场景表 |
 | A3 | 打印履约真机验收（Phase 14） | 商户配置 + 真实下单 | 手册 §4.4 七步 |
-| A4 | 缩略图管线（§5/§115） | 私有读桶的 `tempFileURL` 签名与 `imageMogr2` 参数拼接顺序必须真实环境验证，猜错即 404 可见回归 | 手册 §8 四步验证后再实现 |
+| A4 | 缩略图管线（§5/§115） | 私有读桶的 `tempFileURL` 签名与 `imageMogr2` 参数拼接顺序必须真实环境验证一次 | **代码已就绪**（`native/lib/thumbnail.js` + 组件一次性回退），**默认关闭**；验证后写一个存储开关即生效，手册已给步骤 |
 
 ### B. V2 / 未来增强（Master Plan 自己标注“未来/预留”）
 
@@ -75,7 +75,7 @@
 
 ### C. 本轮已知但刻意不做（防止可见回归）
 
-- 缩略图（见 A4）。
+- 缩略图默认关闭（见 A4）：线上行为与开启前一致，验证后才开。
 - 场景装饰不做“整张 AI 背景图”（§32）：坚持分层可复用元素，十件套总量 488KB，主包预算占用 ~18%。
 
 ---
