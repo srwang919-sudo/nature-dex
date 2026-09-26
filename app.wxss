@@ -131,6 +131,14 @@ button::after{border:none}
 .notice{padding:22rpx 26rpx;border-radius:var(--radius-md);background:#FAF3E4;border:1rpx solid #EFE0BE;font-size:var(--text-sm);line-height:1.65;color:#5A4A28}
 
 /* ---- 动效（§108：生长/呼吸，不用 bounce/pop；尊重系统减弱动态）---- */
+/* 可点击卡片统一按压反馈，让"点了有反应"成为一致体验 */
+.note-card,.record,.collection-item,.landmark,.footprint-row{transition:transform .16s cubic-bezier(.22,1,.36,1),opacity .16s ease}
+.note-card:active,.record:active,.collection-item:active{transform:scale(.985);opacity:.94}
+/* 面板与地图块轻微上浮入场，避免整页元素同时闪现 */
+@keyframes rise{from{opacity:0;transform:translateY(14rpx)}to{opacity:1;transform:none}}
+.journey-map,.landmark-panel,.journey-compass,.stats-panel,.badges-row{animation:rise .34s cubic-bezier(.22,1,.36,1) both}
+.reduce-motion .note-card:active,.reduce-motion .record:active,.reduce-motion .collection-item:active{transform:none;opacity:1}
+.reduce-motion .journey-map,.reduce-motion .landmark-panel,.reduce-motion .journey-compass,.reduce-motion .stats-panel,.reduce-motion .badges-row{animation:none}
 .reduce-motion .primary,.reduce-motion .secondary,.reduce-motion .fill{transition:none}
 @media(prefers-reduced-motion:reduce){.primary,.secondary,.fill{transition:none}.primary:active,.secondary:active{transform:none}}
 

@@ -1,6 +1,33 @@
 <view class="page journey-page {{reduceMotion?'reduce-motion':''}}">
  <text class="sub">留给未来的自己</text><view class="title">自然旅程</view>
  <view wx:if="{{!journeys.length}}" class="journey-empty"><view class="section">第一次遇见，值得记下来。</view><text class="sub">同一种生命，一次又一次相逢。</text><button class="primary spaced" bindtap="capture">拍一张</button></view>
- <view wx:for="{{journeys}}" wx:key="speciesId" class="species-journey"><view class="journey-heading"><view class="journey-portrait" data-id="{{item.card.id}}" bindtap="open" aria-role="button" aria-label="{{'回看'+item.name}}"><collectible card="{{item.card}}" scene="{{true}}"/></view><view class="journey-heading-copy"><view class="section">{{item.name}}</view><text class="sub">{{item.count}} 次真实遇见</text></view></view><view class="observation-thread"><button wx:for="{{item.observations}}" wx:for-item="record" wx:key="id" class="observation-entry" data-id="{{record.id}}" bindtap="open"><view class="thread-dot"/><text>{{record.dateLabel}}</text><text class="thread-link">回看记录</text></button></view></view>
- <view wx:if="{{places.length}}" class="spaced"><view class="section">走过的地方</view><text class="sub">你主动留下的地点，仅自己可见</text><view wx:for="{{places}}" wx:key="placeId" class="place-row"><text>{{item.label}}</text><text class="sub">{{item.count}} 次遇见</text></view></view>
+ <block wx:if="{{journeys.length}}">
+  <view class="journey-compass" aria-label="旅程概览">
+   <view class="compass-cell"><text class="number">{{totalMeetings}}</text><text>次相遇</text></view>
+   <view class="compass-cell"><text class="number">{{speciesCount}}</text><text>条路线</text></view>
+   <view class="compass-cell"><text class="number">{{placeCount}}</text><text>处地标</text></view>
+  </view>
+  <view class="journey-map">
+   <view class="map-legend">
+    <view class="legend-item"><view class="legend-dot"/><text>一次真实遇见</text></view>
+    <view class="legend-item"><view class="legend-dot current"/><text>最近一次</text></view>
+    <view class="legend-item"><view class="legend-dot landmark"/><text>留下过地点</text></view>
+   </view>
+   <view wx:for="{{journeys}}" wx:key="speciesId" class="map-route">
+    <view class="route-head" data-id="{{item.card.id}}" bindtap="open" aria-role="button" aria-label="{{'回看'+item.name+'的收藏卡'}}">
+     <view class="route-portrait"><collectible card="{{item.card}}" scene="{{true}}"/></view>
+     <view class="route-copy"><view class="section">{{item.name}}</view><text class="sub">{{item.count}} 次真实遇见 · 最近 {{item.latest}}</text></view>
+    </view>
+    <view class="route-path">
+     <view wx:for="{{item.observations}}" wx:for-item="record" wx:for-index="recordIndex" wx:key="id" class="path-node {{recordIndex===0?'is-current':''}}" data-id="{{record.id}}" bindtap="open" aria-role="button" aria-label="{{'回看'+record.dateLabel+'的观察'}}">
+      <view class="node-dot"/><text class="node-date">{{record.dateLabel}}</text><text class="node-link">回看</text>
+     </view>
+    </view>
+   </view>
+  </view>
+  <view wx:if="{{places.length}}" class="landmark-panel">
+   <view class="section">走过的地方</view><text class="sub">你主动留下的地点，仅自己可见</text>
+   <view wx:for="{{places}}" wx:key="placeId" class="landmark"><view class="landmark-marker"/><text>{{item.label}}</text><text class="landmark-count">{{item.count}} 次遇见</text></view>
+  </view>
+ </block>
 </view><navigation active="journey"/>

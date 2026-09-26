@@ -11,14 +11,28 @@ function request(url,{method='GET',headers={},body}={}){
 function imageForm(content,kind='animal'){
  const image=Buffer.isBuffer(content)?content:ArrayBuffer.isView(content)?Buffer.from(content.buffer,content.byteOffset,content.byteLength):content instanceof ArrayBuffer?Buffer.from(content):null;
  if(!image||!image.length||image.length>4*1024*1024)throw Error('invalid image');
- const body=new URLSearchParams({image:image.toString('base64'),baike_num:'5',...(kind==='animal'?{top_num:'5'}:{})}).toString();
+ const body=new URLSearchParams({image:image.toString('base64'),baike_num:'5',top_num:'5'}).toString();
  return {method:'POST',headers:{'content-type':'application/x-www-form-urlencoded','Content-Length':String(Buffer.byteLength(body,'utf8'))},body};
+}
+// 分物种阈值：植物类百科覆盖更好可略放宽，通用识别噪声大需更严，动物居中。
+const THRESHOLDS={animal:.85,plant:.80,general:.90};
+const DEFAULT_THRESHOLD=.90;
+const LOW_CONFIDENCE=.6;
+const RETRYABLE=/ETIMEDOUT|ECONNRESET|ENOTFOUND|EAI_AGAIN|socket hang up|timeout/i;
+// 阈值按该候选中置信度最高的路由来定；拿不到有效路由时取最严阈值。
+function thresholdFor(candidate){
+ const scores=(candidate.routeScores||[]).filter(s=>['animal','plant','general'].includes(s.route));
+ const route=scores.length?scores.slice().sort((a,b)=>b.confidence-a.confidence)[0].route:candidate.route;
+ return THRESHOLDS[route]||DEFAULT_THRESHOLD;
 }
 function normalizeRecognition(payload={}){
  const candidates=(payload.candidates||[]).map(x=>{const confidence=Number(x.confidence??x.score);if(!Number.isFinite(confidence)||confidence<0||confidence>1)throw Error('invalid confidence');const name=String(x.name||x.keyword||'').trim();const speciesId=x.speciesId||SPECIES[name]||name;return {speciesId,name,confidence,source:'baidu',category:x.category||'other',route:x.route||'unknown',sourceScience:sanitizeScience({summary:x.baike_info?.description,url:x.baike_info?.baike_url},{speciesId,route:x.route})}}).filter(x=>x.speciesId&&!/非动物|非植物|无法识别|非生物/.test(x.name)).sort((a,b)=>b.confidence-a.confidence).filter((c,i,a)=>a.findIndex(x=>x.speciesId===c.speciesId)===i).slice(0,5);
  if(!candidates.length)return {status:'unknown',candidates:[]};
  for(const c of candidates)c.routeScores=(payload.candidates||[]).filter(x=>(x.speciesId||SPECIES[String(x.name||x.keyword||'').trim()]||String(x.name||x.keyword||'').trim())===c.speciesId).map(x=>({route:['animal','plant','general'].includes(x.route)?x.route:'unknown',confidence:Number(x.confidence??x.score)}));
- return {status:candidates[0].confidence>=.86?'recognized':'needs_confirmation',requiresConfirmation:true,candidates};
+ const top=candidates[0],threshold=thresholdFor(top);
+ // 达到阈值直接判定；0.6 以上给候选让用户确认；低于 0.6 视为没认出来，客户端应引导重拍。
+ const status=top.confidence>=threshold?'recognized':top.confidence>=LOW_CONFIDENCE?'needs_confirmation':'unknown';
+ return {status,candidates,confidence:top.confidence,threshold,requiresConfirmation:status==='needs_confirmation'};
 }
 async function main(event={},deps={}){
  const fail=(code,providerCode)=>({status:'failed',code,candidates:[],contractVersion:2,...(Number.isInteger(providerCode)?{providerCode}:{})});
@@ -65,12 +79,26 @@ async function main(event={},deps={}){
   const token=await auth.json();if(auth.status>=400||!token.access_token)return await finish(fail('provider_auth_failed'));
   const kinds=event.kind==='plant'?['plant']:event.kind==='animal'?['animal']:event.kind==='generalOnly'?['general']:['animal','plant','general'];
   stage='provider_error';
-  const responses=await Promise.all(kinds.map(async kind=>{try{
+  const callKind=async kind=>{
    const res=await send('https://aip.baidubce.com/rest/2.0/image-classify/'+(kind==='general'?'v2/advanced_general':'v1/'+kind)+'?access_token='+encodeURIComponent(token.access_token),imageForm(file.fileContent,kind));
-   const body=await res.json();if(res.status>=400||body.error_code){const n=Number(body.error_code);return {route:kind,failure:fail(baiduErrorCode(n),n)}}
-   if(!Array.isArray(body.result))return {failure:fail('provider_response')};
+   const body=await res.json();if(res.status>=400||body.error_code){const n=Number(body.error_code);if(n===18)throw Error('provider_rate_limit');return {route:kind,failure:fail(baiduErrorCode(n),n)}}
+   if(!Array.isArray(body.result))return {route:kind,failure:fail('provider_response')};
    return {route:kind,rows:body.result};
-  }catch(e){return {failure:fail(/timeout/i.test(e.message||'')?'timeout':'provider_response')}}}));
+  };
+  const callWithRetry=async kind=>{
+   let last;
+   for(let attempt=0;attempt<3;attempt++){
+    try{return await callKind(kind)}catch(e){
+     last=e;if(attempt===2)break;
+     const rateLimited=(e&&e.message)==='provider_rate_limit';
+     if(!rateLimited&&!RETRYABLE.test(String((e&&e.message)||'')))break;
+     await new Promise(resolve=>setTimeout(resolve,rateLimited?1200:400*Math.pow(2,attempt)));
+    }
+   }
+   const message=String((last&&last.message)||'');
+   return {route:kind,failure:fail(message==='provider_rate_limit'?'provider_rate_limit':/timeout/i.test(message)?'timeout':'provider_response')};
+  };
+  const responses=await Promise.all(kinds.map(callWithRetry));
   const warnings=responses.filter(x=>x.failure).map(x=>x.failure),rows=responses.flatMap(x=>x.rows||[]);
   if(!rows.length&&warnings.length){await require('./usage-ledger').recordRecognition(db,{owner:openid,operationId:event.observationId,kind:event.kind,status:'failed',durationMs:Date.now()-started,error:warnings[0].code});return await finish(warnings[0])}
   const result=mergeCandidateRoutes(responses,normalizeRecognition);
@@ -79,4 +107,4 @@ async function main(event={},deps={}){
  }catch(e){const result=fail(['daily_limit','cancelled','receipt_conflict','account_erasing'].includes(e.message)?e.message:/timeout/i.test(e.message||'')?'timeout':stage);if(claimed){try{return await finish(result)}catch(ignore){}}await require('./usage-ledger').recordRecognition(db,{owner:openid,operationId:event.observationId,kind:event.kind,status:'error',durationMs:Date.now()-started,error:result.code}).catch(()=>{});return result}
 }
 function baiduErrorCode(n){if(n===216101)return 'provider_missing_parameter';if(n===6)return 'provider_permission';if(n===17||n===19)return 'provider_quota';if(n===18)return 'provider_rate_limit';if(n===110||n===111)return 'provider_token';if([216200,216201,216202,216203].includes(n))return 'provider_image';return 'provider_error'}
-module.exports={main,normalizeRecognition,request,baiduErrorCode,imageForm};
+module.exports={main,normalizeRecognition,request,baiduErrorCode,imageForm,thresholdFor,THRESHOLDS,LOW_CONFIDENCE};
