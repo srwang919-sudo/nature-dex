@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>去大自然里 · UI/UX 改动前后对比</title>
+<style>
+:root{
+  --paper:#FAF9F6;--surface:#FFFFFF;--ink:#2C3E35;
+  --muted:#66756B;--moss:#4A7C59;--line:#E5E3DA;
+  --primary-light:#EAF1E9;
+  --tertiary-old:#9AA5A0;--tertiary-new:#64736E;
+  --disabled-new:#8A9490;--surface-3:#EFEFE8;
+  --nav-old:#F5F2E9;
+  --danger:#C75B5B;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#F2F1EC;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;line-height:1.6;padding:40px 24px 64px}
+.wrap{max-width:1080px;margin:0 auto}
+header{margin-bottom:40px}
+h1{font-size:26px;font-weight:600;letter-spacing:.5px}
+.lede{color:var(--muted);font-size:14px;margin-top:8px;max-width:62ch}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:24px}
+.metric{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.metric .k{font-size:12px;color:var(--muted)}
+.metric .v{font-size:22px;font-weight:600;margin-top:2px;font-variant-numeric:tabular-nums}
+.metric .v small{font-size:12px;font-weight:400;color:var(--muted)}
+.case{margin-top:44px;border-top:1px solid var(--line);padding-top:28px}
+.case-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.case-no{font-size:12px;color:#fff;background:var(--ink);border-radius:6px;padding:2px 8px;font-variant-numeric:tabular-nums}
+.case-title{font-size:17px;font-weight:600}
+.tag{font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid}
+.tag.p0{color:var(--danger);border-color:#E6BFBC;background:#FBEEED}
+.tag.p1{color:#854F0B;border-color:#E8C98A;background:#FAF1DC}
+.case-desc{font-size:13px;color:var(--muted);max-width:76ch;margin-bottom:20px}
+.pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;align-items:start}
+.side{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:16px}
+.side.before{background:#F7F4EE}
+.side-label{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin-bottom:12px}
+.dot{width:7px;height:7px;border-radius:50%}
+.before .dot{background:var(--danger)}
+.after .dot{background:var(--moss)}
+.phone{width:100%;max-width:340px;margin:0 auto;background:var(--paper);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(44,62,53,.06)}
+.phone-bar{height:34px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted);border-bottom:1px solid var(--line)}
+.phone-body{padding:12px;min-height:150px}
+.phone-cap{font-size:11px;color:var(--muted);padding:10px 12px 14px;line-height:1.5}
+.note{font-size:12px;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
+.note b{color:var(--ink);font-weight:500}
+/* 还原：底部导航 */
+.dock{border-top:1px solid var(--line);background:var(--paper);padding:4px 8px 8px}
+.tabs{display:flex;height:56px;align-items:stretch}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:13px;color:var(--muted)}
+.tab .icon-wrap{width:34px;height:24px;border-radius:12px;display:flex;align-items:center;justify-content:center}
+.tab .ico{width:16px;height:15px;border:1.5px solid currentColor;border-radius:3px}
+.tab.on-old{color:var(--ink);font-weight:600}
+.tab.on-new{color:var(--moss);font-weight:600}
+.tab.on-new .icon-wrap{background:var(--primary-light)}
+/* 还原：文本层级 */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px}
+.badge-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.badge{text-align:center}
+.badge .seal{width:52px;height:52px;border-radius:50%;margin:0 auto 6px;background:linear-gradient(145deg,#E2A96D,#B87333 44%,#8A5426);opacity:.92}
+.badge .nm{font-size:12px;font-weight:500}
+.badge .st-old{font-size:12px;color:var(--tertiary-old);margin-top:2px}
+.badge .st-new{font-size:12px;color:var(--tertiary-new);margin-top:2px}
+.ratio{display:inline-block;font-size:11px;padding:1px 6px;border-radius:999px;margin-top:6px;font-variant-numeric:tabular-nums}
+.ratio.bad{background:#FBEEED;color:var(--danger)}
+.ratio.ok{background:var(--primary-light);color:#2F4A38}
+.btn-dis{display:flex;align-items:center;justify-content:center;height:44px;border-radius:9px;background:var(--surface-3);font-size:13px;margin-top:12px;border:1px solid var(--line)}
+/* 还原：入口网格 */
+.entry-grid{display:grid;gap:10px;margin-top:12px}
+.entry{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px}
+.entry .t{font-size:14px;font-weight:500}
+.entry .s{font-size:12px;color:var(--muted)}
+.entry.dead{opacity:1;position:relative}
+.entry.dead::after{content:"点击 → 页面不存在";position:absolute;right:10px;top:12px;font-size:10px;color:var(--danger);background:#FBEEED;border:1px solid #E6BFBC;border-radius:999px;padding:1px 7px}
+/* 还原：设置入口 */
+.sect{display:flex;flex-wrap:wrap;gap:6px}
+.sect button{flex:1 1 42%;min-height:44px;border:1px solid var(--line);background:var(--surface);border-radius:9px;font-size:12px;color:var(--ink);font-family:inherit}
+.deep{margin-top:14px;font-size:11px;color:var(--muted)}
+.deep button{display:block;width:100%;min-height:44px;border:1px dashed var(--line);background:var(--surface);border-radius:9px;font-size:12px;color:var(--ink);font-family:inherit;margin-top:6px}
+table{width:100%;border-collapse:collapse;margin-top:14px;font-size:13px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+th{font-size:12px;color:var(--muted);font-weight:500}
+td.num{font-variant-numeric:tabular-nums}
+.pill{font-size:11px;padding:1px 7px;border-radius:999px}
+.pill.no{background:#FBEEED;color:var(--danger)}
+.pill.yes{background:var(--primary-light);color:#2F4A38}
+footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;background:#EFEDE6;padding:1px 5px;border-radius:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>去大自然里 · UI/UX 改动前后对比</h1>
+  <p class="lede">评审范围 14 个注册页面 + 3 个公共组件 + 令牌层。下方四组是肉眼最可辨的改动，每组左右对照，右侧为改后。换算按 <code>1rpx = 0.5px</code>（750rpx 设计稿）。</p>
+  <div class="metrics">
+    <div class="metric"><div class="k">全量回归</div><div class="v">302 <small>/ 302 通过</small></div></div>
+    <div class="metric"><div class="k">修复项</div><div class="v">11 <small>P0 四项 + P1 八项</small></div></div>
+    <div class="metric"><div class="k">三级文字对比度</div><div class="v">2.41 <small>→ 4.73 : 1</small></div></div>
+    <div class="metric"><div class="k">最小正文字号</div><div class="v">18 <small>→ 24rpx（9→12px）</small></div></div>
+  </div>
+</header>
+
+<div class="case">
+  <div class="case-head"><span class="case-no">01</span><span class="case-title">底部导航：两套设计在同一文件里打架</span><span class="tag p1">P1</span></div>
+  <p class="case-desc">同一个 wxss 里先写了一遍「浮动胶囊」样式，紧接着又整段覆盖成「贴底栏」，前 13 行几乎全部失效。选中态被覆盖成只剩文字变色，失去了图标底块这个视觉锚点——用户得一格一格读文字才知道自己在哪。</p>
+  <div class="pair">
+    <div class="side before">
+      <div class="side-label"><span class="dot"></span>改前 · 样式来源不明，选中态只有文字色</div>
+      <div class="phone">
+        <div class="phone-bar">去大自然里</div>
+        <div class="phone-body">
+          <div class="card" style="font-size:13px;color:var(--muted)">当前页内容区</div>
+        </div>
+        <div class="dock"><div class="tabs">
+          <div class="tab on-old"><div class="icon-wrap"><div class="ico"></div></div><span>探索</span></div>
+          <div class="tab"><div class="icon-wrap"><div class="ico"></div></div><span>图鉴</span></div>
+          <div class="tab"><div class="icon-wrap"><div class="ico"></div></div><span>旅程</span></div>
+          <div class="tab"><div class="icon-wrap"><div class="ico"></div></div><span>我的</span></div>
+        </div></div>
+      </div>
+      <div class="note"><b>问题</b>：被 CSS 覆盖层的「后定义优先」决定长相，改样式时不知道自己在改哪一套。</div>
+    </div>
+    <div class="side">
+      <div class="side-label"><span class="dot"></span>改后 · 单一来源 + 选中态三重信号</div>
+      <div class="phone">
+        <div class="phone-bar">去大自然里</div>
+        <div class="phone-body">
+          <div class="card" style="font-size:13px;color:var(--muted)">当前页内容区</div>
+        </div>
+        <div class="dock"><div class="tabs">
+          <div class="tab on-new"><div class="icon-wrap"><div class="ico"></div></div><span>探索</span></div>
+          <div class="tab"><div class="icon-wrap"><div class="ico"></div></div><span>图鉴</span></div>
+          <div class="tab"><div class="icon-wrap"><div class="ico"></div></div><span>旅程</span></div>
+          <div class="tab"><div class="icon-wrap"><div class="ico"></div></div><span>我的</span></div>
+        </div></div>
+      </div>
+      <div class="note"><b>改法</b>：品牌色 + 加粗 + 图标浅绿底块三重信号，不只靠颜色传达当前页（同时满足「不能仅用颜色」）。</div>
+    </div>
+  </div>
+</div>
+
+<div class="case">
+  <div class="case-head"><span class="case-no">02</span><span class="case-title">三级文字：关键信息弱到读不清</span><span class="tag p0">P0</span></div>
+  <p class="case-desc">徽章上「3 / 10 · 探索中」这类决定用户下一步行为的信息，挂在对比度仅 <b>2.41:1</b> 的三级文字色上（AA 要求 4.5:1）。禁用按钮更糟，浅底配浅字约 <b>2.2:1</b>——用户既看不清字，也理解不了为什么点不动。</p>
+  <div class="pair">
+    <div class="side before">
+      <div class="side-label"><span class="dot"></span>改前 · tertiary #9AA5A0</div>
+      <div class="phone">
+        <div class="phone-bar">我的</div>
+        <div class="phone-body">
+          <div class="badge-grid">
+            <div class="badge"><div class="seal"></div><div class="nm">植物知音</div><div class="st-old">3 / 10 · 探索中</div></div>
+            <div class="badge"><div class="seal"></div><div class="nm">观鸟的人</div><div class="st-old">1 / 10 · 探索中</div></div>
+            <div class="badge"><div class="seal" style="filter:grayscale(.9)"></div><div class="nm">夜行者</div><div class="st-old">0 / 5 · 探索中</div></div>
+          </div>
+          <div class="btn-dis" style="color:var(--tertiary-old)">保存不可支付的订单草稿</div>
+        </div>
+        <div class="phone-cap"><span class="ratio bad">2.41 : 1</span> 正文要求 4.5 : 1</div>
+      </div>
+      <div class="note"><b>影响</b>：弱视力用户与户外强光下基本不可读；禁用原因也无法传达。</div>
+    </div>
+    <div class="side">
+      <div class="side-label"><span class="dot"></span>改后 · tertiary #64736E + 独立禁用色</div>
+      <div class="phone">
+        <div class="phone-bar">我的</div>
+        <div class="phone-body">
+          <div class="badge-grid">
+            <div class="badge"><div class="seal"></div><div class="nm">植物知音</div><div class="st-new">3 / 10 · 探索中</div></div>
+            <div class="badge"><div class="seal"></div><div class="nm">观鸟的人</div><div class="st-new">1 / 10 · 探索中</div></div>
+            <div class="badge"><div class="seal" style="filter:grayscale(.9)"></div><div class="nm">夜行者</div><div class="st-new">0 / 5 · 探索中</div></div>
+          </div>
+          <div class="btn-dis" style="color:var(--disabled-new)">保存不可支付的订单草稿</div>
+        </div>
+        <div class="phone-cap"><span class="ratio ok">4.73 : 1</span> 达标 · 禁用态按 UI 组件 3:1 取</div>
+      </div>
+      <div class="note"><b>取舍</b>：米白底上「更浅」与「达标」不可兼得——改用<b>更冷的灰绿色相</b>表达层级，而不是继续调浅。</div>
+    </div>
+  </div>
+</div>
+
+<div class="case">
+  <div class="case-head"><span class="case-no">03</span><span class="case-title">「探索生境」：功能的壳还在，真身已下线</span><span class="tag p0">P0</span></div>
+  <p class="case-desc">nearby 页面目录已被删除、<code>app.json</code> 里也已注销，但观察页的入口卡片和跳转代码还留着。用户点「探索生境」必然失败——<b>一个点不开的入口比没有入口更伤信任</b>。同时首页 <code>openNearby</code> 也是没有调用方的死代码。</p>
+  <div class="pair">
+    <div class="side before">
+      <div class="side-label"><span class="dot"></span>改前 · 入口指向已删除的页面</div>
+      <div class="phone">
+        <div class="phone-bar">观察</div>
+        <div class="phone-body">
+          <div class="card" style="text-align:center;font-size:14px;font-weight:500">拍一张</div>
+          <div class="entry-grid" style="grid-template-columns:1fr 1fr">
+            <div class="entry"><div class="t">相册导入</div><div class="s">选一张你拍过的照片</div></div>
+            <div class="entry dead"><div class="t">探索生境</div><div class="s">静态观察指南</div></div>
+          </div>
+        </div>
+        <div class="phone-cap">点击「探索生境」→ <code>wx.reLaunch</code> 到不存在的路径</div>
+      </div>
+      <div class="note"><b>连带</b>：<code>home/index.js</code> 的 <code>openNearby</code> 无人调用；<code>region-atlas.js</code> 成孤儿模块。</div>
+    </div>
+    <div class="side">
+      <div class="side-label"><span class="dot"></span>改后 · 移除死链，网格改单列全宽</div>
+      <div class="phone">
+        <div class="phone-bar">观察</div>
+        <div class="phone-body">
+          <div class="card" style="text-align:center;font-size:14px;font-weight:500">拍一张</div>
+          <div class="entry-grid" style="grid-template-columns:1fr">
+            <div class="entry"><div class="t">相册导入</div><div class="s">选一张你拍过的照片</div></div>
+          </div>
+        </div>
+        <div class="phone-cap">入口网格剩一张卡时不再半宽居左</div>
+      </div>
+      <div class="note"><b>未做</b>：是否要<b>恢复</b>生境页由你定——<code>git show HEAD:native/pages/nearby/</code> 可取回，但需连带确认插画素材授权。</div>
+    </div>
+  </div>
+</div>
+
+<div class="case">
+  <div class="case-head"><span class="case-no">04</span><span class="case-title">设置页：六个板块挤一页，好友入口沉底</span><span class="tag p1">P1</span></div>
+  <p class="case-desc">设置页用 <code>wx:if</code> 把 6 个板块塞在一页里切换。更要紧的是入口分裂：设置/会员/隐私/帮助/关于五个在顶部按钮组，唯独「好友说明」孤零零吊在页面最底部——用户滚到底才发现它。<b>「允许百度鉴别照片」开关也错位到了「运营工具」之后。</b></p>
+  <div class="pair">
+    <div class="side before">
+      <div class="side-label"><span class="dot"></span>改前 · 好友入口孤立在页面底部</div>
+      <div class="phone">
+        <div class="phone-bar">我的自然手记</div>
+        <div class="phone-body">
+          <div class="sect">
+            <button>设置</button><button>会员与用量</button><button>隐私</button><button>帮助与反馈</button><button>关于</button>
+          </div>
+          <div class="deep">
+            页面主体（面板随 wx:if 切换）……
+            <button style="border-style:dashed;opacity:.9">好友说明 ↓ 在这里</button>
+          </div>
+        </div>
+        <div class="phone-cap">要滚过全部面板才能看到第 6 个入口</div>
+      </div>
+      <div class="note"><b>未解</b>：6 板块同页切换 + 与 <code>friend</code> 页功能重叠，需拆分方案。</div>
+    </div>
+    <div class="side">
+      <div class="side-label"><span class="dot"></span>改后 · 入口齐平，删除冗余重复入口</div>
+      <div class="phone">
+        <div class="phone-bar">我的自然手记</div>
+        <div class="phone-body">
+          <div class="sect">
+            <button>设置</button><button>会员与用量</button><button>隐私</button><button>帮助与反馈</button><button>关于</button><button style="border-color:#C9DCC7;background:var(--primary-light);color:#2F4A38">好友与纪念卡</button>
+          </div>
+          <div class="deep">页面主体（面板随 wx:if 切换）……</div>
+        </div>
+        <div class="phone-cap">六入口同一处，2 列 3 行排布</div>
+      </div>
+      <div class="note"><b>仍建议</b>：把好友能力收敛到 <code>friend</code> 页，设置页只留说明与跳转，避免两套实现各自演进。</div>
+    </div>
+  </div>
+</div>
+
+<div class="case">
+  <div class="case-head"><span class="case-no">05</span><span class="case-title">无障碍实测数据</span></div>
+  <p class="case-desc">对比度按 WCAG 相对亮度公式计算，背景取 <code>--paper #FAF9F6</code>（亮度 0.9473）。</p>
+  <table>
+    <thead><tr><th>令牌 / 元素</th><th>改前</th><th>改后</th><th>AA 正文 4.5:1</th></tr></thead>
+    <tbody>
+      <tr><td><code>--color-text</code> #2C3E35</td><td class="num">—</td><td class="num">12.4 : 1</td><td><span class="pill yes">通过</span></td></tr>
+      <tr><td><code>--color-text-secondary</code> #66756B</td><td class="num">—</td><td class="num">4.61 : 1</td><td><span class="pill yes">通过</span></td></tr>
+      <tr><td><code>--color-text-tertiary</code></td><td class="num">#9AA5A0 · 2.41 : 1</td><td class="num">#64736E · 4.73 : 1</td><td><span class="pill yes">通过</span></td></tr>
+      <tr><td>禁用按钮文字</td><td class="num">复用 tertiary · 2.2 : 1</td><td class="num">#8A9490 · 2.97 : 1</td><td><span class="pill yes">豁免达标</span></td></tr>
+      <tr><td>警告提示条（字 / 底）</td><td class="num">#5A4A28 / #FAF3E4</td><td class="num">同上，已令牌化</td><td><span class="pill yes">6.4 : 1</span></td></tr>
+      <tr><td>信息提示条（字 / 底）</td><td class="num">#2A6280 / #EDF3F9</td><td class="num">未变</td><td><span class="pill yes">5.95 : 1</span></td></tr>
+      <tr><td>最小正文字号</td><td class="num">18rpx（9px）</td><td class="num">24rpx（12px）</td><td><span class="pill yes">提升</span></td></tr>
+      <tr><td>触控区</td><td class="num">气泡关闭键为裸文字</td><td class="num">88rpx 热区（负 margin 抵消视觉高度）</td><td><span class="pill yes">达标</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<footer>
+  配套文档：<code>docs/ui-ux-review-2026-09-26.md</code> · 验收 <code>npm run build:weapp</code> PASS / <code>npm test</code> 302 通过<br>
+  未验证项（需真机）：相机与头像、导出到相册、两个微信身份的数据隔离、负 margin 热区在真机上的实际表现。
+</footer>
+
+</div>
+</body>
+</html>

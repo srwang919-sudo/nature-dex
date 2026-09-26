@@ -156,3 +156,6 @@ button::after{border:none}
 
 /* 博物馆图鉴补充层（学名衬线、卡面专属规则） */
 @import "native/styles/museum.wxss";
+
+/* AI 生成内容标识（合规）：出现在生成图展示处附近，说明插画由 AI 生成、非实拍 */
+.ai-mark{display:block;text-align:center;margin:12rpx 0 0;font-size:20rpx;color:var(--color-text-secondary);letter-spacing:.02em}
