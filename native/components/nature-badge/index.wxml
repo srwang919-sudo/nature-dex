@@ -1,1 +1,1 @@
-<view class="enamel tier-{{safeTier}} motif-{{safeMotif}} {{earned?'earned':'locked'}} {{large?'large':''}}" aria-hidden="true"><view class="rim"><view class="motif"><view class="part a"/><view class="part b"/><view class="part c"/><view class="part d"/></view></view></view>
+<view class="enamel motif-{{safeMotif}} {{earned?'earned':'locked'}} {{large?'large':''}}" aria-hidden="true"><image class="badge-photo" src="/assets/badges/{{safeMotif}}.webp" mode="aspectFit" lazy-load="{{true}}"/><view class="badge-gloss"/></view>
