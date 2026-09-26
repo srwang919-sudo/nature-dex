@@ -33,12 +33,24 @@
 .legend-dot.current{background:var(--color-accent)}
 .legend-dot.landmark{border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--color-accent)}
 
+/* ---- 地点气泡：点节点只在旁边显示地点 ---- */
+.map-bubble{position:absolute;z-index:4;min-width:200rpx;max-width:340rpx;padding:16rpx 20rpx;background:#FFFFFF;border-radius:var(--radius-md);box-shadow:0 8rpx 20rpx rgba(44,62,53,.22);transform:translate(-50%,-140%)}
+.map-bubble::after{content:'';position:absolute;left:50%;bottom:-10rpx;width:0;height:0;margin-left:-9rpx;border-left:9rpx solid transparent;border-right:9rpx solid transparent;border-top:12rpx solid #FFFFFF}
+.map-bubble.side-right{transform:translate(-8%,-140%)}
+.map-bubble.side-left{transform:translate(-92%,-140%)}
+.bubble-place{font-size:26rpx;color:var(--color-text);overflow-wrap:anywhere}
+.bubble-date{margin-top:6rpx;display:flex;align-items:center;gap:16rpx;font-size:20rpx;color:var(--color-text-secondary)}
+.bubble-close{flex:none;color:var(--color-primary)}
+.map-node.is-active .node-pin{background:var(--color-accent);box-shadow:0 0 0 6rpx rgba(212,165,116,.28)}
+
 /* ---- 轨迹明细 ---- */
 .track-list{margin-top:8rpx}
 .track-row{display:flex;align-items:center;gap:16rpx;padding:18rpx 0;border-top:1rpx solid var(--color-border);font-size:26rpx}
 .track-row:first-child{border-top:0}
 .track-date{flex:none;width:130rpx;color:var(--color-text-secondary);font-size:24rpx}
 .track-name{flex:1;min-width:0;overflow-wrap:anywhere}
+.track-hint{flex:none;font-size:22rpx;color:var(--color-primary)}
+.track-place{margin:0 0 16rpx;padding:16rpx 20rpx;background:var(--color-surface-2);border-left:4rpx solid var(--color-accent);border-radius:var(--radius-sm);font-size:24rpx;color:var(--color-text)}
 
 /* ---- 地标 ---- */
 .landmark-panel{margin-top:32rpx;padding:24rpx;background:var(--color-surface-1);border:1rpx solid var(--color-border);border-radius:var(--radius-lg)}

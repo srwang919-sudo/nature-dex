@@ -12,8 +12,12 @@
    <canvas class="map-canvas" type="2d" id="journey-canvas" disable-scroll="{{true}}" aria-hidden="true"/>
    <view class="map-compass" aria-hidden="true"/>
    <view class="map-scale"><view class="map-scale-rule"/><text>走过的路</text></view>
-   <view wx:for="{{mapPoints}}" wx:for-item="point" wx:key="id" class="map-node {{point.latest?'is-latest':''}}" style="left:{{point.x}}%;top:{{point.y}}%" data-id="{{point.id}}" bindtap="open" aria-role="button" aria-label="{{'回看'+point.date+'的'+point.name}}">
+   <view wx:for="{{mapPoints}}" wx:for-item="point" wx:key="id" class="map-node {{point.latest?'is-latest':''}} {{activePoint&&activePoint.id===point.id?'is-active':''}}" style="left:{{point.x}}%;top:{{point.y}}%" data-index="{{index}}" bindtap="showPlace" aria-role="button" aria-label="{{'查看'+point.date+'这次遇见的地点'}}">
     <view class="node-pin"/><text class="node-tag">{{point.tag}}</text>
+   </view>
+   <view wx:if="{{activePoint}}" class="map-bubble {{activePoint.side}}" style="left:{{activePoint.x}}%;top:{{activePoint.y}}%">
+    <view class="bubble-place">{{activePoint.place||'这次没有留下地点'}}</view>
+    <view class="bubble-date">{{activePoint.date}}<text class="bubble-close" bindtap="closePlace" aria-label="关闭地点提示">关闭</text></view>
    </view>
   </view>
   <view class="map-legend">
@@ -22,7 +26,7 @@
    <view class="legend-item"><view class="legend-dot landmark"/><text>留下过地点</text></view>
   </view>
   <view class="section spaced">这条路走过的地方</view>
-  <view class="track-list"><view wx:for="{{trace}}" wx:key="id" class="track-row" data-id="{{item.id}}" bindtap="open" aria-role="button" aria-label="{{'回看'+item.date+'的'+item.name}}"><text class="track-date">{{item.date}}</text><view class="track-name">{{item.name}}<text wx:if="{{item.place}}" class="sub"> · {{item.place}}</text></view></view></view>
+  <view class="track-list"><block wx:for="{{trace}}" wx:key="id"><view class="track-row" data-id="{{item.id}}" bindtap="showTracePlace" aria-role="button" aria-label="{{'查看'+item.date+'这次遇见的地点'}}"><text class="track-date">{{item.date}}</text><view class="track-name">{{item.name}}</view><text class="track-hint">{{activeTraceId===item.id?'收起':'地点'}}</text></view><view wx:if="{{activeTraceId===item.id}}" class="track-place">{{item.place||'这次没有留下地点'}}</view></block></view>
   <view wx:if="{{places.length}}" class="landmark-panel">
    <view class="section">地标</view><text class="sub">你主动留下的地点，仅自己可见</text>
    <view wx:for="{{places}}" wx:key="placeId" class="landmark"><view class="landmark-marker"/><text>{{item.label}}</text><text class="landmark-count">{{item.count}} 次遇见</text></view>

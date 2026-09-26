@@ -14,7 +14,7 @@ function routePoints(list,limit=12){
  });
 }
 Page({
- data:{mapPoints:[],trace:[],places:[],meetingCount:0,dayCount:0,placeCount:0,reduceMotion:false},
+ data:{mapPoints:[],trace:[],places:[],activePoint:null,activeTraceId:'',meetingCount:0,dayCount:0,placeCount:0,reduceMotion:false},
  onShow(){
   const all=realCards(app.getCards()).map(locationFreeCard);
   const points=all.map(c=>{
@@ -35,6 +35,14 @@ Page({
    reduceMotion:!!wx.getStorageSync('nature.reduceMotion')
   },()=>this.drawRoute());
  },
+ // 旅程页只回答「在哪儿」：点节点就地弹地点，不进卡片详情。
+ showPlace(e){
+  const index=Number(e.currentTarget.dataset.index),point=this.data.mapPoints[index];
+  if(!point)return;
+  this.setData({activePoint:Object.assign({},point,{side:point.x>55?'side-left':'side-right'})});
+ },
+ closePlace(){this.setData({activePoint:null})},
+ showTracePlace(e){const id=e.currentTarget.dataset.id;this.setData({activeTraceId:this.data.activeTraceId===id?'':id})},
  // 轨迹曲线画在 canvas 上：虚线小路 + 节点光晕；节点本身是可点击的 view。
  drawRoute(){
   const points=this.data.mapPoints||[];
