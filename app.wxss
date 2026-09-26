@@ -107,7 +107,7 @@ button{font:inherit;margin:0;line-height:1.5;color:inherit;background:transparen
 button::after{border:none}
 
 /* ---- 版式 ---- */
-.page{padding:32rpx 32rpx calc(184rpx + env(safe-area-inset-bottom))}
+.page{padding:var(--space-lg) var(--space-lg) calc(184rpx + env(safe-area-inset-bottom))}
 .row{display:flex;align-items:center;gap:var(--space-sm)}
 .between{justify-content:space-between}
 .grow{flex:1;min-width:0}
