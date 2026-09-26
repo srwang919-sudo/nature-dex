@@ -1,6 +1,6 @@
 <view wx:if="{{!hidden}}" class="dock">
   <view class="tabs">
-    <view wx:for="{{navigationItems}}" wx:key="key" class="tab {{item.key==='capture'?'central':''}} {{currentKey===item.key?'on':''}}" data-key="{{item.key}}" bindtap="go" aria-role="button" aria-label="{{currentKey===item.key?item.label+'，当前页面':item.label}}">
+    <view wx:for="{{navigationItems}}" wx:key="key" class="tab {{currentKey===item.key?'on':''}}" data-key="{{item.key}}" bindtap="go" aria-role="button" aria-label="{{currentKey===item.key?item.label+'，当前页面':item.label}}">
       <view class="icon-wrap"><view class="icon {{item.icon}}"></view></view>
       <text class="tab-label">{{item.label}}</text>
     </view>

@@ -28,7 +28,6 @@ Page({
  flash(){this.setData({flash:this.data.flash==='off'?'on':'off'})},
  shoot(){if(this.data.busy||!this.data.cameraReady)return;this.setData({busy:true});wx.createCameraContext().takePhoto({quality:'high',success:r=>this.persist(r.tempImagePath,'camera'),fail:()=>{this.setData({busy:false});wx.showToast({title:'拍摄失败，请重试',icon:'none'})}})},
  album(){if(this.data.busy||this._unloaded)return;wx.chooseMedia({count:1,mediaType:['image'],sourceType:['album'],success:r=>{if(this._unloaded)return;if(r.tempFiles&&r.tempFiles[0]){this.setData({busy:true});this.persist(r.tempFiles[0].tempFilePath,'album')}},fail:e=>{if(!this._unloaded&&!/cancel/.test(e.errMsg||''))wx.showToast({title:'无法打开相册，请检查权限',icon:'none'})}})},
- nearby(){wx.reLaunch({url:'/native/pages/nearby/index'})},
  commitSaved(savedPath){
   try{
    const draft=app.createDraft({photoPath:savedPath,createdAt:Date.now(),mode:'ready'});

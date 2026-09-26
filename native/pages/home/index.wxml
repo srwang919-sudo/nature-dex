@@ -37,20 +37,8 @@
    <button class="secondary spaced" bindtap="closeWorldPick">继续看自然世界</button>
   </view>
  </view>
- <view class="record-area"><button class="primary home-record" bindtap="observe" aria-label="拍一张，打开相机"><text>拍一张</text></button><button class="album-entry" bindtap="album">从相册选择</button></view>
- <view class="row between today-heading"><text class="section">今天的遇见</text><button class="link" bindtap="library">看图鉴</button></view>
- <scroll-view wx:if="{{today.length}}" class="today-scroll" scroll-x="true"><view class="today-strip"><view wx:for="{{today}}" wx:key="id" class="today-card" data-id="{{item.id}}" bindtap="openCard" aria-role="button" aria-label="{{'查看'+item.zh}}"><collectible card="{{item}}"/></view></view></scroll-view>
- <view wx:else class="today-empty"><text>拍下下一次遇见</text><text class="sub">今天还没有新记录。不必赶路，留意身边就好。</text></view>
- <view wx:if="{{explore}}" class="explore-card spaced" bindtap="openNearby" aria-role="button" aria-label="查看本季地区图鉴进度">
-  <view class="row between"><text class="section">继续探索</text><text class="explore-count">{{explore.found}}/{{explore.total}}</text></view>
-  <view class="sub">本季{{explore.seasonLabel}}季图鉴 · 出门走走，把下一位也收进图鉴</view>
-  <view class="track"><view class="fill" style="width:{{explore.coverage}}%"></view></view>
- </view>
- <view class="section spaced">最近的发现</view>
- <view wx:if="{{recent.length}}" class="recent-grid"><view wx:for="{{recent}}" wx:key="id" class="recent-card" data-id="{{item.id}}" bindtap="openCard" aria-role="button" aria-label="{{'回看'+item.zh}}"><collectible card="{{item}}"/></view></view>
- <view wx:else class="quiet-empty">收藏成功的卡片，会在这里慢慢汇成一册。</view>
- <view class="past-section"><text class="eyebrow">过去</text><view class="section">自然回忆</view><view wx:if="{{memory}}" class="memory-row" data-id="{{memory.id}}" bindtap="openCard" aria-role="button" aria-label="{{'回看往年的'+memory.zh}}"><view class="memory-card"><collectible card="{{memory}}"/></view><view><view>往年的今天，遇见{{memory.zh}}</view><text class="sub">{{memory.date}} · 轻点重温</text></view></view><text wx:else class="sub">今天留下的记录，会成为未来值得回看的自然记忆。</text></view>
- <view class="panel spaced"><view class="section">好友最近分享</view><view class="sub">只看好友主动公开且仍有效的物种资料，最多三条。不包含原照片或地点。</view><button class="secondary spaced" disabled="{{friendBusy}}" bindtap="loadFriendRecent">{{friendBusy?'正在查询…':'查看好友近期分享'}}</button><view wx:if="{{friendError}}" class="sub spaced">{{friendError}}</view><view wx:if="{{friendLoaded&&!friendRecent.length}}" class="sub spaced">暂无向你公开的有效分享。</view><button wx:for="{{friendRecent}}" wx:key="shareId" class="secondary spaced" data-id="{{item.relationshipId}}" bindtap="openFriendMuseum">{{item.species.speciesName}} · 去好友自然馆</button></view>
+ <view class="record-area"><button class="primary home-record" bindtap="observe" aria-label="拍一张，打开相机"><text>拍一张</text></button></view>
+ <view class="sub record-hint">拍下植物、昆虫或鸟类，认出它，收进你自己的图鉴。</view>
 </view>
 <button wx:if="{{showReturnTop}}" class="return-top" bindtap="returnTop" aria-label="回到顶部，拍一张">回到顶部</button>
 <navigation active="discover"/>

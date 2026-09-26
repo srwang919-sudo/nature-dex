@@ -1,13 +1,26 @@
-const app=getApp(),{buildMuseumTimeline}=require('../../lib/museum-timeline'),{footprints}=require('../../lib/collection-model');
+const app=getApp(),{realCards,footprints,locationFreeCard}=require('../../lib/collection-model');
+const stamp=c=>Number(c.recoveredFromCloud?c.observedAt:(c.observedAt??c.createdAt))||0;
+const dayKey=t=>{const d=new Date(t);return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()};
 Page({
- data:{journeys:[],places:[],totalMeetings:0,speciesCount:0,placeCount:0,reduceMotion:false},
+ data:{segments:[],places:[],meetingCount:0,dayCount:0,placeCount:0,reduceMotion:false},
  onShow(){
-  const cards=app.getCards(),timeline=buildMuseumTimeline(cards);
-  // 路线按相遇次数排序：走得最远的旅程排在地图最前，最新一次作为路线端点。
-  const journeys=timeline.journeys.map(g=>Object.assign({},g,{card:app.decorate(g.card),latest:(g.observations[0]||{}).dateLabel||''}))
-   .sort((a,b)=>b.count-a.count||String(a.name).localeCompare(String(b.name),'zh'));
-  const places=wx.getStorageSync('nature.showLocation')===true?footprints(cards):[];
-  this.setData({journeys,places,speciesCount:journeys.length,totalMeetings:journeys.reduce((sum,j)=>sum+j.count,0),placeCount:places.length,reduceMotion:!!wx.getStorageSync('nature.reduceMotion')});
+  const all=realCards(app.getCards()).map(locationFreeCard);
+  // 旅程只呈现「走过的轨迹」：按时间正序串成一条路，不重复图鉴里的物种卡片。
+  const points=all.map(c=>{
+   const time=stamp(c),d=new Date(time);
+   return {id:c.id,zh:c.zh||c.speciesId||'未命名物种',time,
+    dateLabel:time>0?(d.getMonth()+1)+'月'+d.getDate()+'日':'日期未记录',
+    month:d.getFullYear()+'年'+(d.getMonth()+1)+'月',
+    place:(c.location&&c.location.label)||''};
+  }).filter(p=>p.time>0).sort((a,b)=>a.time-b.time);
+  const segments=[];
+  for(const point of points){
+   let segment=segments[segments.length-1];
+   if(!segment||segment.month!==point.month){segment={month:point.month,label:point.month,nodes:[]};segments.push(segment)}
+   segment.nodes.push(point);
+  }
+  const places=wx.getStorageSync('nature.showLocation')===true?footprints(all):[];
+  this.setData({segments,places,meetingCount:points.length,dayCount:new Set(points.map(p=>dayKey(p.time))).size,placeCount:places.length,reduceMotion:!!wx.getStorageSync('nature.reduceMotion')});
  },
  open(e){const id=e.currentTarget.dataset.id;if(!id)return;wx.navigateTo({url:'/native/pages/card/index?id='+encodeURIComponent(id)})},
  capture(){wx.navigateTo({url:'/native/pages/observe/index?source=camera'})}

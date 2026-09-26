@@ -87,15 +87,3 @@ test('an empty device reports zero progress instead of a fabricated number',()=>
  assert.equal(none.total,0);
  assert.equal(none.coverage,0);
 });
-
-test('nearby page exposes the atlas without ever reading device location',()=>{
- const page=read('native/pages/nearby/index.js');
- assert.match(page,/buildRegionAtlas/);
- assert.doesNotMatch(page,/getLocation|chooseLocation/);
- const wxml=read('native/pages/nearby/index.wxml');
- assert.match(wxml,/季图鉴/);
- assert.match(wxml,/不含他人观察，不上传位置/);
- assert.match(wxml,/本机私密足迹/);
- const wxss=read('native/pages/nearby/index.wxss');
- assert.doesNotMatch(wxss,/animation[^;}]*infinite|backdrop-filter/);
-});

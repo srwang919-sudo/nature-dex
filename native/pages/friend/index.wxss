@@ -1,0 +1,16 @@
+.friend-heading .title{margin:8rpx 0}
+.friend-heading .sub{display:block;margin-top:8rpx}
+.friend-empty{padding:28rpx 24rpx;text-align:center;color:var(--color-text-secondary);background:var(--color-surface-1);border:1rpx dashed var(--color-border);border-radius:var(--radius-lg);font-size:26rpx;line-height:1.65}
+.friend-row{display:flex;align-items:center;gap:20rpx;padding:22rpx 24rpx;margin-top:16rpx;background:var(--color-surface-1);border:1rpx solid var(--color-border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);transition:transform .16s cubic-bezier(.22,1,.36,1)}
+.friend-row:active{transform:scale(.985)}
+.friend-avatar{width:72rpx;height:72rpx;flex:none;border-radius:50%;background:var(--color-primary-light);border:2rpx solid var(--color-border);position:relative}
+.friend-avatar::after{content:'';position:absolute;left:50%;top:16rpx;width:24rpx;height:24rpx;margin-left:-12rpx;border-radius:50%;background:var(--color-primary);opacity:.55}
+.friend-enter{flex:none;font-size:24rpx;color:var(--color-primary)}
+.memory-row{display:flex;align-items:center;flex-wrap:wrap;gap:14rpx;padding:22rpx 24rpx;margin-top:16rpx;background:var(--color-surface-1);border:1rpx solid var(--color-border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm)}
+.memory-seal{width:56rpx;height:56rpx;flex:none;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--color-accent);box-shadow:var(--shadow-sm)}
+.memory-row .secondary{min-height:72rpx;padding:0 22rpx;font-size:24rpx}
+.request-row{display:flex;align-items:center;gap:16rpx;padding:18rpx 0;border-top:1rpx solid var(--color-border);font-size:26rpx}
+.invite-panel{padding:26rpx 24rpx;background:var(--color-surface-1);border:1rpx solid var(--color-border);border-radius:var(--radius-lg)}
+.invite-panel>.sub{display:block;margin-top:8rpx}
+.friend-input{min-height:var(--tap-min);padding:0 20rpx;border:1rpx solid var(--color-border);border-radius:var(--radius-md);background:var(--color-surface-2);font-size:28rpx;box-sizing:border-box}
+.reduce-motion .friend-row:active{transform:none}

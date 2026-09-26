@@ -4,7 +4,7 @@ const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 for(const page of ['home','library','profile','observe','reveal','card']){
   assert.match(read(`native/pages/${page}/index.wxml`),/reduce-motion/);
 }
-for(const page of ['home','library','profile','observe','reveal','card','nearby','settings','note']){
+for(const page of ['home','library','profile','observe','reveal','card','friend','settings','note']){
   assert.doesNotMatch(read(`native/pages/${page}/index.wxss`),/animation[^;}]*infinite|backdrop-filter/);
 }
 assert.match(read('native/components/navigation/index.wxml'),/aria-role="button"/);

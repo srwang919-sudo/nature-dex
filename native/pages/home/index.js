@@ -10,14 +10,9 @@ Page({
  refresh(){
   const cards=app.getCards().filter(c=>c&&!c.sample&&c.kind!=='example').map(c=>app.decorate(c)).filter(Boolean);
   const timeline=require('../../lib/museum-timeline').buildMuseumTimeline(cards,Date.now());
-  this.setData({...timeline,reduceMotion:!!wx.getStorageSync('nature.reduceMotion')});
+  // 探索页只负责「拍一张」与自然世界：今日/最近/回忆都在各自 tab 里，这里不再重复渲染。
+  this.setData({season:timeline.season,seasonLabel:timeline.seasonLabel,dayPhase:timeline.dayPhase,dateLabel:timeline.dateLabel,worldCards:timeline.worldCards,reduceMotion:!!wx.getStorageSync('nature.reduceMotion')});
   this.noticeWorldGrowth(timeline.worldCards);
-  // 继续探索（§85）：本季地区图鉴进度。只读本机私密足迹；目录或数据异常时诚实隐藏模块。
-  try{
-   const catalog=(app.globalData&&app.globalData.species)||{};
-   const atlas=require('../../lib/region-atlas').buildRegionAtlas(cards,{catalog,now:Date.now()});
-   this.setData({explore:atlas&&atlas.total?{seasonLabel:atlas.seasonLabel,found:atlas.found,total:atlas.total,coverage:atlas.coverage}:null});
-  }catch(e){this.setData({explore:null})}
  },
  // 自然世界生长埋点（§111–112）：仅上报，不参与界面判定；存储失败不影响首页。
  noticeWorldGrowth(worldCards){
@@ -50,6 +45,5 @@ Page({
  openFriendMuseum(e){wx.navigateTo({url:'/native/pages/friend-museum/index?relationshipId='+encodeURIComponent(e.currentTarget.dataset.id)})},
  onHide(){this._friendToken=(this._friendToken||0)+1;this.setData({friendBusy:false,friendRecent:[],friendLoaded:false})},
  library(){wx.reLaunch({url:'/native/pages/library/index'})},
- openNearby(){wx.navigateTo({url:'/native/pages/nearby/index'})},
  openCard(e){wx.navigateTo({url:'/native/pages/card/index?id='+encodeURIComponent(e.currentTarget.dataset.id)})}
 })

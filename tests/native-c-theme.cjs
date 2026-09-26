@@ -11,7 +11,7 @@ for(const key of ['color-bg','color-surface-1','color-surface-2','color-surface-
 for(const key of ['shadow-sm','shadow-md','shadow-lg','radius-sm','radius-md','radius-lg','radius-xl','space-xs','space-sm','space-md','space-lg','space-xl','text-xs','text-sm','text-base','text-lg','text-xl'])assert.ok(css.includes('--'+key+':'),key);
 // 页面不得再用旧硬编码回退值（var(--token, #旧色)）
 const stale=/var\(--[a-z-]+,\s*#[0-9a-f]{3,8}\)/;
-for(const file of ['../app.wxss','../native/pages/home/index.wxss','../native/pages/nearby/index.wxss','../native/pages/print-admin/index.wxss','../native/pages/profile/index.wxss'])assert.doesNotMatch(fs.readFileSync(path.join(__dirname,file),'utf8').toLowerCase(),stale,file);
+for(const file of ['../app.wxss','../native/pages/home/index.wxss','../native/pages/library/index.wxss','../native/pages/print-admin/index.wxss','../native/pages/profile/index.wxss'])assert.doesNotMatch(fs.readFileSync(path.join(__dirname,file),'utf8').toLowerCase(),stale,file);
 function luminance(hex){return hex.slice(1).match(/../g).map(x=>parseInt(x,16)/255).map(x=>x<=.04045?x/12.92:((x+.055)/1.055)**2.4).reduce((s,x,i)=>s+x*[.2126,.7152,.0722][i],0)}
 function contrast(a,b){const x=luminance(a),y=luminance(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05)}
 for(const key of ['ink','muted','moss'])assert.ok(contrast(colors[key],colors.paper)>=4.5,key+' contrast');

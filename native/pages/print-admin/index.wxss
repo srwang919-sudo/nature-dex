@@ -7,7 +7,7 @@
 .admin-list{display:flex;flex-direction:column;gap:20rpx}
 .admin-card{padding:var(--space-md);background:var(--color-surface-1);border:1rpx solid var(--color-border);border-radius:22rpx}
 .admin-title{font-size:30rpx;color:var(--color-text)}
-.admin-pill{flex:none;font-size:22rpx;padding:6rpx 14rpx;border:1rpx solid var(--color-border);border-radius:999rpx;color:var(--color-primary)}
+.admin-pill{flex:none;font-size:24rpx;padding:6rpx 14rpx;border:1rpx solid var(--color-border);border-radius:999rpx;color:var(--color-primary)}
 .admin-actions{display:flex;gap:var(--space-sm);margin-top:20rpx}
 .admin-actions .grow{flex:1;min-width:0}
 .admin-tracking{display:flex;align-items:center;gap:12rpx;margin-top:var(--space-sm)}

@@ -1,0 +1,34 @@
+<view class="page friend-page">
+ <view class="friend-heading"><text class="eyebrow">同行的人</text><view class="title">好友</view><text class="sub">只交换物种资料与纪念卡；原照片、地点、笔记始终保持私有。</text></view>
+ <view wx:if="{{!social.available}}" class="notice spaced">{{social.label}}好友服务需要服务端配置完成后可用。</view>
+ <view class="row spaced"><button class="primary grow" disabled="{{serviceBusy}}" bindtap="connectFriends">{{serviceBusy?'正在连接…':'连接 / 刷新好友'}}</button></view>
+ <block wx:if="{{socialConnected}}">
+  <view class="section spaced">我的好友 · {{friends.length}}</view>
+  <view wx:if="{{!friends.length}}" class="friend-empty">还没有好友。生成一个邀请码发给对方，或粘贴对方的邀请码。</view>
+  <view wx:for="{{friends}}" wx:key="relationshipId" class="friend-row" data-id="{{item.relationshipId}}" bindtap="openFriendMuseum" aria-role="button" aria-label="打开好友的自然馆">
+   <view class="friend-avatar" aria-hidden="true"/><view class="grow"><text>好友 {{index+1}}</text><text class="sub">轻点进入 TA 的自然馆</text></view><text class="friend-enter">进入 ›</text>
+  </view>
+  <view class="section spaced">好友展示的纪念卡 · {{sharedSpecies.length}}</view>
+  <view wx:if="{{!sharedSpecies.length}}" class="friend-empty">好友还没有向你分享物种资料。分享是对方主动选择的，不是默认公开。</view>
+  <view wx:for="{{sharedSpecies}}" wx:key="shareId" class="memory-row">
+   <view class="memory-seal" aria-hidden="true"/>
+   <view class="grow"><text>{{item.species.speciesName}}</text><text class="sub">{{item.liked?'你已点赞':'来自好友的公开分享'}}</text></view>
+   <button class="secondary" data-id="{{item.shareId}}" bindtap="toggleSpeciesLike" aria-label="{{item.liked?'取消点赞':'点赞'}}">{{item.liked?'已赞':'点赞'}}</button>
+   <button class="secondary spaced" data-id="{{item.shareId}}" bindtap="requestMemorial">求纪念卡</button>
+  </view>
+  <view wx:if="{{myCopyRequests.length}}" class="section spaced">我的收藏请求</view>
+  <view wx:for="{{myCopyRequests}}" wx:key="copyRequestId" class="request-row"><view class="grow"><text>{{item.species.speciesName}}</text><text class="sub">{{item.stateLabel}}</text></view><button wx:if="{{item.state==='pending'}}" class="secondary" data-id="{{item.copyRequestId}}" bindtap="cancelMyRequest">取消</button></view>
+ </block>
+ <view class="invite-panel spaced">
+  <view class="section">邀请与接受</view>
+  <text class="sub">邀请码 15 分钟内有效，只发给你信任的人。</text>
+  <button class="secondary spaced" disabled="{{serviceBusy}}" bindtap="createFriendInvite">生成邀请码</button>
+  <button wx:if="{{inviteCode}}" class="secondary spaced" bindtap="copyFriendInvite">复制邀请码</button>
+  <input class="friend-input spaced" value="{{enteredInvite}}" bindinput="inviteInput" maxlength="128" placeholder="粘贴好友邀请码" aria-label="好友邀请码"/>
+  <button class="secondary spaced" disabled="{{serviceBusy}}" bindtap="acceptFriendInvite">接受邀请</button>
+  <text wx:if="{{inviteMessage}}" class="sub" aria-live="polite">{{inviteMessage}}</text>
+ </view>
+ <view wx:if="{{serviceError}}" class="notice spaced" aria-live="polite">{{serviceError}}</view>
+ <button class="link spaced" bindtap="goSettings">好友与纪念卡说明 →</button>
+</view>
+<navigation active="friend"/>
