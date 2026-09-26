@@ -1,6 +1,6 @@
 <view class="page journey-page {{reduceMotion?'reduce-motion':''}}">
  <text class="sub">留给未来的自己</text><view class="title">自然旅程</view>
- <view wx:if="{{!meetingCount}}" class="journey-empty"><view class="section">第一次遇见，值得记下来。</view><text class="sub">同一种生命，一次又一次相逢，会在这里连成一条路。</text><button class="primary spaced" bindtap="capture">拍一张</button></view>
+ <view wx:if="{{!meetingCount}}" class="journey-empty"><view class="section">第一次遇见，值得记下来。</view><text class="sub">同一种生命，一次又一次相逢，会在地图上连成一条路。</text><button class="primary spaced" bindtap="capture">拍一张</button></view>
  <block wx:if="{{meetingCount}}">
   <view class="journey-compass" aria-label="旅程概览">
    <view class="compass-cell"><text class="number">{{meetingCount}}</text><text>次相遇</text></view>
@@ -8,21 +8,23 @@
    <view class="compass-cell"><text class="number">{{placeCount}}</text><text>处地标</text></view>
   </view>
   <view class="journey-map">
-   <view class="map-legend">
-    <view class="legend-item"><view class="legend-dot"/><text>一次真实遇见</text></view>
-    <view class="legend-item"><view class="legend-dot landmark"/><text>留下过地点</text></view>
-   </view>
-   <view wx:for="{{segments}}" wx:key="month" class="track-segment">
-    <view class="segment-label">{{item.label}}</view>
-    <view class="route-path">
-     <view wx:for="{{item.nodes}}" wx:for-item="node" wx:key="id" class="path-node {{node.place?'has-place':''}}" data-id="{{node.id}}" bindtap="open" aria-role="button" aria-label="{{'回看'+node.dateLabel+'的'+node.zh}}">
-      <view class="node-dot"/><view class="node-copy"><text class="node-date">{{node.dateLabel}} · {{node.zh}}</text><text wx:if="{{node.place}}" class="node-place">{{node.place}}</text></view><text class="node-link">回看</text>
-     </view>
-    </view>
+   <image class="map-base" src="/assets/journey-map-base.webp" mode="aspectFill" aria-hidden="true"/>
+   <canvas class="map-canvas" type="2d" id="journey-canvas" disable-scroll="{{true}}" aria-hidden="true"/>
+   <view class="map-compass" aria-hidden="true"/>
+   <view class="map-scale"><view class="map-scale-rule"/><text>走过的路</text></view>
+   <view wx:for="{{mapPoints}}" wx:for-item="point" wx:key="id" class="map-node {{point.latest?'is-latest':''}}" style="left:{{point.x}}%;top:{{point.y}}%" data-id="{{point.id}}" bindtap="open" aria-role="button" aria-label="{{'回看'+point.date+'的'+point.name}}">
+    <view class="node-pin"/><text class="node-tag">{{point.tag}}</text>
    </view>
   </view>
+  <view class="map-legend">
+   <view class="legend-item"><view class="legend-dot"/><text>一次真实遇见</text></view>
+   <view class="legend-item"><view class="legend-dot current"/><text>最近一次</text></view>
+   <view class="legend-item"><view class="legend-dot landmark"/><text>留下过地点</text></view>
+  </view>
+  <view class="section spaced">这条路走过的地方</view>
+  <view class="track-list"><view wx:for="{{trace}}" wx:key="id" class="track-row" data-id="{{item.id}}" bindtap="open" aria-role="button" aria-label="{{'回看'+item.date+'的'+item.name}}"><text class="track-date">{{item.date}}</text><view class="track-name">{{item.name}}<text wx:if="{{item.place}}" class="sub"> · {{item.place}}</text></view></view></view>
   <view wx:if="{{places.length}}" class="landmark-panel">
-   <view class="section">走过的地方</view><text class="sub">你主动留下的地点，仅自己可见</text>
+   <view class="section">地标</view><text class="sub">你主动留下的地点，仅自己可见</text>
    <view wx:for="{{places}}" wx:key="placeId" class="landmark"><view class="landmark-marker"/><text>{{item.label}}</text><text class="landmark-count">{{item.count}} 次遇见</text></view>
   </view>
  </block>

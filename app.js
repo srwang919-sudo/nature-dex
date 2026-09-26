@@ -42,20 +42,24 @@ App({
   async refreshAssetUrls() { return {status:'retired'} },
   async syncAssets() { return {status:'retired'} },
   async retryCloudCleanup(){const protectedIds=new Set(this.getCards().concat(this.getReadyCards()).map(c=>c.photoObservationId).filter(Boolean));if(this._observation)protectedIds.add(this._observation.id);return require('./native/lib/cloud-cleanup').drain(wx,protectedIds)},
+  // 删除永远以「本机生效」为准：能确认云端删除就连云端一起清；确认不了也先删本机，
+  // 云端照片转入后台队列重试，不让用户因为云端状态而删不掉自己的卡片。
   async removeCard(cardId) {
     const card = this.getCards().find(c => c.id === cardId)
     if (!card) return {status:'deleted',mode:'missing'}
     const fileId=card.photoFileId||card.originalPhotoAsset?.fileId||card.artAssetFileId||card.artAsset?.fileId
     const observationId=card.photoObservationId
-    // Nothing was ever uploaded under this card, so there is no cloud copy to erase.
     if(!fileId||!observationId)return this.eraseCard(cardId,'local_only')
-    if(!wx.cloud?.callFunction)return this.blockCardRemoval(cardId,'cloud_delete_unavailable')
+    if(!wx.cloud?.callFunction)return this.eraseCard(cardId,'local_only',observationId)
+    let code
     try{
       const reply=await wx.cloud.callFunction({name:'deleteObservationAssets',data:{observationId}})
-      const code=require('./native/lib/card-delete').classify({result:reply&&reply.result})
-      if(code)return this.blockCardRemoval(cardId,code)
-      return this.eraseCard(cardId,(reply.result&&reply.result.mode)||'cloud')
-    }catch(e){return this.blockCardRemoval(cardId,require('./native/lib/card-delete').classify({error:e}))}
+      code=require('./native/lib/card-delete').classify({result:reply&&reply.result})
+      if(!code)return this.eraseCard(cardId,(reply.result&&reply.result.mode)||'cloud')
+    }catch(e){code=require('./native/lib/card-delete').classify({error:e})}
+    // 已入册的真实观察：删了就找不回来，必须让用户再确认一次。
+    if(code==='observation_saved')return {status:'needs_confirm',code,message:require('./native/lib/card-delete').messageFor(code)}
+    return this.eraseCard(cardId,'local_first',observationId)
   },
   // Escape hatch: the local copy goes away and any cloud cleanup stays queued for retry.
   async forceRemoveCard(cardId) {
@@ -71,13 +75,14 @@ App({
   queueCloudCleanup(observationId){
     try{require('./native/lib/cloud-cleanup').enqueue(wx,observationId);return true}catch(e){return false}
   },
-  async eraseCard(cardId,mode){
+  async eraseCard(cardId,mode,pendingObservationId){
     const card=this.getCards().find(c=>c.id===cardId)||{}
     this._dataEpoch = this.getDataEpoch() + 1;
     this.saveCards(this.getCards().filter(c => c.id !== cardId))
     try { wx.removeStorageSync('nature.note.' + cardId) } catch (e) {}
+    const queued=pendingObservationId?this.queueCloudCleanup(pendingObservationId):false
     await this.cleanupPaths([card.photoPath,card.originalPhotoAsset?.localPath,card.artPhotoPath].filter(p=>p&&!p.startsWith('cloud://')))
-    return {status:'deleted',mode}
+    return {status:'deleted',mode,cloudCleanupPending:queued}
   },
   achievementContext() {const cards=this.getCards(),notesByCard={};cards.forEach(c=>{notesByCard[c.id]=wx.getStorageSync('nature.note.'+c.id)||''});return {notesByCard,events:{shelfUsed:!!(wx.getStorageSync('nature.collection.v1')||{}).shelfUsed,puzzleUsed:!!(wx.getStorageSync('nature.collection.v1')||{}).puzzleUsed,scienceReadSpecies:wx.getStorageSync('nature.scienceReads.v1')||[]}}},
   getBadges() { return {badges:require('./native/lib/badge-model').buildAchievements(this.getCards(),this.achievementContext())} },

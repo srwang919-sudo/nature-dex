@@ -70,13 +70,22 @@ Page({
   wx.showModal({title:'图片未导出',content,showCancel:false,confirmText:'知道了'});
  },
  removeCard(){
-  wx.showModal({title:'删除这张卡？',content:'删除本机卡片、笔记及此观察的私有云照片和彩绘。云端删除确认前会保留本机卡片以便重试。',confirmText:'删除',confirmColor:'#b03a26',success:async r=>{
+  wx.showModal({title:'删除这张卡？',content:'删除本机卡片、笔记与此观察的私有云照片和彩绘。云端照片若暂时无法确认删除，会转为后台重试，不会把你卡在这里。',confirmText:'删除',confirmColor:'#b03a26',success:async r=>{
     if(!r.confirm)return;
     let result;
     try{result=await app.removeCard(this.id)}catch(e){wx.showToast({title:'删除失败，请稍后重试',icon:'none'});return}
+    // 已入册的真实观察删除后不可恢复，需要再确认一次；其余情况一律以本机删除为准。
+    if(result&&result.status==='needs_confirm'){this.confirmRemoveSaved(result);return}
+    if(result&&result.status==='deleted'){
+      wx.showToast({title:result.cloudCleanupPending?'本机已删除 · 云端稍后清理':'已删除'});
+      setTimeout(()=>wx.navigateBack(),600);return
+    }
     if(result&&result.status==='blocked'){this.showDeleteBlocked(result);return}
     wx.showToast({title:'已删除'});setTimeout(()=>wx.navigateBack(),600)
   }})
+ },
+ confirmRemoveSaved(result){
+  wx.showModal({title:'这条观察已入册',content:result.message+'删除后无法恢复，确定继续？',confirmText:'确认删除',confirmColor:'#b03a26',cancelText:'取消',success:r=>{if(r.confirm)this.forceRemoveCard()}})
  },
  showDeleteBlocked(result){
   const {messageFor}=require('../../lib/card-delete');

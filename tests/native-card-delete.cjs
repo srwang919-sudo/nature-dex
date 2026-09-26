@@ -15,18 +15,19 @@ const queued=()=>store.get('nature.cloudCleanup.v1')||[];
  reset();const done=await app.removeCard('one');
  assert.equal(done.status,'deleted');assert.equal(app.getCards().length,0);assert.equal(store.has('nature.note.one'),false);
  assert.deepEqual(JSON.parse(JSON.stringify(calls[0])),{name:'deleteObservationAssets',data:{observationId:'obs'}});
- // A cloud failure keeps the local card and note, and queues the observation for retry.
- reset();mode='failed';const blocked=await app.removeCard('one');
- assert.equal(blocked.status,'blocked');assert.equal(blocked.code,'cloud_delete_failed');assert.equal(blocked.queued,true);
- assert.equal(app.getCards().length,1);assert.equal(store.get('nature.note.one'),'private note');assert.deepEqual(queued(),['obs']);
- // The escape hatch removes local data and still keeps the cleanup queued.
- await app.forceRemoveCard('one');
+ // 2026-09-26 语义变更（用户反馈删不掉）：云端清理无法确认时不再保留本机卡片，
+// 删除立即生效并把云端清理转后台队列，用户永远删得掉自己的卡。
+ reset();mode='failed';const failedDelete=await app.removeCard('one');
+ assert.equal(failedDelete.status,'deleted');assert.equal(failedDelete.mode,'local_first');assert.equal(failedDelete.cloudCleanupPending,true);
  assert.equal(app.getCards().length,0);assert.equal(store.has('nature.note.one'),false);assert.deepEqual(queued(),['obs']);
- // An undeployed cloud function is reported as its own code, not a generic failure.
+ // The escape hatch still works for the explicit confirmation path.
+ reset();await app.forceRemoveCard('one');
+ assert.equal(app.getCards().length,0);assert.equal(store.has('nature.note.one'),false);assert.deepEqual(queued(),['obs']);
+ // An undeployed cloud function no longer blocks: local data goes, cleanup is queued.
  reset();failed=true;const missing=await app.removeCard('one');
- assert.equal(missing.status,'blocked');assert.equal(missing.code,'function_not_found');assert.equal(app.getCards().length,1);
- // A retained observation blocks deletion with a dedicated reason.
+ assert.equal(missing.status,'deleted');assert.equal(missing.cloudCleanupPending,true);assert.equal(app.getCards().length,0);
+ // A retained observation is the only case that asks for one more confirmation.
  reset();failed=false;mode='retained';const retained=await app.removeCard('one');
- assert.equal(retained.status,'blocked');assert.equal(retained.code,'observation_saved');assert.equal(app.getCards().length,1);
- console.log('PASS cloud confirmation deletes locally; failures keep the card, queue retry and name the reason; force removal works')
+ assert.equal(retained.status,'needs_confirm');assert.equal(retained.code,'observation_saved');assert.equal(app.getCards().length,1);
+ console.log('PASS local deletion always wins; cloud cleanup falls back to a retry queue; only retained observations ask again')
 })().catch(e=>{console.error(e);process.exitCode=1});
