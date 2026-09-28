@@ -23,9 +23,9 @@ test('collection category and text filters compose, including explicitly other a
 });
 test('journey original-photo presentation never substitutes a legacy illustration on image failure',()=>{
  const file=path.join(root,'native/components/collectible/index.js');let component;const wx={getStorageSync:()=>false};
- vm.runInNewContext(fs.readFileSync(file,'utf8'),{Component:c=>component=c,wx,getCurrentPages:()=>[{route:'native/pages/journey/index'}],require:require('node:module').createRequire(file)});
+ vm.runInNewContext(fs.readFileSync(file,'utf8'),{Component:c=>component=c,wx,getCurrentPages:()=>[{route:'native/pages/card/index'}],require:require('node:module').createRequire(file)});
  const card={id:'legacy',speciesId:'bird',photoPath:'/private/original.jpg'},instance={data:{card},properties:{originalPhoto:true},setData(v){Object.assign(this.data,v)},...component.methods};
- component.observers.card.call(instance,card);assert.equal(instance.data.presentation.back.illustration,'/private/original.jpg');assert.equal(instance.data.presentation.back.kind,'original');instance.artError();assert.equal(instance.data.backUnavailable,true);assert.equal(instance.data.presentation.back.illustration,'/private/original.jpg');
+ component.observers.card.call(instance,card);assert.equal(instance.data.imageUnavailable,false);assert.equal(instance.data.backUnavailable,false);assert.equal(instance.data.presentation.front.expanded,true);assert.equal(instance.data.presentation.back.illustration,'/private/original.jpg');assert.equal(instance.data.presentation.back.kind,'original');instance.artError();assert.equal(instance.data.backUnavailable,true);assert.equal(instance.data.presentation.back.illustration,'/private/original.jpg');
 });
 test('capture category uses the existing provider route and cancelling new camera restores the pinned hint',async()=>{
  let draft={id:'observation',photoPath:'/photo',photoFileId:'cloud://owned',photoUploadVersion:2},calls=[];
@@ -33,6 +33,7 @@ test('capture category uses the existing provider route and cancelling new camer
  const wx={getStorageSync:key=>key==='nature.recognitionConsent.v1'?{version:1,provider:'baidu',acceptedAt:1}:null,cloud:{callFunction:async args=>{calls.push(args);return {result:{contractVersion:2,status:'unknown',candidates:[]}}}}};
  const p=page('observe',app,wx);p.data.photoPath='/photo';p.selectCaptureHint({currentTarget:{dataset:{hint:'plant'}}});await p.identifyConsented();assert.equal(calls[0].data.kind,'plant');assert.equal(draft.recognitionKind,'plant');
  p.openCamera();p.selectCaptureHint({currentTarget:{dataset:{hint:'animal'}}});assert.equal(p.data.captureHint,'animal');p.closeCamera();assert.equal(p.data.captureHint,'plant');await p.identifyConsented();assert.equal(calls[1].data.kind,'plant');
+ app.globalData={species:{}};p.onLoad({source:'dock'});p.onReady();assert.equal(p.data.cameraOpen,true,'center camera entry opens camera without another tap');
 });
 test('settings section is reachable rather than silently redirecting to privacy',()=>{
  const p=page('settings',{},{});p.changeSection({currentTarget:{dataset:{section:'settings'}}});assert.equal(p.data.section,'settings');

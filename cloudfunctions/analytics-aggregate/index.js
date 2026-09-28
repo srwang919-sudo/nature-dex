@@ -25,7 +25,9 @@ function sourceOf(event, openid) {
 }
 
 async function main(event = {}, dependencies = {}) {
-  const api = dependencies.cloud || cloud;
+  // 显式传 null 表示「调用方确认无运行时」→ 返回 runtime_unavailable；
+  // undefined 才回退到模块级单例 cloud（生产默认路径，由云端 SDK 注入）。
+  const api = dependencies.cloud !== undefined ? dependencies.cloud : cloud;
   if (!api) return { status: 'failed', code: 'runtime_unavailable', retryable: true };
   let openid;
   try { openid = api.getWXContext().OPENID; } catch (_) {}

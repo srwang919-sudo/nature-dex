@@ -14,6 +14,6 @@
 .observe-hero .sub{display:block;margin-top:14rpx;color:var(--muted);line-height:1.65}
 .observe-hero .pill{flex:none}
 /* 拍摄主按钮更收一点，避免游戏化大圆 */
-.capture-hint{min-height:84rpx;border-radius:0}
+.capture-hint{min-height:88rpx;border-radius:0;color:#E3EBDD;background:transparent}
 .shutter-card{transition:transform .24s cubic-bezier(.22,1,.36,1)}
 .shutter-card:active{transform:scale(.985)}

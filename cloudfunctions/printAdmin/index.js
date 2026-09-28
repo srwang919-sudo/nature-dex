@@ -3,7 +3,7 @@
 let cloud;try{cloud=require('./sdk');cloud.init({env:cloud.DYNAMIC_CURRENT_ENV,timeout:60000})}catch(e){}
 const SAFE=new Set(['invalid_request','unauthenticated','operator_required','order_unavailable','order_conflict','order_state_conflict','tracking_required','runtime_unavailable','invalid_claim_code','service_unavailable']);
 async function main(event={},deps={}){
- const api=deps.cloud||cloud,fail=code=>({status:'failed',code,retryable:false});
+ const api=deps.cloud!==undefined?deps.cloud:cloud,fail=code=>({status:'failed',code,retryable:false});
  if(!api)return fail('runtime_unavailable');
  const owner=api.getWXContext().OPENID;if(!owner)return fail('unauthenticated');
  try{return await require('./core').printAdmin({db:api.database(),owner,event})}

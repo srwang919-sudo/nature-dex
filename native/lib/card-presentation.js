@@ -10,8 +10,8 @@ function presentVersionedCard(card={}){
  p.front.date=Number.isFinite(recorded)&&recorded>0&&recorded<=Date.now()?date.getFullYear()+'.'+(date.getMonth()+1)+'.'+date.getDate():'';
  p.front.shortStory=String(card.tagline||card.factTitle||card.scienceSnapshot?.summary||'').trim().slice(0,90);
  const categories={plant:'植物',bird:'鸟类',insect:'昆虫',animal:'动物',mammal:'哺乳动物',fungi:'真菌'};
- p.front.secondaryName=card.latin||(card.scienceSnapshot?.status==='available'?card.scienceSnapshot.english||'':'');
- p.front.categoryLabel=categories[card.category]||'类别未提供';p.front.locationLabel='地点未公开';p.front.expanded=!card.sample&&card.schemaVersion===2;
+ p.front.secondaryName=card.latin||(card.scienceSnapshot?.status==='available'?card.scienceSnapshot.latin||'':'')||(card.scienceSnapshot?.status==='available'?card.scienceSnapshot.english||'':'');
+ p.front.categoryLabel=categories[card.category]||'类别未提供';p.front.locationLabel='地点未公开';p.front.expanded=!card.sample;
  if(card.schemaVersion===2){
   const normalized=require('./observation-card').normalizeCard(card);
   p.front.photo=normalized.artAsset.localPath||normalized.artAsset.fileId||'';
