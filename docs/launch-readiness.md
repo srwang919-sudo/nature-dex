@@ -31,7 +31,8 @@
 - 候选提交 SHA：`7b8ecc74f567aaa06c6defc51fffa6bf5ef38ec3`（HEAD，已推送 origin/main，工作树 clean）。
 - 离线已验证：`git diff --check` 通过；`npm run quality` = 主测试 **314/0** + 支付测试 **14/14** + `build:weapp` PASS；本地 `node_modules` 齐备（主仓与各云函数）。
 - 密钥/令牌模式扫描（`AKID|secretId|secretKey|sk-|PRIVATE KEY|access ?key` 等）**无真实密钥命中**：仅 `cloudfunctions/natureMembership/lib/config.js` 中的正则校验片段；仓库未跟踪 `.env`/`.pem`/`.key`/`credentials` 类文件。
-- 待补（GitHub 经代理 `000/fail` 不可达）：`npm ci` 全量重装可重复验证、16 个云函数 `npm audit --omit=dev --audit-level=moderate`。
+- 待补项已闭环（代理恢复可达）：修复 analytics-aggregate 入口对「显式 null 运行时」与「未注入运行时」的区分——`{cloud:null}` 现确定性返回 `runtime_unavailable`（测试 29），而生产默认 `undefined` 仍回退模块级单例 `cloud`，行为不变；最终 `npm run quality` = 主测试 **314/0** + 支付测试 **14/14** + `build:weapp` PASS。
+- `npm ci --ignore-scripts` 已对各云函数重装（含此前被中断脚本清空的 claimGift/generateIllustration/natureAI2/printAdmin；其中三者的 0 依赖状态为正常），`npm audit --omit=dev --audit-level=moderate` 对**根仓 + 15 个云函数（共 16 包）全部 0 已知漏洞**，退出码 0。
 - 结论：候选在**代码/仓库层**证据齐备；云端部署、真实账号/审批/真机验收等发布门仍阻塞（见 USER_LAUNCH_PLAN.md）。
 
 ## 剩余风险与发布门
