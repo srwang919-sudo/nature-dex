@@ -7,6 +7,7 @@
     "native/pages/observe/index",
     "native/pages/reveal/index",
     "native/pages/card/index",
+    "native/pages/badges/index",
     "native/pages/friend/index",
     "native/pages/note/index",
     "native/pages/settings/index",
@@ -17,9 +18,9 @@
   ],
   "window": {
     "navigationBarTitleText": "去大自然里",
-    "navigationBarBackgroundColor": "#FAF9F6",
+    "navigationBarBackgroundColor": "#F6F0E5",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#FAF9F6"
+    "backgroundColor": "#F6F0E5"
   },
   "sitemapLocation": "sitemap.json",
   "permission": {
@@ -27,11 +28,15 @@
       "desc": "仅在主动选地点时保存私密足迹。"
     }
   },
-  "requiredPrivateInfos": ["chooseLocation"],
+  "requiredPrivateInfos": [
+    "chooseLocation"
+  ],
   "lazyCodeLoading": "requiredComponents",
+  "__usePrivacyCheck__": true,
   "usingComponents": {
     "nature-badge": "/native/components/nature-badge/index",
     "collectible": "/native/components/collectible/index",
-    "navigation": "/native/components/navigation/index"
+    "navigation": "/native/components/navigation/index",
+    "privacy-consent": "/native/components/privacy-consent/index"
   }
 }

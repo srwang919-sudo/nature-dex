@@ -1,35 +1,81 @@
 <view class="page journey-page {{reduceMotion?'reduce-motion':''}}">
- <text class="sub">留给未来的自己</text><view class="title">自然旅程</view>
- <view wx:if="{{!meetingCount}}" class="journey-empty"><view class="section">第一次遇见，值得记下来。</view><text class="sub">同一种生命，一次又一次相逢，会在地图上连成一条路。</text><button class="primary spaced" bindtap="capture">拍一张</button></view>
- <block wx:if="{{meetingCount}}">
-  <view class="journey-compass" aria-label="旅程概览">
-   <view class="compass-cell"><text class="number">{{meetingCount}}</text><text>次相遇</text></view>
-   <view class="compass-cell"><text class="number">{{dayCount}}</text><text>个日子</text></view>
-   <view class="compass-cell"><text class="number">{{placeCount}}</text><text>处地标</text></view>
-  </view>
-  <view class="journey-map">
-   <image class="map-base" src="/assets/journey-map-base.webp" mode="aspectFill" aria-hidden="true"/>
-   <canvas class="map-canvas" type="2d" id="journey-canvas" disable-scroll="{{true}}" aria-hidden="true"/>
-   <view class="map-compass" aria-hidden="true"/>
-   <view class="map-scale"><view class="map-scale-rule"/><text>走过的路</text></view>
-   <view wx:for="{{mapPoints}}" wx:for-item="point" wx:key="id" class="map-node {{point.latest?'is-latest':''}} {{activePoint&&activePoint.id===point.id?'is-active':''}}" style="left:{{point.x}}%;top:{{point.y}}%" data-index="{{index}}" bindtap="showPlace" aria-role="button" aria-label="{{'查看'+point.date+'这次遇见的地点'}}">
-    <view class="node-pin"/><text class="node-tag">{{point.tag}}</text>
-   </view>
-   <view wx:if="{{activePoint}}" class="map-bubble {{activePoint.side}}" style="left:{{activePoint.x}}%;top:{{activePoint.y}}%">
-    <view class="bubble-place">{{activePoint.place||'这次没有留下地点'}}</view>
-    <view class="bubble-date">{{activePoint.date}}<text class="bubble-close" bindtap="closePlace" aria-label="关闭地点提示">关闭</text></view>
-   </view>
-  </view>
-  <view class="map-legend">
-   <view class="legend-item"><view class="legend-dot"/><text>一次真实遇见</text></view>
-   <view class="legend-item"><view class="legend-dot current"/><text>最近一次</text></view>
-   <view class="legend-item"><view class="legend-dot landmark"/><text>留下过地点</text></view>
-  </view>
-  <view class="section spaced">这条路走过的地方</view>
-  <view class="track-list"><block wx:for="{{trace}}" wx:key="id"><view class="track-row" data-id="{{item.id}}" bindtap="showTracePlace" aria-role="button" aria-label="{{'查看'+item.date+'这次遇见的地点'}}"><text class="track-date">{{item.date}}</text><view class="track-name">{{item.name}}</view><text class="track-hint">{{activeTraceId===item.id?'收起':'地点'}}</text></view><view wx:if="{{activeTraceId===item.id}}" class="track-place">{{item.place||'这次没有留下地点'}}</view></block></view>
-  <view wx:if="{{places.length}}" class="landmark-panel">
-   <view class="section">地标</view><text class="sub">你主动留下的地点，仅自己可见</text>
-   <view wx:for="{{places}}" wx:key="placeId" class="landmark"><view class="landmark-marker"/><text>{{item.label}}</text><text class="landmark-count">{{item.count}} 次遇见</text></view>
-  </view>
- </block>
-</view><navigation active="journey"/>
+  <block wx:if="{{!activeJourney}}">
+    <view class="journey-hero">
+      <text class="eyebrow">JOURNAL</text>
+      <view class="title">自然旅程</view>
+      <text class="sub">走过的路，看过的世界，遇见的生命。</text>
+    </view>
+
+    <view class="journey-compass" aria-label="真实旅程概览">
+      <view class="compass-cell"><text class="number">{{placeCount}}</text><text>去过的地方</text></view>
+      <view class="compass-cell"><text class="number">{{meetingCount}}</text><text>遇见的物种</text></view>
+      <view class="compass-cell"><text class="number">{{dayCount}}</text><text>记录的日子</text></view>
+    </view>
+
+    <view wx:if="{{!meetingCount}}" class="journey-empty">
+      <view class="section">第一次遇见，值得记下来。</view>
+      <text class="sub">拍一张身边的生命，为这一天留下一页自然手记。</text>
+      <button class="primary spaced" bindtap="capture">拍一张</button>
+    </view>
+
+    <view class="journey-journal">
+      <view wx:for="{{journeys}}" wx:key="id" class="journal-entry" data-index="{{index}}" bindtap="openJourney" aria-role="button" aria-label="{{'查看'+item.date+'的旅程'}}">
+        <view class="journey-cover"><collectible card="{{item.cover}}" large="{{true}}" back="{{true}}" original-photo="{{true}}"/></view>
+        <view class="journal-copy">
+          <text class="journal-place">{{item.place||'这一天的自然相遇'}}</text>
+          <text class="journal-date">{{item.date}}</text>
+          <text class="sub">遇见 {{item.speciesCount}} 种生命 · {{item.count}} 次观察</text>
+          <text wx:if="{{item.note}}" class="journal-note">{{item.note}}</text>
+          <text class="journal-open">翻开手记 →</text>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{places.length}}" class="landmark-panel">
+      <view class="section">留下过地点的相遇</view>
+      <text class="sub">仅在你开启地点显示时可见</text>
+      <view wx:for="{{places}}" wx:key="placeId" class="landmark">
+        <text>{{item.label}}</text>
+        <text class="landmark-count">{{item.count}} 次相遇</text>
+      </view>
+    </view>
+  </block>
+
+  <block wx:else>
+    <button class="link" bindtap="closeJourney">← 全部旅程</button>
+    <text class="sub">{{activeJourney.date}}</text>
+    <view class="title">{{activeJourney.place||'这一天的自然相遇'}}</view>
+    <text class="sub">{{activeJourney.speciesCount}} 种生命 · {{activeJourney.count}} 次观察</text>
+
+    <view wx:for="{{activeJourney.items}}" wx:key="id" class="journal-entry detail-entry">
+      <view class="journey-cover"><collectible card="{{item.card}}" large="{{true}}" back="{{true}}" original-photo="{{true}}"/></view>
+      <view class="journal-copy">
+        <view class="section">{{item.name}}</view>
+        <text wx:if="{{item.note}}" class="detail-note">{{item.note}}</text>
+        <text wx:else class="sub">这次相遇还没有笔记，打开记录可以补写。</text>
+        <button class="link" data-id="{{item.id}}" bindtap="open">查看卡片与观察笔记 →</button>
+      </view>
+    </view>
+
+    <view wx:if="{{mapPoints.length}}" class="spaced">
+      <view class="section">相遇时间线</view>
+      <text class="sub">节点按时间排列，仅作示意，不是地理路线。</text>
+      <view class="journey-map">
+        <image class="map-base" src="/assets/journey-map-base.webp" mode="aspectFill" aria-hidden="true"/>
+        <canvas class="map-canvas" type="2d" id="journey-canvas" disable-scroll="{{true}}" aria-hidden="true"/>
+        <view class="map-compass" aria-hidden="true"/>
+        <view class="map-scale" aria-hidden="true"><text>10 km</text><view class="map-scale-rule"/></view>
+        <view wx:for="{{mapPoints}}" wx:for-item="point" wx:key="id" class="map-node {{point.latest?'is-latest':''}}" style="left:{{point.x}}%;top:{{point.y}}%" data-index="{{index}}" bindtap="showPlace" aria-role="button" aria-label="{{point.name+'，'+point.date}}">
+          <view class="node-pin"/>
+          <text class="node-tag">{{point.name}}</text>
+        </view>
+        <view wx:if="{{activePoint}}" class="map-bubble {{activePoint.side}}">
+          <text class="bubble-place">{{activePoint.place||'地点未显示'}}</text>
+          <view class="bubble-date"><text>{{activePoint.date}}</text><button class="bubble-close" bindtap="closePlace">收起</button></view>
+        </view>
+      </view>
+    </view>
+  </block>
+</view>
+<navigation active="journey"/>
+<privacy-consent id="nature-privacy"/>

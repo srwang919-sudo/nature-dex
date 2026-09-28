@@ -34,6 +34,10 @@
   "simulatorPluginLibVersion": {},
   "packOptions": {
     "ignore": [
+      { "type": "prefix", "value": ".env" },
+      { "type": "folder", "value": ".github" },
+      { "type": "folder", "value": ".git" },
+      { "type": "folder", "value": "cloudfunction-packages" },
       { "type": "folder", "value": "scripts" },
       { "type": "folder", "value": "cloudfunctions" },
       {

@@ -2,7 +2,7 @@
 // 中间的「发现」拍照 tab 已移除：它的拍照能力与探索页的「拍一张」重复。
 const tabs=Object.freeze([
   {key:'discover',label:'探索',url:'/native/pages/home/index',icon:'leaf'},
-  {key:'collection',label:'图鉴',url:'/native/pages/library/index',icon:'book'},
+  {key:'collection',label:'馆藏',url:'/native/pages/library/index',icon:'book'},
   {key:'journey',label:'旅程',url:'/native/pages/journey/index',icon:'trail'},
   {key:'friend',label:'好友',url:'/native/pages/friend/index',icon:'friends'},
   {key:'me',label:'我的',url:'/native/pages/profile/index',icon:'person'}

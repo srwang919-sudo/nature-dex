@@ -1,4 +1,4 @@
-<view wx:if="{{!hidden}}" class="dock">
+<view wx:if="{{!hidden}}" class="dock" style="{{safeBottom?'padding-bottom: '+(safeBottom+4)+'px;':''}}">
   <view class="tabs">
     <view wx:for="{{navigationItems}}" wx:key="key" class="tab {{currentKey===item.key?'on':''}}" data-key="{{item.key}}" bindtap="go" aria-role="button" aria-label="{{currentKey===item.key?item.label+'，当前页面':item.label}}">
       <view class="icon-wrap"><view class="icon {{item.icon}}"></view></view>

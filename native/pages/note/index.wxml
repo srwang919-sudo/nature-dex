@@ -27,3 +27,4 @@
   </view>
 </view>
 <navigation active="note"/>
+<privacy-consent id="nature-privacy"/>

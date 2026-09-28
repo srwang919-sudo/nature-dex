@@ -48,7 +48,7 @@ function sanitizeProps(props) {
 
 function validEvent(e) {
   return e && typeof e === 'object' && typeof e.event === 'string' && KNOWN_EVENTS.has(e.event)
-    && typeof e.eventId === 'string' && /^ev_[a-zA-Z0-9]{8,40}$/.test(e.eventId)
+    && typeof e.eventId === 'string' && /^ev_[a-zA-Z0-9_]{8,40}$/.test(e.eventId)
     && typeof e.ts === 'number' && Number.isFinite(e.ts);
 }
 
@@ -62,13 +62,14 @@ async function main(event = {}, dependencies = {}) {
   if (!events.length) return { status: 'ok', accepted: 0 };
   const valid = events.filter(validEvent);
   if (!valid.length) return { status: 'ok', accepted: 0 };
-  const db = api.database();
+  const db = require('./account-gate').guardDatabase(api.database(),openid);
   const now = Date.now();
-  // 逐条写入；eventId 作为 _id 天然幂等（重复上报覆盖同一条）。
+  // 逐条写入；owner + eventId 的摘要作为 _id，保证重放幂等与用户隔离。
   try {
     for (const e of valid) {
       const doc = { owner: openid, event: e.event, eventId: e.eventId, props: sanitizeProps(e.props), clientTs: e.ts, day: dayOf(e.ts), receivedAt: now };
-      await db.collection('analyticsEvents').doc(e.eventId).set({ data: doc });
+      const id=require('crypto').createHash('sha256').update(openid+'|'+e.eventId).digest('hex');
+      await db.collection('analyticsEvents').doc(id).set({ data: doc });
     }
     return { status: 'ok', accepted: valid.length };
   } catch (_) {

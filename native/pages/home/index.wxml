@@ -1,44 +1,79 @@
 <view class="page explore {{reduceMotion?'reduce-motion':''}}">
- <view class="explore-top"><text class="brand">去大自然里</text><text class="sub">{{dateLabel}}</text></view>
- <view class="world-canvas season-{{season}} phase-{{dayPhase}}">
-  <view class="world-heading"><text class="eyebrow">{{seasonLabel}} · 按当前月份</text><view class="title">你的自然世界</view><text class="sub">每一次遇见，都留下自己的位置。</text></view>
-  <view class="world-ecosystem"><view class="scene-sky"/>
-   <block wx:if="{{!sceneDecorBroken}}">
-    <image class="deco deco-sun" src="/assets/scene/sun.webp" mode="widthFix" aria-hidden="true" binderror="hideSceneDecor"/>
-    <image class="deco deco-cloud" src="/assets/scene/cloud.webp" mode="widthFix" aria-hidden="true" binderror="hideSceneDecor"/>
-    <image class="deco deco-hills" src="/assets/scene/hills-back.webp" mode="widthFix" aria-hidden="true" binderror="hideSceneDecor"/>
-   </block>
-   <view class="scene-ground"/><view class="scene-water"/>
-   <block wx:if="{{!sceneDecorBroken}}">
-    <image class="deco deco-tree tree-lush" src="/assets/scene/tree-lush.webp" mode="widthFix" aria-hidden="true" binderror="hideSceneDecor"/>
-    <image class="deco deco-tree tree-autumn" src="/assets/scene/tree-autumn.webp" mode="widthFix" aria-hidden="true" binderror="hideSceneDecor"/>
-    <image class="deco deco-tree tree-winter" src="/assets/scene/tree-winter.webp" mode="widthFix" aria-hidden="true" binderror="hideSceneDecor"/>
-    <image class="deco deco-grass" src="/assets/scene/grass-bank.webp" mode="widthFix" aria-hidden="true" binderror="hideSceneDecor"/>
-    <image class="deco deco-rocks" src="/assets/scene/rocks.webp" mode="widthFix" aria-hidden="true" binderror="hideSceneDecor"/>
-    <image class="deco deco-reeds" src="/assets/scene/reeds.webp" mode="widthFix" aria-hidden="true" binderror="hideSceneDecor"/>
-    <image class="deco deco-mushroom" src="/assets/scene/mushroom.webp" mode="widthFix" aria-hidden="true" binderror="hideSceneDecor"/>
-   </block>
-   <view class="season-layer" aria-hidden="true"/><view class="atmosphere-layer" aria-hidden="true"/>
-   <view wx:for="{{worldCards}}" wx:key="id" class="world-specimen zone-{{item.worldZone}} slot-{{item.worldSlot}}" data-id="{{item.id}}" bindtap="tapWorld" aria-role="button" aria-label="{{'查看真实收藏：'+item.zh}}"><collectible card="{{item}}" scene="{{true}}"/></view>
-   <view wx:if="{{!worldCards.length}}" class="world-empty-copy"><text>这里，等着你的第一次发现</text><text class="sub">尚无真实收藏，画布为你留白。</text></view>
+  <view class="explore-hero">
+    <view class="explore-brand">
+      <text class="brand">去大自然里</text>
+      <text class="brand-en">INTO NATURE</text>
+      <text class="brand-tag">每一次相遇，都让这世界更丰盛。</text>
+    </view>
+    <view class="explore-tools">
+      <view class="explore-compass" aria-hidden="true"><view class="compass-icon"></view></view>
+      <button class="explore-camera home-record" bindtap="observe" aria-label="拍一张">
+        <view class="camera-icon" aria-hidden="true"></view>
+      </button>
+    </view>
   </view>
-  <text class="world-caption">自然场景示意，非实际分布 · {{worldCards.length?'轻点物种回看':'从第一次遇见开始'}}</text>
- </view>
- <view wx:if="{{worldPick}}" class="world-sheet-mask" bindtap="closeWorldPick" aria-role="button" aria-label="关闭物种信息">
-  <view class="world-sheet" catchtap="noop">
-   <view class="sheet-head"><text class="section">{{worldPick.zh}}</text><text class="sub latin-row">{{worldPick.latin}}</text></view>
-   <view class="sub spaced">{{worldPick.habitat}} · {{worldPick.season}}</view>
-   <view class="sheet-stats">
-    <view class="sheet-stat"><text class="stat-value">{{worldPick.count}}</text><text class="sub">遇见次数</text></view>
-    <view class="sheet-stat"><text class="stat-value sheet-date">{{worldPick.firstLabel}}</text><text class="sub">第一次</text></view>
-    <view class="sheet-stat"><text class="stat-value sheet-date">{{worldPick.lastLabel}}</text><text class="sub">最近一次</text></view>
-   </view>
-   <button class="primary spaced" bindtap="openWorldCard">回看这张卡</button>
-   <button class="secondary spaced" bindtap="closeWorldPick">继续看自然世界</button>
+
+  <view class="world-canvas season-{{season}} phase-{{dayPhase}}">
+    <view class="world-heading">
+      <text class="eyebrow">你的自然世界</text>
+      <view class="title">{{seasonLabel}} · 此刻</view>
+      <text class="sub">把一次次相遇，留成自己的自然博物馆。</text>
+    </view>
+    <view class="world-ecosystem">
+      <view class="scene-sky"/>
+      <block wx:if="{{!sceneDecorBroken}}">
+        <image class="deco deco-sun" src="/assets/scene/sun.webp" mode="widthFix" aria-hidden="true" binderror="hideSceneDecor"/>
+        <image class="deco deco-cloud" src="/assets/scene/cloud.webp" mode="widthFix" aria-hidden="true" binderror="hideSceneDecor"/>
+        <image class="deco deco-hills" src="/assets/scene/hills-back.webp" mode="widthFix" aria-hidden="true" binderror="hideSceneDecor"/>
+      </block>
+      <view class="scene-ground"/><view class="scene-water"/>
+      <block wx:if="{{!sceneDecorBroken}}">
+        <image class="deco deco-tree tree-lush" src="/assets/scene/tree-lush.webp" mode="widthFix" aria-hidden="true" binderror="hideSceneDecor"/>
+        <image class="deco deco-tree tree-autumn" src="/assets/scene/tree-autumn.webp" mode="widthFix" aria-hidden="true" binderror="hideSceneDecor"/>
+        <image class="deco deco-tree tree-winter" src="/assets/scene/tree-winter.webp" mode="widthFix" aria-hidden="true" binderror="hideSceneDecor"/>
+        <image class="deco deco-grass" src="/assets/scene/grass-bank.webp" mode="widthFix" aria-hidden="true" binderror="hideSceneDecor"/>
+        <image class="deco deco-rocks" src="/assets/scene/rocks.webp" mode="widthFix" aria-hidden="true" binderror="hideSceneDecor"/>
+        <image class="deco deco-reeds" src="/assets/scene/reeds.webp" mode="widthFix" aria-hidden="true" binderror="hideSceneDecor"/>
+        <image class="deco deco-mushroom" src="/assets/scene/mushroom.webp" mode="widthFix" aria-hidden="true" binderror="hideSceneDecor"/>
+      </block>
+      <view class="season-layer" aria-hidden="true"/><view class="atmosphere-layer" aria-hidden="true"/>
+      <view wx:for="{{worldCards}}" wx:key="id" class="world-specimen zone-{{item.worldZone}} slot-{{item.worldSlot}}" data-id="{{item.id}}" bindtap="tapWorld" aria-role="button" aria-label="{{'查看真实收藏：'+item.zh}}"><collectible card="{{item}}" scene="{{true}}"/></view>
+      <view wx:if="{{!worldCards.length}}" class="world-empty-copy"><text>这里，等着你的第一次发现</text><text class="sub">拍一张身边的生命，让相遇成为收藏。</text></view>
+    </view>
   </view>
- </view>
- <view class="record-area"><button class="primary home-record" bindtap="observe" aria-label="拍一张，打开相机"><text>拍一张</text></button></view>
- <view class="sub record-hint">拍下植物、昆虫或鸟类，认出它，收进你自己的图鉴。</view>
+
+  <view class="explore-bottom">
+    <view class="explore-stat-card" bindtap="library" aria-role="button" aria-label="查看我的馆藏">
+      <view class="stat-copy">
+        <text class="stat-eyebrow">共遇见</text>
+        <text class="stat-count">{{speciesCount||0}} 种生命</text>
+      </view>
+      <text class="stat-action">继续探索 →</text>
+    </view>
+  </view>
+
+  <view wx:if="{{recentCards.length}}" class="recent-strip">
+    <view class="recent-head"><text class="section">最近相遇</text><button class="link" bindtap="library">全部 {{speciesCount}} 种 →</button></view>
+    <scroll-view class="recent-scroll" scroll-x="{{true}}" enable-flex="{{true}}">
+      <view wx:for="{{recentCards}}" wx:key="id" class="recent-specimen" data-id="{{item.id}}" bindtap="openCard" aria-role="button" aria-label="{{'回看'+item.zh}}"><collectible card="{{item}}"/></view>
+    </scroll-view>
+  </view>
 </view>
+
+<view wx:if="{{worldPick}}" class="world-sheet-mask" bindtap="closeWorldPick" aria-role="button" aria-label="关闭物种信息">
+  <view class="world-sheet" catchtap="noop">
+    <view class="sheet-head"><text class="section">{{worldPick.zh}}</text><text class="sub latin-row">{{worldPick.latin}}</text></view>
+    <view class="sub spaced">{{worldPick.habitat}} · {{worldPick.season}}</view>
+    <view class="sheet-stats">
+      <view class="sheet-stat"><text class="stat-value">{{worldPick.count}}</text><text class="sub">遇见次数</text></view>
+      <view class="sheet-stat"><text class="stat-value sheet-date">{{worldPick.firstLabel}}</text><text class="sub">第一次</text></view>
+      <view class="sheet-stat"><text class="stat-value sheet-date">{{worldPick.lastLabel}}</text><text class="sub">最近一次</text></view>
+    </view>
+    <button class="primary spaced" bindtap="openWorldCard">回看这张卡</button>
+    <button class="secondary spaced" bindtap="closeWorldPick">继续看自然世界</button>
+  </view>
+</view>
+
 <button wx:if="{{showReturnTop}}" class="return-top" bindtap="returnTop" aria-label="回到顶部，拍一张">回到顶部</button>
 <navigation active="discover"/>
+<privacy-consent id="nature-privacy"/>

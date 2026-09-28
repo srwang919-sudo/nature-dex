@@ -42,7 +42,7 @@ const tracker={
   if(!KNOWN_EVENTS.has(event))return false;
   const a=host();
   if(!a)return false;              // 没有宿主就没有缓冲，如实返回未记录
-  const q=loadQueue();
+  let q=loadQueue();
   const entry={event,props:sanitizeProps(props),eventId:'ev_'+Date.now()+'_'+Math.random().toString(36).slice(2,10),ts:Date.now()};
   q.push(entry);
   if(q.length>MAX_QUEUE)q=q.slice(q.length-MAX_QUEUE);
@@ -74,13 +74,13 @@ async function flush(){
  try{
   if(a.cloud&&a.cloud.callFunction){
    const r=await a.cloud.callFunction({name:'analytics',data:{events:sending}});
-   if(!r||!r.result||r.result.status!=='ok')return;   // 失败保留队列
+   if(!r||!r.result||r.result.status!=='ok'||r.result.accepted!==sending.length)return;
   } else {
    return; // 无云能力（例如 devtools 基础库过低），不丢队列也不上报
   }
   // 成功：移除已发送的（按 eventId 精确匹配）
   const sent=new Set(sending.map(e=>e.eventId));
-  const rest=q.filter(e=>!sent.has(e.eventId));
+  const rest=loadQueue().filter(e=>!sent.has(e.eventId));
   try{a.setStorageSync(KEY,rest)}catch(e){}
   if(rest.length>=BATCH)scheduleFlush();
  }catch(e){/* 静默：网络失败保留队列 */}

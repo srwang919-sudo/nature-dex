@@ -2,7 +2,6 @@ const fs=require('fs'),path=require('path'),assert=require('node:assert/strict')
 const {definitions}=require('../native/lib/badge-model');
 assert.equal(definitions.length,12);assert.equal(new Set(definitions.map(b=>b.id)).size,12);
 assert.equal(new Set(definitions.map(b=>b.motif)).size,12);
-const bytes=fs.readFileSync(path.join(__dirname,'../assets/theme/share-safe-leaf.png'));
-assert.equal(bytes.readUInt32BE(16),800);assert.equal(bytes.readUInt32BE(20),640);assert.ok(bytes.length<60000);
+for(const {motif} of definitions){const file=path.join(__dirname,'../assets/badges',motif+'.webp'),bytes=fs.readFileSync(file);assert.ok(bytes.length>12,motif+' is nonempty');assert.equal(bytes.toString('ascii',0,4),'RIFF',motif+' RIFF header');assert.equal(bytes.toString('ascii',8,12),'WEBP',motif+' WebP format');}
 assert.ok(!fs.existsSync(path.join(__dirname,'../assets/badges/red-fox.png')));
-console.log('PASS condition achievements use project-authored neutral leaf, not unverified animal badges');
+console.log('PASS all 12 configured badge WebP assets exist and have valid format headers; retired red-fox asset absent. This does not verify commercial rights.');

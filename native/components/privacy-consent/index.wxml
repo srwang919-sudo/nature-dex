@@ -1,0 +1,9 @@
+<view wx:if="{{visible}}" class="privacy-mask" catchtouchmove="stop">
+ <view class="privacy-dialog" aria-role="dialog" aria-label="隐私保护提示">
+  <view class="privacy-title">请先了解隐私保护指引</view>
+  <view class="privacy-copy">你选择的功能需要使用相机、相册或地点等相关能力。请阅读指引后决定是否继续。</view>
+  <button class="privacy-button privacy-link" bindtap="contract">{{contractName}}</button>
+  <button id="nature-privacy-agree" class="privacy-button privacy-agree" open-type="agreePrivacyAuthorization" bindagreeprivacyauthorization="agree">同意并继续</button>
+  <button class="privacy-button privacy-decline" bindtap="decline">暂不同意</button>
+ </view>
+</view>

@@ -1,20 +1,33 @@
 <view class="page profile-page {{reduce?'reduce-motion':''}}" wx:if="{{profile}}">
-  <view class="identity"><button class="avatar-picker" open-type="chooseAvatar" bindchooseavatar="chooseAvatar" disabled="{{avatarSaving}}" aria-label="主动选择本地头像"><image wx:if="{{avatarPath}}" class="avatar-image" src="{{avatarPath}}" mode="aspectFill"/><text wx:else>选头像</text></button><view class="identity-copy"><view class="identity-name">{{profile.name}}</view><text class="observer-tag">本地观察者 · {{profile.localLevel}}</text><text class="identity-meta">{{profile.stats.species}} 种记录 · 观察 {{profile.stats.days}} 天</text></view></view>
-  <view class="summary-grid"><view><text class="summary-number">{{profile.stats.species}}</text><text>物种</text></view><view><text class="summary-number">{{profile.stats.count}}</text><text>记录</text></view><view><text class="summary-number">{{profile.stats.days}}</text><text>观察天数</text></view><view><text class="summary-number">{{profile.stats.badges}}</text><text>徽章</text></view><view><text class="summary-number">{{profile.stats.repeat}}</text><text>重逢</text></view><view><text class="summary-number">{{profile.stats.notes}}</text><text>笔记</text></view></view>
-  <view class="level-card"><view class="row between"><text class="section">探索经验 · 等级 {{profile.level}}</text><text class="level-number">{{profile.xp}}{{profile.nextXp?' / '+profile.nextXp:' 种'}}</text></view><view class="level-track"><view class="level-fill" style="width:{{profile.levelPercent}}%"></view></view><text class="sub">每收藏一种真实物种增加 1 经验，重复和案例不计入。{{profile.nextXp?'下一级需要 '+profile.nextXp+' 种。':'已达当前最高等级。'}}与工艺、保护等级和识别准确率无关。</text></view>
-  <view class="badge-heading"><text class="section">我的自然勋章</text><text class="sub">十二个探索印记 · 已获得 {{badgeEarned}} / {{badgeTotal}} · 仅来自真实观察与主动阅读</text><view class="track"><view class="fill" style="width:{{badgeTotal?badgeEarned*100/badgeTotal:0}}%"/></view></view>
-  <view class="species-badge-grid"><view wx:for="{{badges}}" wx:key="key" data-id="{{item.id}}" bindtap="openBadge" aria-role="button" class="species-badge {{item.earned?'earned':''}} tier-{{item.tier}}" aria-label="{{item.name+'，'+item.desc+(item.earned?'，已获得':'，未获得')}}"><view class="species-badge-image"><nature-badge motif="{{item.motif}}" earned="{{item.earned}}" tier="{{item.tier}}" target="{{item.target}}"/></view><text class="species-badge-name">{{item.name}}<text class="species-badge-tier">{{item.tierLabel}}</text></text><text class="species-badge-state">{{item.progress}} / {{item.target}} · {{item.earned?'已获得':'探索中'}}</text><text class="badge-condition">{{item.desc}}</text></view></view>
-  <view class="subscription-card"><view class="section">本地收藏</view><view class="sub">统计仅包含真实观察，示例与纪念副本不计入。云端恢复需要单独授权，会员状态以服务端查询为准。</view></view>
-  <view class="notes-heading"><text class="section">我的笔记</text></view><view wx:if="{{!notes.length}}" class="empty-notes"><text class="sub">在图鉴里选一张收藏卡，就能为那次遇见写下几句话。</text></view><view wx:for="{{notes}}" wx:key="id" class="note-card" data-id="{{item.id}}" bindtap="openNote"><image class="note-thumb" src="{{item.image}}" mode="aspectFill"/><view class="note-copy"><text class="note-name">{{item.zh}}</text><text class="note-text">{{item.text}}</text></view></view>
+  <view class="identity"><button class="avatar-picker" open-type="chooseAvatar" bindchooseavatar="chooseAvatar" disabled="{{avatarSaving}}" aria-label="主动选择本地头像"><image wx:if="{{avatarPath}}" class="avatar-image" src="{{avatarPath}}" mode="aspectFill"/><text wx:else>选头像</text></button><view class="identity-copy"><view class="identity-name">{{profile.name}}</view><text class="observer-tag">自然观察者 · {{profile.localLevel}}</text><text class="identity-meta">{{profile.stats.species}} 种记录 · 观察 {{profile.stats.days}} 天</text></view></view>
+  <view class="profile-archive-head"><text class="section">我的观察档案</text></view>
+  <view class="summary-grid"><view><text class="summary-number">{{profile.stats.species}}</text><text>物种</text></view><view><text class="summary-number">{{profile.stats.count}}</text><text>记录</text></view><view><text class="summary-number">{{profile.stats.days}}</text><text>观察天数</text></view></view>
+  <view class="profile-quote"><text>“在自然里，我找回了更真实的自己。”</text></view>
+
+  <view wx:if="{{badges.length}}" class="badges-preview">
+    <view class="badges-preview-heading"><text class="section">最近获得的勋章</text><button class="link" bindtap="openBadges">查看全部 {{badgeEarned}} 枚 ›</button></view>
+    <view class="badges-preview-row">
+      <view wx:for="{{badges}}" wx:key="id" wx:if="{{index<3 && item.earned}}" class="preview-badge" data-id="{{item.id}}" bindtap="openBadge" aria-role="button" aria-label="{{item.name}}，已获得"><nature-badge motif="{{item.motif}}" earned="{{item.earned}}" tier="{{item.tier}}" target="{{item.target}}"/></view>
+    </view>
+  </view>
+
+  <view class="profile-links">
+    <button class="link-row" bindtap="openBadges"><view class="grow"><text>我的勋章</text><text class="sub">已获得 {{badgeEarned}} / {{badgeTotal}}</text></view><text class="arrow">›</text></button>
+    <button class="link-row" bindtap="chooseNote"><view class="grow"><text>我的收藏夹</text><text class="sub">{{profile.stats.count}} 张卡片</text></view><text class="arrow">›</text></button>
+    <button class="link-row" bindtap="openPhotos"><view class="grow"><text>我的照片</text><text class="sub">按旅程整理</text></view><text class="arrow">›</text></button>
+    <button class="link-row" bindtap="openNotes"><view class="grow"><text>观察笔记</text><text class="sub">{{profile.stats.notes}} 篇</text></view><text class="arrow">›</text></button>
+  </view>
+  <view class="notes-heading row between"><text class="section">我的笔记</text><button class="link" bindtap="openNotes">全部 {{profile.stats.notes}} 篇 →</button></view><view wx:if="{{!notes.length}}" class="empty-notes"><text class="sub">在馆藏里选一张收藏卡，就能为那次遇见写下几句话。</text></view><view wx:for="{{notes}}" wx:key="id" class="note-card" data-id="{{item.id}}" bindtap="openNote"><image wx:if="{{item.image}}" class="note-thumb" src="{{item.image}}" mode="aspectFill"/><view class="note-copy"><text class="note-name">{{item.zh}}</text><text class="note-text">{{item.text}}</text></view></view>
   <view class="settings-links"><button class="secondary" data-section="membership" bindtap="openSettings">会员与用量</button><button class="secondary" data-section="privacy" bindtap="openSettings">设置与隐私</button><button class="secondary" data-section="help" bindtap="openSettings">帮助与反馈</button><button class="secondary" data-section="about" bindtap="openSettings">关于</button></view>
-  <view class="brand-footer"><text>本地观察者</text><text>去大自然里 · v0.1 原型</text></view>
+  <view class="brand-footer"><text>本地观察者</text><text>去大自然里 · 记录每次相遇</text></view>
 </view>
+<privacy-consent id="nature-privacy"/>
 <navigation active="me"/>
 
 <view wx:if="{{badgePreviewOpen && selectedBadge}}" class="badge-preview-mask" bindtap="closeBadge" catchtouchmove="previewContent" aria-role="dialog" aria-label="{{selectedBadge.name}}">
  <scroll-view class="badge-preview-panel" scroll-y="{{true}}" catchtap="previewContent" catchtouchmove="previewContent">
   <button class="badge-preview-close" bindtap="closeBadge" aria-label="关闭勋章预览">关闭 ×</button>
-  <view class="badge-preview-image"><nature-badge motif="{{selectedBadge.motif}}" earned="{{selectedBadge.earned}}" large="{{true}}"/></view>
+  <view class="badge-preview-image"><nature-badge motif="{{selectedBadge.motif}}" earned="{{selectedBadge.earned}}" tier="{{selectedBadge.tier}}" target="{{selectedBadge.target}}" large="{{true}}"/></view>
   <view class="title">{{selectedBadge.name}}</view>
   <text class="badge-preview-state">{{selectedBadge.earned?'已获得':'尚未获得'}}</text>
   <text class="badge-preview-rule">{{selectedBadge.desc}}</text>

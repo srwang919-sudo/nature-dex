@@ -18,6 +18,6 @@ const component=fs.readFileSync(path.join(__dirname,'../native/components/collec
 const markup=fs.readFileSync(path.join(__dirname,'../native/components/collectible/index.wxml'),'utf8');
 assert.ok(markup.includes('back-illustration-full')&&markup.includes('presentation.back.illustration'),'screen uses shared local illustration mapping');
 assert.ok(markup.includes('presentation.back.no')&&markup.includes('presentation.back.date'),'back retains truthful observation provenance');
-assert.ok(markup.includes('binderror="imageError"')&&markup.includes('原图不可用')&&markup.includes('请重新选择'),'broken local photos have a safe fallback');
+assert.ok(markup.includes('binderror="imageError"')&&markup.includes('图片暂时无法读取')&&markup.includes('开启云恢复后查看'),'broken local photos have a safe fallback');
 assert.ok(component.includes('imageError')&&component.includes('imageUnavailable'));
 console.log('PASS: presentation five-star slots and seven distinct line arts');

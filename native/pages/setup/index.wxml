@@ -3,3 +3,4 @@
   <view class="sub">来源未能确认的内置素材已从发布版本移除，此页不再上传或恢复素材。你的实拍照片不受影响。</view>
   <view class="log spaced"><text wx:for="{{logs}}" wx:key="index">{{item}}</text></view>
 </view>
+<privacy-consent id="nature-privacy"/>

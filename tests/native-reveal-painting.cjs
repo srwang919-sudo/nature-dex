@@ -3,23 +3,16 @@ const root = path.join(__dirname, '..');
 const css = fs.readFileSync(path.join(root, 'native/pages/reveal/index.wxss'), 'utf8');
 const wxml = fs.readFileSync(path.join(root, 'native/pages/reveal/index.wxml'), 'utf8');
 
-test('the reveal paints the plate in stages instead of popping a card', () => {
-  assert.ok(wxml.includes("'arrive painting'"), 'painting stage is gated by the same motion condition as arrive');
-  assert.ok(css.includes('@keyframes plate-sketch'), 'outline/pencil stage');
-  assert.ok(css.includes('@keyframes plate-wash'), 'watercolour wash stage');
-  const sketch = css.slice(css.indexOf('@keyframes plate-sketch'), css.indexOf('@keyframes plate-wash'));
-  assert.ok(sketch.includes('grayscale(1)'), 'starts desaturated like a pencil outline');
-  assert.ok(sketch.includes('contrast(1.22)'), 'pencil linework reads through contrast');
-  const wash = css.slice(css.indexOf('@keyframes plate-wash'));
-  assert.ok(wash.indexOf('filter:none') >= 0 && wash.indexOf('filter:none') < wash.indexOf('}', wash.indexOf('@keyframes plate-wash') + 40) + 400, 'wash ends on the true colours');
-  assert.ok(!/@keyframes plate-(sketch|wash)\{[^;]*scale\(1\.[3-9]/.test(css), 'no bouncy pop, the motion stays quiet');
+test('the reveal uses a quiet 320ms specimen reveal without reward effects', () => {
+ assert.ok(wxml.includes("'arrive painting'"));
+ assert.ok(css.includes('@keyframes plate-reveal'));
+ assert.ok(css.includes('.32s ease-out'));
+ assert.ok(!css.includes('@keyframes badge-burst'));
+ assert.ok(!wxml.includes('discovery-stars'));
 });
-
-test('the staged paint is fully disabled under reduced motion', () => {
-  assert.ok(/\.reduce-motion \.hero-card\.painting\{animation:none;filter:none\}/.test(css));
-  assert.ok(css.includes('prefers-reduced-motion:reduce'));
-  const media = /@media\(prefers-reduced-motion:reduce\)\{([^}]*\})[^}]*/.exec(css);
-  assert.ok(media && media[0].includes('.hero-card.painting'), 'system preference also disables it');
+test('the specimen reveal respects application and system reduced motion', () => {
+ assert.match(css,/\.reduce-motion \.hero-card[^{]*\{animation:none/);
+ assert.ok(css.includes('prefers-reduced-motion:reduce'));
 });
 
 test('the reveal state machine still decides when the card opens', () => {

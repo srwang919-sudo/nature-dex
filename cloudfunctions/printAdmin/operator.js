@@ -2,7 +2,6 @@
 // 该文件在 printAdmin 与 analytics-aggregate 中逐字节一致，漂移测试保证同步。
 const ADMIN_ENV = 'NATURE_ADMIN_OPENIDS';
 const CLAIM_ENV = 'NATURE_OPERATOR_CLAIM_CODE';
-const DEFAULT_CLAIM_CODE = 'nature-ops-2026';
 const DOC_ID = 'main';
 const COLLECTION = 'natureAdmin';
 
@@ -12,7 +11,7 @@ function envOpenids() {
 
 function expectedClaimCode() {
   const env = process.env[CLAIM_ENV];
-  return typeof env === 'string' && env.length > 0 ? env : DEFAULT_CLAIM_CODE;
+  return typeof env === 'string' && env.trim().length > 0 ? env : '';
 }
 
 function normalizeOpenids(value) {
@@ -42,24 +41,28 @@ async function isOperator(db, openid) {
 async function claimOperator({ db, openid, code, now = Date.now } = {}) {
   if (!db || typeof db.collection !== 'function') return { status: 'failed', code: 'service_unavailable', retryable: true };
   if (typeof openid !== 'string' || openid.length === 0) return { status: 'failed', code: 'unauthenticated' };
-  if (typeof code !== 'string' || code !== expectedClaimCode()) return { status: 'failed', code: 'invalid_claim_code' };
+  const expected = expectedClaimCode();
+  if (!expected) return { status: 'failed', code: 'claim_disabled' };
+  if (typeof code !== 'string' || code !== expected) return { status: 'failed', code: 'invalid_claim_code' };
   const ts = typeof now === 'function' ? now() : now;
   try {
     // 云函数管理员权限下 doc().set() 通常会自动创建集合；若环境要求显式创建，忽略失败。
     try { await db.createCollection && db.createCollection(COLLECTION); } catch (_) {}
-    const doc = db.collection(COLLECTION).doc(DOC_ID);
+    return await db.runTransaction(async tx => {
+    const doc = tx.collection(COLLECTION).doc(DOC_ID);
     let existing = [];
     try {
       const res = await doc.get();
       existing = normalizeOpenids(res && res.data && res.data.openids);
-    } catch (_) {}
+    } catch (e) { if (!/DATABASE_DOCUMENT_NOT_EXIST|not exist|not found/i.test(e.message || e.errMsg || '')) throw e; }
     if (existing.includes(openid)) return { status: 'ok', already: true };
     const next = { openids: existing.concat([openid]), claimedAt: ts };
     await doc.set({ data: next });
     return { status: 'ok' };
+    });
   } catch (e) {
     return { status: 'failed', code: 'service_unavailable', retryable: true };
   }
 }
 
-module.exports = { isOperator, claimOperator, ADMIN_ENV, CLAIM_ENV, DEFAULT_CLAIM_CODE };
+module.exports = { isOperator, claimOperator, ADMIN_ENV, CLAIM_ENV };

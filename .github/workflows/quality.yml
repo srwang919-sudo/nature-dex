@@ -16,12 +16,23 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - run: npm ci
+      - run: npm ci --ignore-scripts
+      - name: Install every cloud function from its lockfile
+        run: |
+          for manifest in cloudfunctions/*/package.json; do
+            npm ci --ignore-scripts --prefix "${manifest%/package.json}"
+          done
+      - name: Audit production dependencies
+        run: |
+          npm audit --omit=dev --audit-level=moderate
+          for manifest in cloudfunctions/*/package.json; do
+            npm audit --omit=dev --audit-level=moderate --prefix "${manifest%/package.json}"
+          done
       - run: npm run quality
       - run: git diff --check
       - name: Scan for credential patterns
         run: |
-          if rg -n --hidden --glob '!node_modules/**' --glob '!.git/**' \
+          if rg -n --hidden --glob '!**/node_modules/**' --glob '!.git/**' \
             -e 'sk-[A-Za-z0-9]{20,}' -e 'AKIA[0-9A-Z]{16}' -e 'BEGIN [A-Z ]+ PRIVATE KEY' \
             -e 'DASHSCOPE_API_KEY=[^$<[:space:]]{12,}' -e 'BAIDU_SECRET_KEY=[^$<[:space:]]{12,}' \
             app.js app.json config native cloudfunctions scripts; then

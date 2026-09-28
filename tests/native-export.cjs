@@ -34,6 +34,6 @@ assert.equal(lib.printQuality({width:375,height:485},'printBack',v2).qualified,f
  assert.ok(texts.some(d=>d[1]===card.protection));
  draws.length=0;lib.render(ctx,{...card,finish:'珍藏'},lib.exportPlan(card,'printFront'),{path:'p',width:821,height:855});
  const pill=draws.findIndex(d=>d[0]==='rect'&&d[1]===540&&d[2]===71);
- const label=draws.findIndex(d=>d[0]==='text'&&d[1]==='珍藏');assert.ok(pill>=0&&pill<label);
+ const label=draws.findIndex(d=>d[0]==='text'&&d[1]==='珍藏');assert.equal(pill,-1);assert.equal(label,-1);
  assert.ok(draws.filter(d=>d[0]==='text').every(d=>d[2]>=71));
- console.log('PASS effective DPI, safe-area text, opaque finish pill and longest science reserved protection band');
+ console.log('PASS effective DPI, safe-area text, neutral specimen without finish pill and longest science reserved protection band');

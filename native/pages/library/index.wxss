@@ -1,20 +1,37 @@
-.library-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16rpx;padding-bottom:24rpx;border-bottom:1rpx solid var(--color-border)}
-.library-heading-copy{min-width:0;flex:1}
-.library-heading .title{font-size:44rpx;color:var(--ink);margin:6rpx 0}
-.eyebrow{display:block;color:var(--moss);font-size:24rpx;margin-bottom:10rpx;letter-spacing:.06em}
-/* 次要动作收进标题行右上角，不再独占一行 */
-.print-link{flex:none;min-height:0;padding:12rpx 22rpx;margin:0;font-size:24rpx;line-height:1.4;color:var(--color-primary);background:var(--color-primary-light);border:1rpx solid #C9DCC7;border-radius:999rpx;transition:transform .16s cubic-bezier(.22,1,.36,1)}
-.print-link:active{transform:scale(.95)}
-.reduce-motion .print-link:active{transform:none}/* 布局切换 = 网格的分段控件：紧贴网格上方、左对齐，不再是悬浮的大胶囊 */
-.layout-switch{display:flex;gap:0;width:320rpx;margin:24rpx 0 20rpx;padding:6rpx;background:var(--color-surface-3);border-radius:999rpx}
-.layout-button{flex:1;min-height:0;min-width:0;border:0;border-radius:999rpx;background:transparent;color:var(--color-text-secondary);font-size:25rpx;line-height:1.4;padding:16rpx 0;transition:background .18s ease,color .18s ease}
+/* 我的馆藏 · 私人自然博物馆 */
+.library-hero{padding-bottom:28rpx;border-bottom:1rpx solid var(--color-border);margin-bottom:28rpx}
+.library-hero .eyebrow{display:block;color:var(--moss);font-size:22rpx;margin-bottom:10rpx;letter-spacing:.08em}
+.library-hero .title{font-size:44rpx;color:var(--ink);margin:6rpx 0}
+.library-hero .sub{display:block;font-size:24rpx;color:var(--muted);margin-top:10rpx;max-width:42ch}
+
+.library-search{display:flex;align-items:center;gap:12rpx;margin-top:24rpx}
+.search-input{flex:1;min-width:0;min-height:var(--tap-min);padding:0 28rpx;background:var(--color-surface-1);border:1rpx solid var(--color-border);border-radius:var(--radius-action);font-size:28rpx}
+.search-clear{flex:none;min-height:var(--tap-min);padding:0 26rpx;font-size:26rpx;color:var(--color-text-secondary);background:var(--color-surface-2);border:1rpx solid var(--color-border);border-radius:var(--radius-action)}
+
+.category-scroll{white-space:nowrap;margin-top:20rpx;width:100%}
+.category-row{display:inline-flex;gap:8rpx;padding-bottom:6rpx}
+.category-button{flex:none;min-height:80rpx;padding:16rpx 24rpx;font-size:25rpx;border-radius:var(--radius-action);background:transparent;color:var(--muted);transition:background .2s ease,color .2s ease}
+.category-button.selected{background:var(--color-primary-light);color:var(--moss);font-weight:600}
+
+.layout-switch{display:flex;gap:0;width:280rpx;margin:24rpx 0 20rpx;padding:5rpx;background:var(--color-surface-3);border-radius:var(--radius-action)}
+.layout-button{flex:1;min-height:64rpx;min-width:0;border:0;border-radius:var(--radius-action);background:transparent;color:var(--color-text-secondary);font-size:24rpx;line-height:1.4;padding:12rpx 0;transition:background .24s ease,color .24s ease}
 .layout-button.selected{background:var(--color-surface-1);color:var(--color-text);font-weight:600;box-shadow:var(--shadow-sm)}
-.reduce-motion .layout-button{transition:none}/* 网格改 flex 居中：只剩一张卡、或最后一行为奇数时也能居中，不再贴左 */
+
 .card-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:24rpx;align-items:flex-start}
 .collection-item{flex:0 0 calc((100% - 24rpx)/2);min-width:0;min-height:88rpx}
-@media(min-width:480px){.library-page{max-width:760rpx;margin:0 auto}.collection-item{flex-basis:calc((100% - 48rpx)/3)}}.collection-card{width:100%;aspect-ratio:5/7}.collection-card collectible{display:block;width:100%;height:100%}.library-empty{border:1rpx solid var(--line);border-radius:28rpx;background:var(--surface);padding:28rpx 24rpx;text-align:center}.library-empty .sub{display:block;margin:12rpx 0 24rpx}.reduce-motion .collection-item{transition:none;animation:none}
+.collection-card{width:100%;aspect-ratio:5/7}
+.collection-card collectible{display:block;width:100%;height:100%}
 
-.card-shelf{min-width:0}.shelf-swiper{height:820rpx;width:100%}.shelf-item{padding:0 20rpx;box-sizing:border-box;text-align:center}.shelf-card{width:100%;max-width:480rpx;aspect-ratio:5/7;margin:0 auto}.shelf-card collectible{display:block;width:100%;height:100%}.shelf-counter{text-align:center;font-size:24rpx;color:var(--muted);line-height:1.5}.reduce-motion .shelf-item{transition:none;animation:none}
-.library-search{display:flex;align-items:center;gap:12rpx;margin-top:28rpx}
-.search-input{flex:1;min-width:0;min-height:var(--tap-min);padding:0 28rpx;background:var(--color-surface-1);border:1rpx solid var(--color-border);border-radius:999rpx;font-size:28rpx}
-.search-clear{flex:none;min-height:var(--tap-min);padding:0 26rpx;font-size:26rpx;color:var(--color-text-secondary);background:var(--color-surface-2);border:1rpx solid var(--color-border);border-radius:999rpx}
+.card-shelf{min-width:0}
+.shelf-swiper{height:680rpx;width:100%}
+.shelf-item{padding:0 20rpx;box-sizing:border-box;text-align:center}
+.shelf-card{width:100%;max-width:520rpx;aspect-ratio:5/7;margin:0 auto}
+.shelf-card collectible{display:block;width:100%;height:100%}
+.shelf-counter{text-align:center;font-size:24rpx;color:var(--muted);line-height:1.5;margin-top:12rpx}
+
+.library-empty{border:1rpx solid var(--line);border-radius:var(--radius-card);background:var(--surface);padding:28rpx 24rpx;text-align:center;margin-top:24rpx}
+.library-empty .sub{display:block;margin:12rpx 0 24rpx}
+
+.sync-status{display:block;margin-top:16rpx}
+
+@media(max-width:320px){.collection-item{flex:0 0 100%}.shelf-swiper{height:600rpx}}

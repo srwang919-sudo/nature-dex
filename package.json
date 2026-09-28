@@ -1,12 +1,12 @@
 {
   "name": "daziranli-mini",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "private": true,
   "description": "去大自然里 - 原生微信小程序（历史源码仅存档）",
   "scripts": {
     "dev:weapp": "node scripts/verify-native.cjs",
     "build:weapp": "node scripts/verify-native.cjs",
     "test": "node --test tests/*.cjs",
-    "quality": "npm test && npm run build:weapp"
+    "quality": "npm test && npm test --prefix cloudfunctions/natureMembership && npm run build:weapp"
   }
 }

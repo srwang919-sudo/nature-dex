@@ -4,7 +4,6 @@ const {illustrationFor}=require('./species-illustration');
 const PRINT_SPEC=Object.freeze({width:815,height:1110,trimWidth:744,trimHeight:1039,bleedMm:3,dpi:300});
 function publicShare(card){const id=card.speciesId||card.id;return {title:'去大自然里 · '+card.zh+'的自然档案',path:'/native/pages/card/index?id=sample_'+encodeURIComponent(id),imageUrl:'/assets/theme/share-safe-leaf.png'};}
 function exportPlan(card,mode){const backs=mode==='share'&&!!card.protection,print=mode.indexOf('print')===0;return {mode,width:print?PRINT_SPEC.width:821,height:print?PRINT_SPEC.height:backs?2282:1121,backs,print};}
-const COLORS={standard:'#FFFFFF',holo:'#DEF0FC',alt:'#FCE3DE',numbered:'#FFF3D6'};
 function printQuality(image,mode,card={}){
  if(mode==='printBack'&&card.schemaVersion!==2)return {qualified:true,effectiveDpi:null,message:'卡背为文字绘制，按目标 300dpi 像素规格导出'};
  const dpi=Math.floor(Math.min(Number(image.width)/((mode==='printBack'?750:821)*PRINT_SPEC.width/821),Number(image.height)/((mode==='printBack'?925:855)*PRINT_SPEC.height/1121))*300);
@@ -21,15 +20,13 @@ function text(ctx,value,x,y,width,size,lineHeight,maxLines,color){
 }
 function front(ctx,card,offset,image){
  const v=presentCard(card).front;
- ctx.setFillStyle(COLORS[card.finishKey]||'#fff');ctx.fillRect(0,offset,821,1121);
+ ctx.setFillStyle('#FCFAF5');ctx.fillRect(0,offset,821,1121);
  const h=855,w=821;const ratio=Math.max(w/image.width,h/image.height),dw=image.width*ratio,dh=image.height*ratio;
  ctx.save();ctx.beginPath();ctx.rect(0,offset,w,h);ctx.clip();ctx.drawImage(image,(w-dw)/2,offset+(h-dh)/2,dw,dh);ctx.restore();
  if(v.no){ctx.setFillStyle('#FFFBF2');ctx.fillRect(71,offset+71,410,48);text(ctx,v.no,83,offset+104,386,23,28,1);}
- ctx.setFillStyle('#FFFBF2');ctx.fillRect(540,offset+71,210,48);text(ctx,v.finish,552,offset+104,186,26,30,1);
- text(ctx,v.name,71,offset+927,v.expanded?520:679,49,59,1);text(ctx,v.secondaryName,71,offset+974,679,27,35,1);
- text(ctx,presentCard(card).starText,620,offset+927,130,21,27,1,'#997921');
+ text(ctx,v.name,71,offset+927,679,49,59,1);text(ctx,v.secondaryName,71,offset+974,679,27,35,1);
  if(v.expanded){text(ctx,v.categoryLabel,71,offset+1015,300,23,28,1,'#58655D');text(ctx,v.locationLabel,390,offset+1015,360,23,28,1,'#58655D');}
- text(ctx,card.sample?'参考资料卡':card.date,71,offset+1040,679,25,30,1,'#58655D');
+ text(ctx,card.sample?'参考资料卡':v.date,71,offset+1040,679,25,30,1,'#58655D');
 }
 function back(ctx,card,offset,illustration){
  if(card.schemaVersion===2){

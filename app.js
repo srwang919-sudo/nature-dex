@@ -1,6 +1,7 @@
 // Explicit production environment: do not inherit the DevTools default.
 App({
   onLaunch(){
+    this.bootstrapPrivacy(wx)
     if (!wx.cloud) { console.warn('[cloud] 基础库过低，无 wx.cloud'); return }
     try { wx.cloud.init({ env: 'nature-prod-d0gufarx064489f0f', traceUser: false }) }
     catch (e) { console.warn('[cloud] init failed', e) }
@@ -8,6 +9,15 @@ App({
     require('./native/lib/recovery-consent').retryRevocation(wx).catch(()=>{})
     this.refreshAssetUrls()
     this.retryCloudCleanup().catch(()=>{})
+  },
+  bootstrapPrivacy(api) {
+    if(typeof api?.onNeedPrivacyAuthorization!=='function')return
+    api.onNeedPrivacyAuthorization(resolve=>{
+      const pages=getCurrentPages(),page=pages[pages.length-1]
+      const dialog=page&&page.selectComponent('#nature-privacy')
+      if(dialog)dialog.request(resolve)
+      else resolve({event:'disagree'})
+    })
   },
   globalData: {
     species: {
@@ -47,9 +57,8 @@ App({
   async removeCard(cardId) {
     const card = this.getCards().find(c => c.id === cardId)
     if (!card) return {status:'deleted',mode:'missing'}
-    const fileId=card.photoFileId||card.originalPhotoAsset?.fileId||card.artAssetFileId||card.artAsset?.fileId
     const observationId=card.photoObservationId
-    if(!fileId||!observationId)return this.eraseCard(cardId,'local_only')
+    if(!observationId)return this.eraseCard(cardId,'local_only')
     if(!wx.cloud?.callFunction)return this.eraseCard(cardId,'local_only',observationId)
     let code
     try{
@@ -64,8 +73,7 @@ App({
   // Escape hatch: the local copy goes away and any cloud cleanup stays queued for retry.
   async forceRemoveCard(cardId) {
     const card = this.getCards().find(c => c.id === cardId)
-    if(card&&card.photoObservationId)this.queueCloudCleanup(card.photoObservationId)
-    return this.eraseCard(cardId,'forced')
+    return this.eraseCard(cardId,'forced',card&&card.photoObservationId)
   },
   blockCardRemoval(cardId,code){
     const card=this.getCards().find(c=>c.id===cardId)
@@ -77,10 +85,12 @@ App({
   },
   async eraseCard(cardId,mode,pendingObservationId){
     const card=this.getCards().find(c=>c.id===cardId)||{}
+    // Persist explicit deletion before removing the local card; quota failures keep it recoverable.
+    if(card.photoObservationId)require('./native/lib/cloud-cleanup').markDeleted(wx,card.photoObservationId,!!pendingObservationId)
     this._dataEpoch = this.getDataEpoch() + 1;
     this.saveCards(this.getCards().filter(c => c.id !== cardId))
     try { wx.removeStorageSync('nature.note.' + cardId) } catch (e) {}
-    const queued=pendingObservationId?this.queueCloudCleanup(pendingObservationId):false
+    const queued=!!pendingObservationId
     await this.cleanupPaths([card.photoPath,card.originalPhotoAsset?.localPath,card.artPhotoPath].filter(p=>p&&!p.startsWith('cloud://')))
     return {status:'deleted',mode,cloudCleanupPending:queued}
   },
@@ -167,7 +177,7 @@ App({
     // Persist cleanup intent before removing records, so partial file failures can be retried.
     wx.setStorageSync('nature.cleanup.v1', [...new Set(photos.filter(Boolean))]);
     const keys = wx.getStorageInfoSync().keys;
-    keys.filter(k=>k.startsWith('nature.') && k !== 'nature.cleanup.v1' && k !== 'nature.cloudCleanup.v1').forEach(k=>wx.removeStorageSync(k));
+    keys.filter(k=>k.startsWith('nature.') && k !== 'nature.cleanup.v1' && k !== 'nature.cloudCleanup.v1' && k !== 'nature.deletedObservations.v1').forEach(k=>wx.removeStorageSync(k));
     return this.retryCleanup();
   },
   exportLocalData() { return {version:1,exportedAt:new Date().toISOString(),cards:this.getCards(),drafts:this.getDrafts(),notes:this.getCards().map(c=>({cardId:c.id,text:wx.getStorageSync('nature.note.'+c.id)||''})),notice:'本地数据备份；照片路径仅在原设备有效，图片请单独导出'}; },

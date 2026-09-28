@@ -1,14 +1,18 @@
 /* 徽章：项目内生成的珐琅质感资产（assets/badges/*.webp）。
    未解锁整体去色并保留虚线轮廓，让「还没拿到的」清晰可见。 */
 .enamel{position:relative;width:100%;height:100%;border-radius:50%;overflow:hidden;
- box-shadow:0 4rpx 12rpx rgba(44,62,53,.2),inset 0 0 0 1rpx rgba(255,255,255,.3);
+ box-shadow:0 4rpx 12rpx rgba(44,62,53,.08),inset 0 0 0 1rpx rgba(255,255,255,.3);
  transition:filter .3s ease,opacity .3s ease,transform .3s cubic-bezier(.22,1,.36,1)}
 .badge-photo{width:100%;height:100%;display:block}
+.enamel::before{content:'';position:absolute;inset:3rpx;border:3rpx solid var(--medal-rim,#AD7958);border-radius:50%;z-index:1;pointer-events:none}
+.tier-copper{--medal-rim:#AD7958}.tier-silver{--medal-rim:#A9B9BA}.tier-gold{--medal-rim:#C9A453}.tier-platinum{--medal-rim:#B0D5CB}
+.tier-gold.earned,.tier-platinum.earned{box-shadow:0 6rpx 18rpx rgba(23,63,53,.08),0 0 0 3rpx var(--medal-rim)}
 /* 斜向高光叠加，让平面图有珐琅釉面反光 */
 .badge-gloss{position:absolute;inset:0;border-radius:50%;pointer-events:none;
- background:linear-gradient(125deg,rgba(255,255,255,.36) 0%,rgba(255,255,255,0) 30%,rgba(255,255,255,0) 68%,rgba(255,255,255,.16) 100%)}
-.locked{filter:grayscale(.95) brightness(1.04);opacity:.62}
+ background:linear-gradient(125deg,rgba(255,255,255,.12) 0%,rgba(255,255,255,0) 30%,rgba(255,255,255,0) 68%,rgba(255,255,255,.16) 100%)}
+.locked{filter:grayscale(.95) brightness(1.04);opacity:.78}
 .locked::after{content:'';position:absolute;inset:0;border-radius:50%;border:2rpx dashed rgba(44,62,53,.34)}
-.earned{box-shadow:0 6rpx 16rpx rgba(44,62,53,.26),inset 0 0 0 1rpx rgba(255,255,255,.4)}
-.large .badge-gloss{background:linear-gradient(125deg,rgba(255,255,255,.42) 0%,rgba(255,255,255,0) 32%,rgba(255,255,255,0) 66%,rgba(255,255,255,.2) 100%)}
+.earned{box-shadow:0 6rpx 16rpx rgba(44,62,53,.08),inset 0 0 0 1rpx rgba(255,255,255,.4)}
+.large .badge-gloss{background:linear-gradient(125deg,rgba(255,255,255,.16) 0%,rgba(255,255,255,0) 32%,rgba(255,255,255,0) 66%,rgba(255,255,255,.2) 100%)}
 .reduce-motion .enamel{transition:none}
+@media(prefers-reduced-motion:reduce){.enamel{transition:none}}

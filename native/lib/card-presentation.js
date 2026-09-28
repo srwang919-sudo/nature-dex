@@ -6,6 +6,9 @@ function presentVersionedCard(card={}){
  const p=presentCard(card);
  const number=require('./v1-card-model').projectV1Card(card).discoveryNumber;
  p.front.no=p.back.no=number?'Discovery No. '+number:'';
+ const recorded=card.recoveredFromCloud?card.observedAt:(card.observedAt??card.createdAt),date=new Date(recorded);
+ p.front.date=Number.isFinite(recorded)&&recorded>0&&recorded<=Date.now()?date.getFullYear()+'.'+(date.getMonth()+1)+'.'+date.getDate():'';
+ p.front.shortStory=String(card.tagline||card.factTitle||card.scienceSnapshot?.summary||'').trim().slice(0,90);
  const categories={plant:'植物',bird:'鸟类',insect:'昆虫',animal:'动物',mammal:'哺乳动物',fungi:'真菌'};
  p.front.secondaryName=card.latin||(card.scienceSnapshot?.status==='available'?card.scienceSnapshot.english||'':'');
  p.front.categoryLabel=categories[card.category]||'类别未提供';p.front.locationLabel='地点未公开';p.front.expanded=!card.sample&&card.schemaVersion===2;

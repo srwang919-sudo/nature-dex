@@ -1,0 +1,38 @@
+<view class="page badges-page {{reduce?'reduce-motion':''}}">
+  <view class="badges-hero">
+    <text class="eyebrow">NATURALIST MEDALS</text>
+    <view class="title">我的勋章</view>
+    <text class="sub">每一次真实观察，都会留下一枚与自然的纪念。</text>
+  </view>
+
+  <view class="filter-bar">
+    <view class="filter-tab {{filter==='all'?'on':''}}" data-filter="all" bindtap="setFilter">全部</view>
+    <view class="filter-tab {{filter==='progress'?'on':''}}" data-filter="progress" bindtap="setFilter">进行中</view>
+    <view class="filter-tab {{filter==='earned'?'on':''}}" data-filter="earned" bindtap="setFilter">已获得</view>
+  </view>
+
+  <view wx:if="{{badges.length}}" class="badge-grid">
+    <view wx:for="{{badges}}" wx:key="id" class="badge-cell {{(filter==='earned'&&!item.earned)||(filter==='progress'&&item.earned)?'hidden':''}}" data-id="{{item.id}}" bindtap="openBadge" aria-role="button" aria-label="{{item.name+'，'+item.desc+(item.earned?'，已获得':'，探索中')}}">
+      <view class="badge-image"><nature-badge motif="{{item.motif}}" earned="{{item.earned}}" tier="{{item.tier}}" target="{{item.target}}"/></view>
+      <text class="badge-name">{{item.name}}</text>
+      <text class="badge-tier">{{item.tierLabel}}</text>
+      <text class="badge-progress">{{item.progress}} / {{item.target}} · {{item.earned?'已获得':'进行中'}}</text>
+    </view>
+  </view>
+
+  <view wx:if="{{!badges.length}}" class="empty">勋章数据尚未加载</view>
+</view>
+
+<view wx:if="{{badgePreviewOpen && selectedBadge}}" class="badge-preview-mask" bindtap="closeBadge" catchtouchmove="previewContent" aria-role="dialog" aria-label="{{selectedBadge.name}}">
+  <scroll-view class="badge-preview-panel" scroll-y="{{true}}" catchtap="previewContent" catchtouchmove="previewContent">
+    <button class="badge-preview-close" bindtap="closeBadge" aria-label="关闭勋章预览">关闭 ×</button>
+    <view class="badge-preview-image"><nature-badge motif="{{selectedBadge.motif}}" earned="{{selectedBadge.earned}}" tier="{{selectedBadge.tier}}" target="{{selectedBadge.target}}" large="{{true}}"/></view>
+    <view class="title">{{selectedBadge.name}}</view>
+    <text class="badge-preview-state">{{selectedBadge.earned?'已获得':'尚未获得'}}</text>
+    <text class="badge-preview-rule">{{selectedBadge.desc}}</text>
+    <text class="badge-preview-progress">当前进度 {{selectedBadge.progress}} / {{selectedBadge.target}}</text>
+    <text class="sub">欣赏勋章不会改变探索进度</text>
+  </scroll-view>
+</view>
+
+<privacy-consent id="nature-privacy"/>

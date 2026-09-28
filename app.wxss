@@ -6,15 +6,15 @@
    ============================================================ */
 page{
   /* ---- 基础色（温暖自然）---- */
-  --paper:#FAF9F6;          /* 主背景 · 米白纸感 */
-  --surface:#FFFFFF;        /* 卡片面 · 比纸更亮半度 */
-  --ink:#2C3E35;            /* 正文 · 深炭绿 */
-  --muted:#66756B;          /* 次级文字 · 苔灰（对比度 ≥4.5:1） */
-  --moss:#4A7C59;           /* 品牌主绿（主按钮/当前状态/Progress/关键 Icon） */
+  --paper:#F6F0E5;          /* 暖纸 */
+  --surface:#FCFAF5;        /* 标本纸页 */
+  --ink:#26382F;            /* 墨绿正文 */
+  --muted:#5E6B60;          /* 次级文字 · 苔灰（对比度 ≥4.5:1） */
+  --moss:#183F34;           /* 森林主操作 */
   --lake:#5B8BC7;           /* 鸟类 · 天空蓝 */
   --sun:#D4A574;            /* 奖励色（首发现 / 特殊收藏 / 高级徽章） */
   --orange:#C98A5A;         /* 昆虫 · 暖琥珀（点缀，不作主按钮） */
-  --line:#E5E3DA;           /* 1px 边线（§106：优先边线与留白） */
+  --line:#DAD5C9;           /* 纸页细线 */
   /* 类别色（§103） */
   --c-plant:#5E8F6B;
   --c-bird:#5B8BC7;
@@ -24,20 +24,20 @@ page{
 
   /* ---- 语义色：页面与组件只消费这一层 ---- */
   --color-bg:var(--paper);
-  --color-surface-1:#FFFFFF;      /* 卡片 */
-  --color-surface-2:#F5F5F0;      /* 面板 */
-  --color-surface-3:#EFEFE8;      /* 悬浮/凹陷底 */
+  --color-surface-1:var(--surface);
+  --color-surface-2:#F0EDE2;
+  --color-surface-3:#E7E5DB;
   --color-text:var(--ink);
   --color-text-secondary:var(--muted);
   /* 三级文字仍须可读（4.7:1）：靠更冷的灰绿区分层级，不靠更浅的明度。
      ——米白底上做不到「比 secondary 更浅又满足 4.5:1」，层级改用色相表达。 */
-  --color-text-tertiary:#64736E;
+  --color-text-tertiary:#5F6B65;
   /* 禁用态文字（WCAG 对 inactive 组件豁免，此处按 UI 组件 3:1 取） */
   --color-text-disabled:#8A9490;
   --color-border:var(--line);
   --color-primary:var(--moss);
-  --color-primary-hover:#3F6A4C;
-  --color-primary-light:#EAF1E9;  /* 选中底 / 已达成态 */
+  --color-primary-hover:#103329;
+  --color-primary-light:#E3EBDD;
   --color-accent:var(--sun);
   --color-success:#4A7C59;
   /* 警告三件套：提示条底 / 边 / 字，避免散落的近似暖黄 */
@@ -46,9 +46,9 @@ page{
   --color-warning-border:#EFE0BE;
   --color-warning-text:#5A4A28;
   /* 品牌浅底三件套：选中态不再散写边框与文字色 */
-  --color-primary-light-border:#C9DCC7;
-  --color-primary-light-text:#2F4A38;
-  --color-focus:#4A7C59;          /* 输入/可聚焦控件的焦点环 */
+  --color-primary-light-border:#C3D4C9;
+  --color-primary-light-text:#173F35;
+  --color-focus:#173F35;          /* 输入/可聚焦控件的焦点环 */
   --color-danger:#C75B5B;         /* 危险红统一出口 */
   --color-danger-surface:#FBEDEC;
   --color-danger-border:#EDC7BC;
@@ -65,10 +65,10 @@ page{
   --shadow-lg:0 12rpx 32rpx rgba(44,62,53,.14);
 
   /* ---- 圆角 ---- */
-  --radius-sm:12rpx;
-  --radius-md:18rpx;
+  --radius-sm:16rpx;
+  --radius-md:20rpx;
   --radius-lg:24rpx;
-  --radius-xl:32rpx;
+  --radius-xl:24rpx;
   --radius-card:var(--radius-lg);   /* 兼容旧名 */
   --radius-action:var(--radius-md); /* 兼容旧名 */
 
@@ -85,7 +85,8 @@ page{
   --text-base:28rpx;
   --text-lg:32rpx;
   --text-xl:40rpx;
-  --text-title:46rpx;
+  --text-title:52rpx;
+  --font-heading:'Songti SC','STSong','Noto Serif CJK SC',Georgia,serif;
 
   /* ---- 徽章尺寸 ---- */
   --badge-sm:64rpx;
@@ -107,13 +108,13 @@ button{font:inherit;margin:0;line-height:1.5;color:inherit;background:transparen
 button::after{border:none}
 
 /* ---- 版式 ---- */
-.page{padding:var(--space-lg) var(--space-lg) calc(184rpx + env(safe-area-inset-bottom))}
+.page{padding:var(--space-lg) 40rpx calc(184rpx + env(safe-area-inset-bottom));max-width:1100rpx;margin:0 auto}
 .row{display:flex;align-items:center;gap:var(--space-sm)}
 .between{justify-content:space-between}
 .grow{flex:1;min-width:0}
-.title{font-size:var(--text-title);font-weight:600;line-height:1.28;letter-spacing:.5rpx}
-.section{font-size:34rpx;font-weight:600;line-height:1.4}
-.brand{font-size:30rpx;font-weight:600;letter-spacing:1rpx}
+.title{font-family:var(--font-heading);font-size:var(--text-title);font-weight:600;line-height:1.38;letter-spacing:.5rpx}
+.section{font-family:var(--font-heading);font-size:38rpx;font-weight:600;line-height:1.4}
+.brand{font-family:var(--font-heading);font-size:32rpx;font-weight:600;letter-spacing:1rpx}
 .sub,.hint{font-size:var(--text-sm);color:var(--color-text-secondary);line-height:1.65}
 .muted{color:var(--color-text-secondary)}
 .small{font-size:var(--text-xs)}
@@ -124,27 +125,27 @@ button::after{border:none}
 /* ---- 面板与容器 ---- */
 .panel{background:var(--color-surface-1);border:1rpx solid var(--color-border);border-radius:var(--radius-card);padding:26rpx}
 .spaced{margin-top:var(--space-lg)}
-.pill{padding:10rpx 20rpx;border-radius:999rpx;background:var(--color-surface-1);border:1rpx solid var(--color-border);font-size:var(--text-xs);color:var(--color-text);white-space:nowrap}
+.pill{padding:10rpx 20rpx;border-radius:var(--radius-sm);background:var(--color-surface-1);border:1rpx solid var(--color-border);font-size:var(--text-xs);color:var(--color-text);white-space:nowrap}
 .pill.on{background:var(--color-primary-light);border-color:var(--color-primary-light-border);color:var(--color-primary-light-text)}
 .empty{text-align:center;padding:56rpx 28rpx;color:var(--color-text-secondary);background:var(--color-surface-1);border:1rpx dashed var(--color-border);border-radius:var(--radius-card);font-size:26rpx;line-height:1.7}
 
 /* ---- 操作（§102：现代 UI 负责效率；触控区 ≥88rpx）---- */
-.primary,.secondary{display:flex;align-items:center;justify-content:center;min-height:var(--tap-min);padding:20rpx 28rpx;border-radius:var(--radius-action);text-align:center;font-size:29rpx;transition:transform .18s cubic-bezier(.22,1,.36,1),opacity .18s ease}
+.primary,.secondary{display:flex;align-items:center;justify-content:center;min-height:var(--tap-min);padding:20rpx 28rpx;border-radius:var(--radius-action);text-align:center;font-size:29rpx;transition:opacity .24s ease,background .24s ease}
 .primary{background:var(--color-primary);color:#FFFFFF;font-weight:600}
 .secondary{background:var(--color-surface-1);color:var(--color-text);border:1rpx solid var(--color-border)}
 .primary[disabled],.secondary[disabled]{opacity:1;background:var(--color-surface-3);color:var(--color-text-disabled);border-color:var(--color-border)}
-.primary:active,.secondary:active{transform:scale(.98)}
+.primary:active,.secondary:active{opacity:.86}
 .secondary.danger{color:var(--color-danger);border-color:var(--color-danger-border)}
 .link{color:var(--color-primary);font-size:var(--text-sm);background:none;padding:14rpx 8rpx;min-height:var(--tap-min)}
 
 /* ---- 数据与反馈 ---- */
 .track{height:18rpx;background:var(--color-surface-3);border-radius:999rpx;overflow:hidden;margin:20rpx 0 12rpx}
-.fill{height:100%;background:var(--color-primary);border-radius:999rpx;transition:width .5s ease}
+.fill{height:100%;background:var(--color-primary);border-radius:999rpx;transition:width .3s ease}
 .notice{padding:22rpx 26rpx;border-radius:var(--radius-md);background:var(--color-warning-surface);border:1rpx solid var(--color-warning-border);font-size:var(--text-sm);line-height:1.65;color:var(--color-warning-text)}
 
 /* ---- 动效（§108：生长/呼吸，不用 bounce/pop；尊重系统减弱动态）---- */
 /* 可点击卡片统一按压反馈，让"点了有反应"成为一致体验 */
-.note-card,.record,.collection-item,.landmark{transition:transform .16s cubic-bezier(.22,1,.36,1),opacity .16s ease}
+.note-card,.record,.collection-item,.landmark{transition:transform .24s cubic-bezier(.22,1,.36,1),opacity .24s ease}
 .note-card:active,.record:active,.collection-item:active{transform:scale(.985);opacity:.94}
 /* 面板与地图块轻微上浮入场，避免整页元素同时闪现 */
 @keyframes rise{from{opacity:0;transform:translateY(14rpx)}to{opacity:1;transform:none}}

@@ -1,0 +1,7 @@
+{
+  "usingComponents": {
+    "nature-badge": "/native/components/nature-badge/index",
+    "privacy-consent": "/native/components/privacy-consent/index"
+  },
+  "navigationBarTitleText": "我的勋章"
+}

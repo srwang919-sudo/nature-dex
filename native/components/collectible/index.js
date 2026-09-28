@@ -3,9 +3,10 @@ const {localIllustrationFor}=require('../../lib/species-illustration')
 const thumb=require('../../lib/thumbnail')
 function automaticMediaDenied(){const pages=typeof getCurrentPages==='function'?getCurrentPages():[],route=pages[pages.length-1]?.route||'';return ['native/pages/home/index','native/pages/library/index','native/pages/journey/index','native/pages/profile/index'].includes(route)&&!require('../../lib/recovery-consent').allowed(wx)}
 Component({
- options:{virtualHost:true},properties:{card:Object,large:Boolean,back:Boolean,motion:Boolean,scene:Boolean},data:{stars:'',presentation:null,imageUnavailable:false,thumbUrl:'',useThumb:false},
- observers:{card:function(c){if(c){const presentation=presentCard(c),denied=automaticMediaDenied()||(c.serverCardId&&!require('../../lib/recovery-consent').allowed(wx));if(denied){if(/^(cloud:\/\/|https?:\/\/)/.test(presentation.front.photo))presentation.front.photo='';if(/^(cloud:\/\/|https?:\/\/)/.test(presentation.back.illustration))presentation.back.illustration=''}this.setData({stars:presentation.starText,presentation,imageUnavailable:denied&&!presentation.front.photo,backUnavailable:denied&&!presentation.back.illustration});this.applyThumb();this.fixCloudUrls(presentation)}}},
+ options:{virtualHost:true},properties:{card:Object,large:Boolean,back:Boolean,motion:Boolean,scene:Boolean,originalPhoto:Boolean},data:{stars:'',presentation:null,imageUnavailable:false,thumbUrl:'',useThumb:false},
+ observers:{card:function(c){if(c){this.present(c)}},originalPhoto:function(){if(this.data.card)this.present(this.data.card)}},
  methods:{
+  present(c){const presentation=presentCard(c);if(this.properties?.originalPhoto){const original=require('../../lib/observation-card').normalizeCard(c).originalPhotoAsset;presentation.back.illustration=original.localPath||original.fileId||'';presentation.back.kind='original';presentation.back.locationLabel='地点未公开'}const denied=automaticMediaDenied()||(c.serverCardId&&!require('../../lib/recovery-consent').allowed(wx));if(denied){if(/^(cloud:\/\/|https?:\/\/)/.test(presentation.front.photo))presentation.front.photo='';if(/^(cloud:\/\/|https?:\/\/)/.test(presentation.back.illustration))presentation.back.illustration=''}this.setData({mediaDenied:!!denied,stars:presentation.starText,presentation,imageUnavailable:denied&&!presentation.front.photo,backUnavailable:denied&&!presentation.back.illustration});this.applyThumb();this.fixCloudUrls(presentation)},
   // 缩略图只在展示层启用；默认 off，所以不改任何现有行为。
   applyThumb(){
    const mode=thumb.currentMode(typeof wx!=='undefined'?wx:null);
@@ -22,7 +23,7 @@ Component({
    }
    this.setData({imageUnavailable:true});
   },
-  artError(){if(this.data.card.schemaVersion===2||this.data.card.backAssetFileId)this.setData({backUnavailable:true});else this.setData({'presentation.back.illustration':localIllustrationFor(this.data.card.speciesId)})},
+  artError(){if(this.properties?.originalPhoto||this.data.card.schemaVersion===2||this.data.card.backAssetFileId)this.setData({backUnavailable:true});else this.setData({'presentation.back.illustration':localIllustrationFor(this.data.card.speciesId)})},
  fixCloudUrls(p){
   const token=this._assetToken=(this._assetToken||0)+1;
   if(!wx.cloud||!p||automaticMediaDenied())return;

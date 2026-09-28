@@ -10,9 +10,8 @@ Page({
  refresh(){
   const cards=app.getCards().filter(c=>c&&!c.sample&&c.kind!=='example').map(c=>app.decorate(c)).filter(Boolean);
   const timeline=require('../../lib/museum-timeline').buildMuseumTimeline(cards,Date.now());
-  // 探索页只负责「拍一张」与自然世界：今日/最近/回忆都在各自 tab 里，这里不再重复渲染。
-  this.setData({season:timeline.season,seasonLabel:timeline.seasonLabel,dayPhase:timeline.dayPhase,dateLabel:timeline.dateLabel,worldCards:timeline.worldCards,reduceMotion:!!wx.getStorageSync('nature.reduceMotion')});
-  this.noticeWorldGrowth(timeline.worldCards);
+  this.setData({season:timeline.season,seasonLabel:timeline.seasonLabel,dayPhase:timeline.dayPhase,dateLabel:timeline.dateLabel,worldCards:timeline.worldCards,journeys:timeline.journeys,speciesCount:timeline.journeys.length,recentCards:timeline.today.concat(timeline.recent).slice(0,3),reduceMotion:!!wx.getStorageSync('nature.reduceMotion')});
+  this.noticeWorldGrowth(timeline.journeys.map(j=>j.card));
  },
  // 自然世界生长埋点（§111–112）：仅上报，不参与界面判定；存储失败不影响首页。
  noticeWorldGrowth(worldCards){

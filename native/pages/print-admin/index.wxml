@@ -43,3 +43,4 @@
  </view>
  <navigation active="me"/>
 </view>
+<privacy-consent id="nature-privacy"/>

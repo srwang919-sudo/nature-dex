@@ -5,7 +5,7 @@ const reset=()=>{store.clear();calls.length=0;store.set('nature.cards.v2',[Objec
 const wx={getStorageSync:k=>store.get(k),setStorageSync:(k,v)=>store.set(k,v),removeStorageSync:k=>store.delete(k),cloud:{callFunction:async input=>{calls.push(input);if(failed)throw Error('FunctionName parameter could not be found');return {result:{status:mode}}}}};
 vm.runInNewContext(fs.readFileSync(file,'utf8'),{App:x=>app=x,wx,require:createRequire(file),console});
 app.cleanupPaths=async()=>{};
-const queued=()=>store.get('nature.cloudCleanup.v1')||[];
+const queued=()=>require('../native/lib/cloud-cleanup').entries(wx);
 (async()=>{
  // A card that never uploaded anything is deleted locally without a cloud call.
  reset();store.set('nature.cards.v2',[{id:'local',photoPath:'/tmp/a.jpg'}]);
@@ -26,8 +26,15 @@ const queued=()=>store.get('nature.cloudCleanup.v1')||[];
  // An undeployed cloud function no longer blocks: local data goes, cleanup is queued.
  reset();failed=true;const missing=await app.removeCard('one');
  assert.equal(missing.status,'deleted');assert.equal(missing.cloudCleanupPending,true);assert.equal(app.getCards().length,0);
+ reset();store.set('nature.cards.v2',[{id:'one',photoObservationId:'obs'}]);const noFile=await app.removeCard('one');assert.equal(noFile.cloudCleanupPending,true);assert.equal(calls[0].name,'deleteObservationAssets');
  // A retained observation is the only case that asks for one more confirmation.
  reset();failed=false;mode='retained';const retained=await app.removeCard('one');
  assert.equal(retained.status,'needs_confirm');assert.equal(retained.code,'observation_saved');assert.equal(app.getCards().length,1);
+ // Explicit deletion retries through the deletion endpoint; retained never drops the intent.
+ reset();await app.forceRemoveCard('one');await app.retryCloudCleanup();assert.deepEqual(queued(),['obs']);assert.equal(calls.at(-1).name,'deleteObservationAssets');
+ mode='deleted';await app.retryCloudCleanup();assert.deepEqual(queued(),[]);assert.equal(require('../native/lib/cloud-cleanup').isDeleted(wx,'obs'),true);
+ // A full local store must not erase the card before recording deletion intent.
+ reset();const write=wx.setStorageSync;wx.setStorageSync=(k,v)=>{if(k==='nature.deletedObservations.v1')throw Error('quota');return write(k,v)};
+ await assert.rejects(app.forceRemoveCard('one'),/quota/);assert.equal(app.getCards().length,1);wx.setStorageSync=write;
  console.log('PASS local deletion always wins; cloud cleanup falls back to a retry queue; only retained observations ask again')
 })().catch(e=>{console.error(e);process.exitCode=1});

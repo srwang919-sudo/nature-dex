@@ -8,7 +8,7 @@ async function recoverCards(app,wx){
   const rows=[],seen=new Set();let cursor='';
   do{const page=await call({action:'list_owned',...(cursor?{cursor}:{})});if(!Array.isArray(page.cards))throw Error('card_sync_unavailable');rows.push(...page.cards);cursor=page.nextCursor||'';if(cursor&&seen.has(cursor))throw Error('card_sync_pagination');seen.add(cursor);if(rows.length>10000)throw Error('card_sync_limit')}while(cursor);
   const known=app.getCards(),restored=[];
-  for(const row of rows){if(known.some(c=>c.serverCardId===row.id))continue;
+  for(const row of rows){if(require('./cloud-cleanup').isDeleted(wx,row.observationId)||known.some(c=>c.serverCardId===row.id))continue;
    const front=await call({action:'card_resource',cardId:row.id,side:'art'}),back=await call({action:'card_resource',cardId:row.id,side:'original'});
    const info=await Promise.all([front.url,back.url].map(src=>new Promise((resolve,reject)=>wx.getImageInfo({src,success:resolve,fail:()=>reject(Error('card_resource_unavailable'))}))));check();
    const local=await new Promise((resolve,reject)=>wx.saveFile({tempFilePath:info[1].path,success:resolve,fail:()=>reject(Error('card_local_storage'))}));saved.push(local.savedFilePath);check();

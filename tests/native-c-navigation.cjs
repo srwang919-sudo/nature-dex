@@ -2,7 +2,7 @@ const assert=require('node:assert/strict'),fs=require('fs'),vm=require('vm'),pat
 const model=require('../native/lib/tab-model');
 assert.deepEqual(model.tabs.map(x=>x.key),['discover','collection','journey','friend','me']);
 assert.deepEqual(model.navigationItems.map(x=>x.key),['discover','collection','journey','friend','me']);
-assert.deepEqual(model.navigationItems.map(x=>x.label),['探索','图鉴','旅程','好友','我的']);
+assert.deepEqual(model.navigationItems.map(x=>x.label),['探索','馆藏','旅程','好友','我的']);
 let component;const calls=[];
 vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../native/components/navigation/index.js'),'utf8'),{require:()=>model,Component:x=>component=x,wx:{navigateTo:x=>calls.push(['push',x.url]),reLaunch:x=>calls.push(['tab',x.url])}});
 const ctx={data:{currentKey:'discover'},setData(x){Object.assign(this.data,x)}};

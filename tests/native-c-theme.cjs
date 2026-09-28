@@ -1,7 +1,7 @@
 const assert=require('node:assert/strict'),fs=require('fs'),path=require('path');
 const css=fs.readFileSync(path.join(__dirname,'../app.wxss'),'utf8').toLowerCase();
 // 温暖自然色系令牌（2026-09 重设计）：米白纸面、深炭正文、苔藓绿品牌、暖阳金奖励。
-const colors={paper:'#FAF9F6',surface:'#FFFFFF',ink:'#2C3E35',muted:'#66756B',moss:'#4A7C59',lake:'#5B8BC7',orange:'#C98A5A',sun:'#D4A574',line:'#E5E3DA'};
+const colors={paper:'#F6F0E5',surface:'#FCFAF5',ink:'#26382F',muted:'#5E6B60',moss:'#183F34',lake:'#5B8BC7',orange:'#C98A5A',sun:'#D4A574',line:'#DAD5C9'};
 for(const [key,value] of Object.entries(colors))assert.ok(css.includes('--'+key+':'+value.toLowerCase()),key);
 // §103 类别色必须齐备：植物/鸟/昆虫/菌/水生
 for(const key of ['c-plant','c-bird','c-insect','c-fungi','c-aqua'])assert.ok(css.includes('--'+key+':'),key);

@@ -1,48 +1,45 @@
-# Release checklist — current gates, 2026-09-23
+# 发布检查门 · 2026-09-27
 
-本表刻意不自动勾选：本地通过不能替代发布分支、真实设备与控制台证据。当前没有部署/上传/正式发布操作。
+本地通过不代表云端部署完成。最终候选须记录提交 SHA；当前工作区变更仍待纳入发布候选。
 
-## 可重复的干净检出
+## 可重复安装与验证
 
-在本项目已有可信本地仓库路径运行（不从脏工作区复制未提交文件）：
+在一个新的专用检出目录（不要删除现有目录）检查所选候选提交：
 
 ```sh
-git clone --no-local /Users/w/WorkBuddy/2026-09-13-12-50-14/去大自然里-mini /tmp/nature-release-clean
-cd /tmp/nature-release-clean
 npm ci --ignore-scripts
-npm test
-npm run build:weapp
-npm audit
-for f in recognizeObservation createArtCard speciesIllustration deleteObservationAssets cleanupObservationAssets initCollections; do
-  npm ci --ignore-scripts --prefix "cloudfunctions/$f" || exit 1
-  npm audit --prefix "cloudfunctions/$f" || exit 1
+for manifest in cloudfunctions/*/package.json; do
+  npm ci --ignore-scripts --prefix "${manifest%/package.json}" || exit 1
+done
+npm run quality
+npm audit --omit=dev --audit-level=moderate
+for manifest in cloudfunctions/*/package.json; do
+  npm audit --omit=dev --audit-level=moderate --prefix "${manifest%/package.json}" || exit 1
 done
 git diff --check
 git status --short
 ```
 
-若目标路径已存在，换用一个不存在的专用目录，不删除现有目录。审核应记录所验 commit SHA。云函数依赖在各函数目录独立安装，根项目零依赖并不证明云 SDK 无漏洞。
+quality 包含主 tests、natureMembership 独立支付测试、原生源码与 JavaScript 验证。CI 也枚举全部函数安装和审计，退休函数虽无依赖也要保留锁文件。不要以根目录零依赖代替函数审计。
 
-当前以上云函数audit会非零退出（已知SDK传递依赖风险）；这应当阻断发布，不能删去该检查或用根audit结果代替。审计全部函数时可逐个运行并记录各退出状态。
+- [ ] 干净候选安装、测试、全函数 audit 通过，记录 SHA、测试数量与审计结果。
+- [ ] 微信官方 wcc/wcsc 编译全部注册页面及组件 WXML/WXSS。
+- [ ] 上传包大小与资源引用正确；不含 .env、密钥、备份、日志、node_modules、cloudfunction-packages。
+- [ ] 私钥/令牌模式检查无命中；人工确认无真实用户数据被纳入候选。
+- [ ] 深森林主题、按钮居中/触控区、图鉴滑动、徽章等级及放大、拍照页和隐私弹层移动端通过。
 
-- [ ] 干净检出以上命令全部通过，记录 SHA、测试数和审计范围。
-- [ ] 使用微信官方 wcc/wcsc 对全部 native WXML/WXSS逐文件编译。
-- [ ] 实际上传包主包≤2MiB；badge alpha/尺寸与七案例hash一致。
-- [ ] 私密配置、环境文件、用户照片、备份、日志和部署压缩包不在发布包/仓库。
-- [ ] 资源授权/来源、AI图声明、README 与当前产品一致；Changelog 有 Unreleased。
+## 云端与外部验证
 
-## 外部发布阻断门
+- [ ] 已部署修复后的管理员认领；审计旧 natureAdmin/main 名单并轮换/关闭旧码。
+- [ ] 已部署 natureAI2 / generateIllustration 退休版本，旧客户端不能绕过当前配额调用付费模型。
+- [ ] 删除/恢复明确区分私人显式删除与未完成观察清理；断网队列恢复后成功，无跨账号删除。
+- [ ] 所有私有集合为服务端权限；索引、初始化和定时任务真实可用。
+- [ ] 百度/混元权限、并发额度和全站费用报警就位；已授权测试照片全链路通过。
+- [ ] 真实隐私指引、类目/接口审批与 AI 标识相符；授权拒绝/同意/离页真机通过。
+- [ ] 支付商户与签名回调、退款/对账、会员状态实测；未启用服务保持明确关闭。
+- [ ] 好友/获赠副本/打印授权双账号验证；私人照片及地点不会越权暴露。
+- [ ] iPhone/Android 上相机、相册、头像、定位、导出、字体放大及 375/390/430 屏宽完成验收。
+- [ ] 素材来源/许可、打印打样、客户反馈渠道由所有者确认。
+- [ ] 体验版和审核截图来自实际候选；审核批准及所有者发布操作完成。
 
-- [ ] 新版删除/同意/每日限额函数已部署；observationDeletions、usageQuotas 服务端私有权限已验证。
-- [ ] 六个云函数锁文件安装可重复，云端部署遵守同一锁；上游SDK审计漏洞已修复或完成所有者认可的具体风险评估，不能因本地mock通过而忽略。
-- [ ] 两微信身份隔离：原图/艺术图、任务、删除/取消/迟到响应不会串号或假成功；公共水彩不被私人删除波及。
-- [ ] Hunyuan 模型、百度三路真实权限/额度/错误码/超时验证；只用明确授权的测试照片，完成识别校准。
-- [ ] 控制台全站预算/告警、生成并发控制、照片保留/清理/撤回渠道由所有者确认；每人限额不是全站预算。
-- [ ] 隐私指引第三方列表与单次同意一致；chooseLocation 隐私声明和接口审核通过。
-- [ ] iPhone/Android 微信真机相机、头像、地点、导出、拒绝权限、断网/后台/字体放大和375/390/430小屏已验。
-- [ ] 原图背面和私人导出风险明确；纸张/DPI/颜色仅在打样后确认。
-- [ ] 真实登录/好友授权仍未实现；支付商户、订单与回调未实现。未开放 UI 不可解释为已开通。
-- [ ] 所有者批准MVP首发不提供上述未实现服务；所有无功能入口已隐藏或明显标为「未开放」，无误导性购买/赠送按钮，截图和宣传与范围一致。
-- [ ] 版本、审核截图和发布材料基于实际运行版本，不用概念图代替。只有所有门具备证据才打正式标签。
-
-详见 OWNER_SETUP_GUIDE.md；当前本地验证记录独立保存在 docs/plans/2026-09-23-release-readiness-verification.md。
+结构化所有者任务与完成标准见 [USER_LAUNCH_PLAN.md](USER_LAUNCH_PLAN.md)；本轮本地证据见 [launch-readiness.md](launch-readiness.md)。

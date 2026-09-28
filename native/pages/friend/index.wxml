@@ -1,34 +1,79 @@
 <view class="page friend-page">
- <view class="friend-heading"><text class="eyebrow">同行的人</text><view class="title">好友</view><text class="sub">只交换物种资料与纪念卡；原照片、地点、笔记始终保持私有。</text></view>
- <view wx:if="{{!social.available}}" class="notice spaced">{{social.label}}好友服务需要服务端配置完成后可用。</view>
- <view class="row spaced"><button class="primary grow" disabled="{{serviceBusy}}" bindtap="connectFriends">{{serviceBusy?'正在连接…':'连接 / 刷新好友'}}</button></view>
- <block wx:if="{{socialConnected}}">
-  <view class="section spaced">我的好友 · {{friends.length}}</view>
-  <view wx:if="{{!friends.length}}" class="friend-empty">还没有好友。生成一个邀请码发给对方，或粘贴对方的邀请码。</view>
-  <view wx:for="{{friends}}" wx:key="relationshipId" class="friend-row" data-id="{{item.relationshipId}}" bindtap="openFriendMuseum" aria-role="button" aria-label="打开好友的自然馆">
-   <view class="friend-avatar" aria-hidden="true"/><view class="grow"><text>好友 {{index+1}}</text><text class="sub">轻点进入 TA 的自然馆</text></view><text class="friend-enter">进入 ›</text>
+  <view class="friend-tabs">
+    <view class="friend-tab {{friendTab==='friend'?'on':''}}" data-tab="friend" bindtap="switchTab">好友</view>
+    <view class="friend-tab {{friendTab==='discover'?'on':''}}" data-tab="discover" bindtap="switchTab">发现</view>
   </view>
-  <view class="section spaced">好友展示的纪念卡 · {{sharedSpecies.length}}</view>
-  <view wx:if="{{!sharedSpecies.length}}" class="friend-empty">好友还没有向你分享物种资料。分享是对方主动选择的，不是默认公开。</view>
-  <view wx:for="{{sharedSpecies}}" wx:key="shareId" class="memory-row">
-   <view class="memory-seal" aria-hidden="true"/>
-   <view class="grow"><text>{{item.species.speciesName}}</text><text class="sub">{{item.liked?'你已点赞':'来自好友的公开分享'}}</text></view>
-   <button class="secondary" data-id="{{item.shareId}}" bindtap="toggleSpeciesLike" aria-label="{{item.liked?'取消点赞':'点赞'}}">{{item.liked?'已赞':'点赞'}}</button>
-   <button class="secondary spaced" data-id="{{item.shareId}}" bindtap="requestMemorial">求纪念卡</button>
+
+  <!-- 发现：与截图一致的 banner + 可能认识的人 + 好友动态 -->
+  <block wx:if="{{friendTab==='discover'}}">
+    <view class="friend-banner">
+      <view class="friend-banner-copy">
+        <view class="title">和有相同热爱的人</view>
+        <text class="sub">一起看见更大的自然。</text>
+      </view>
+      <button class="primary friend-invite-btn" bindtap="toggleInvite">邀请好友</button>
+      <view class="friend-banner-leaf" aria-hidden="true"/>
+    </view>
+
+    <view class="friend-section-head"><text class="section">可能认识的人</text><button class="link" bindtap="connectFriends">{{serviceBusy?'刷新中…':'查看全部'}}</button></view>
+    <view wx:if="{{!suggestions.length}}" class="friend-empty">还没有推荐。开放好友功能后，会为你找到有共同热爱的人。</view>
+    <view wx:for="{{suggestions}}" wx:key="id" class="suggestion-row">
+      <view class="suggestion-avatar avatar-{{item.avatar}}" aria-hidden="true"/>
+      <view class="grow"><text>{{item.name}}</text><text class="sub">{{item.desc}}</text></view>
+      <button class="secondary follow-btn" data-id="{{item.id}}" bindtap="followSuggest">关注</button>
+    </view>
+
+    <view class="friend-section-head"><text class="section">好友动态</text></view>
+    <view wx:if="{{!feed.length}}" class="friend-empty">好友还没有动态。分享是对方主动选择的，不是默认公开。</view>
+    <view wx:for="{{feed}}" wx:key="id" class="feed-card">
+      <view class="feed-header">
+        <view class="feed-avatar avatar-{{item.avatar||'plant'}}" aria-hidden="true"/>
+        <view class="grow"><text class="feed-name">{{item.name}}</text><text class="sub">{{item.time}} · {{item.place}}</text></view>
+      </view>
+      <view class="feed-photo photo-{{item.image}}"/>
+      <view class="feed-text">{{item.text}}</view>
+      <view class="feed-actions">
+        <button class="feed-action {{item.liked?'liked':''}}" data-id="{{item.id}}" bindtap="toggleFeedLike">{{item.liked?'已赞':'赞'}} {{item.likes}}</button>
+        <button class="feed-action">评论 {{item.comments}}</button>
+      </view>
+    </view>
+  </block>
+
+  <!-- 好友：我的人与纪念卡 -->
+  <block wx:if="{{friendTab==='friend'}}">
+    <view wx:if="{{!social.available}}" class="notice spaced">好友功能暂未开放，开放后可以邀请朋友一起记录自然。</view>
+    <view class="row spaced"><button class="primary grow" disabled="{{serviceBusy}}" bindtap="connectFriends">{{serviceBusy?'正在连接…':'连接 / 刷新好友'}}</button></view>
+
+    <view class="section spaced">我的好友 · {{friends.length}}</view>
+    <view wx:if="{{!friends.length}}" class="friend-empty">还没有好友。生成一个邀请码发给对方，或粘贴对方的邀请码。</view>
+    <view wx:for="{{friends}}" wx:key="relationshipId" class="friend-row" data-id="{{item.relationshipId}}" bindtap="openFriendMuseum" aria-role="button" aria-label="打开好友的自然馆">
+      <view class="friend-avatar" aria-hidden="true"/><view class="grow"><text>好友 {{index+1}}</text><text class="sub">轻点进入 TA 的自然馆</text></view><text class="friend-enter">进入 ›</text>
+    </view>
+
+    <view class="section spaced">好友展示的纪念卡 · {{sharedSpecies.length}}</view>
+    <view wx:if="{{!sharedSpecies.length}}" class="friend-empty">好友还没有向你分享物种资料。分享是对方主动选择的，不是默认公开。</view>
+    <view wx:for="{{sharedSpecies}}" wx:key="shareId" class="memory-row">
+      <view class="memory-seal" aria-hidden="true"/>
+      <view class="grow"><text>{{item.species.speciesName}}</text><text class="sub">{{item.liked?'你已点赞':'来自好友的公开分享'}}</text></view>
+      <view class="memory-actions"><button class="secondary" data-id="{{item.shareId}}" bindtap="toggleSpeciesLike" aria-label="{{item.liked?'取消点赞':'点赞'}}">{{item.liked?'已赞':'点赞'}}</button><button class="secondary spaced" data-id="{{item.shareId}}" bindtap="requestMemorial">求纪念卡</button></view>
+    </view>
+
+    <view wx:if="{{myCopyRequests.length}}" class="section spaced">我的收藏请求</view>
+    <view wx:for="{{myCopyRequests}}" wx:key="copyRequestId" class="request-row"><view class="grow"><text>{{item.species.speciesName}}</text><text class="sub">{{item.stateLabel}}</text></view><button wx:if="{{item.state==='pending'}}" class="secondary" data-id="{{item.copyRequestId}}" bindtap="cancelMyRequest">取消</button></view>
+  </block>
+
+  <view wx:if="{{inviteExpanded}}" class="invite-panel spaced">
+    <view class="section">邀请与接受</view>
+    <text class="sub">邀请码 15 分钟内有效，只发给你信任的人。</text>
+    <button class="secondary spaced" disabled="{{serviceBusy}}" bindtap="createFriendInvite">生成邀请码</button>
+    <button wx:if="{{inviteCode}}" class="secondary spaced" bindtap="copyFriendInvite">复制邀请码</button>
+    <input class="friend-input spaced" value="{{enteredInvite}}" bindinput="inviteInput" maxlength="128" placeholder="粘贴好友邀请码" aria-label="好友邀请码"/>
+    <button class="secondary spaced" disabled="{{serviceBusy}}" bindtap="acceptFriendInvite">接受邀请</button>
+    <text wx:if="{{inviteMessage}}" class="sub" aria-live="polite">{{inviteMessage}}</text>
   </view>
-  <view wx:if="{{myCopyRequests.length}}" class="section spaced">我的收藏请求</view>
-  <view wx:for="{{myCopyRequests}}" wx:key="copyRequestId" class="request-row"><view class="grow"><text>{{item.species.speciesName}}</text><text class="sub">{{item.stateLabel}}</text></view><button wx:if="{{item.state==='pending'}}" class="secondary" data-id="{{item.copyRequestId}}" bindtap="cancelMyRequest">取消</button></view>
- </block>
- <view class="invite-panel spaced">
-  <view class="section">邀请与接受</view>
-  <text class="sub">邀请码 15 分钟内有效，只发给你信任的人。</text>
-  <button class="secondary spaced" disabled="{{serviceBusy}}" bindtap="createFriendInvite">生成邀请码</button>
-  <button wx:if="{{inviteCode}}" class="secondary spaced" bindtap="copyFriendInvite">复制邀请码</button>
-  <input class="friend-input spaced" value="{{enteredInvite}}" bindinput="inviteInput" maxlength="128" placeholder="粘贴好友邀请码" aria-label="好友邀请码"/>
-  <button class="secondary spaced" disabled="{{serviceBusy}}" bindtap="acceptFriendInvite">接受邀请</button>
-  <text wx:if="{{inviteMessage}}" class="sub" aria-live="polite">{{inviteMessage}}</text>
- </view>
- <view wx:if="{{serviceError}}" class="notice spaced" aria-live="polite">{{serviceError}}</view>
- <button class="link spaced" bindtap="goSettings">好友与纪念卡说明 →</button>
+
+  <view wx:if="{{serviceError}}" class="notice spaced" aria-live="polite">{{serviceError}}</view>
+  <button class="link spaced" bindtap="goSettings">好友与纪念卡说明 →</button>
 </view>
 <navigation active="friend"/>
+<privacy-consent id="nature-privacy"/>
