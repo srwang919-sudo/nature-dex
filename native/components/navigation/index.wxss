@@ -23,3 +23,11 @@
 .friends{transform:scale(.92)}.friends::before{content:'';position:absolute;left:1rpx;top:3rpx;width:10rpx;height:10rpx;border:2rpx solid currentColor;border-radius:50%;box-sizing:border-box}.friends::after{content:'';position:absolute;right:0;bottom:2rpx;width:9rpx;height:9rpx;border:2rpx solid currentColor;border-radius:50%;box-sizing:border-box;background:var(--color-bg)}
 /* 我的 · 单人轮廓 */
 .person::before{content:'';position:absolute;left:9rpx;top:0;width:10rpx;height:10rpx;border:2rpx solid currentColor;border-radius:50%}.person::after{content:'';position:absolute;left:3rpx;bottom:0;width:22rpx;height:9rpx;border:2rpx solid currentColor;border-radius:11rpx 11rpx 3rpx 3rpx}
+
+/* 中央主操作键：克制、融入导航的悬浮相机键，浮于导航栏正上方、不遮挡五个 tab */
+.dock-fab{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(112rpx + env(safe-area-inset-bottom));width:92rpx;height:92rpx;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#3f6f52,#2f5740);box-shadow:0 8rpx 20rpx rgba(31,58,42,.32);pointer-events:auto;transition:transform .18s ease}
+.dock-fab:active{transform:translateX(-50%) scale(.94)}
+.fab-camera{position:relative;width:40rpx;height:32rpx;border:3rpx solid #fff;border-radius:8rpx;box-sizing:border-box}
+.fab-camera::before{content:'';position:absolute;left:50%;top:-9rpx;transform:translateX(-50%);width:16rpx;height:9rpx;border:3rpx solid #fff;border-bottom:none;border-radius:5rpx 5rpx 0 0;box-sizing:border-box}
+.fab-camera::after{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:16rpx;height:16rpx;border:3rpx solid #fff;border-radius:50%;box-sizing:border-box}
+.reduce-motion .dock-fab{transition:none}

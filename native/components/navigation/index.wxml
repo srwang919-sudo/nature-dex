@@ -5,4 +5,7 @@
       <text class="tab-label">{{item.label}}</text>
     </view>
   </view>
+  <view class="dock-fab" bindtap="record" aria-role="button" aria-label="记录一次相遇">
+    <view class="fab-camera"></view>
+  </view>
 </view>
