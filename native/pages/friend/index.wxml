@@ -4,7 +4,7 @@
     <view class="friend-tab {{friendTab==='discover'?'on':''}}" data-tab="discover" bindtap="switchTab">发现</view>
   </view>
 
-  <!-- 发现：与截图一致的 banner + 可能认识的人 + 好友动态 -->
+  <!-- 无推荐或动态接口，不将设计示例展示为真实用户 -->
   <block wx:if="{{friendTab==='discover'}}">
     <view class="friend-banner">
       <view class="friend-banner-copy">
@@ -15,32 +15,13 @@
       <view class="friend-banner-leaf" aria-hidden="true"/>
     </view>
 
-    <view class="friend-section-head"><text class="section">可能认识的人</text><button class="link" bindtap="connectFriends">{{serviceBusy?'刷新中…':'查看全部'}}</button></view>
-    <view wx:if="{{!suggestions.length}}" class="friend-empty">还没有推荐。开放好友功能后，会为你找到有共同热爱的人。</view>
-    <view wx:for="{{suggestions}}" wx:key="id" class="suggestion-row">
-      <view class="suggestion-avatar avatar-{{item.avatar}}" aria-hidden="true"/>
-      <view class="grow"><text>{{item.name}}</text><text class="sub">{{item.desc}}</text></view>
-      <button class="secondary follow-btn" data-id="{{item.id}}" bindtap="followSuggest">关注</button>
-    </view>
-
-    <view class="friend-section-head"><text class="section">好友动态</text></view>
-    <view wx:if="{{!feed.length}}" class="friend-empty">好友还没有动态。分享是对方主动选择的，不是默认公开。</view>
-    <view wx:for="{{feed}}" wx:key="id" class="feed-card">
-      <view class="feed-header">
-        <view class="feed-avatar avatar-{{item.avatar||'plant'}}" aria-hidden="true"/>
-        <view class="grow"><text class="feed-name">{{item.name}}</text><text class="sub">{{item.time}} · {{item.place}}</text></view>
-      </view>
-      <view class="feed-photo photo-{{item.image}}"/>
-      <view class="feed-text">{{item.text}}</view>
-      <view class="feed-actions">
-        <button class="feed-action {{item.liked?'liked':''}}" data-id="{{item.id}}" bindtap="toggleFeedLike">{{item.liked?'已赞':'赞'}} {{item.likes}}</button>
-        <button class="feed-action">评论 {{item.comments}}</button>
-      </view>
-    </view>
+    <view class="friend-empty">这里还没有公开动态。你可以邀请认识的朋友，再查看他们主动分享的纪念卡。</view>
+    <button class="secondary" data-tab="friend" bindtap="switchTab">查看我的好友</button>
   </block>
 
   <!-- 好友：我的人与纪念卡 -->
   <block wx:if="{{friendTab==='friend'}}">
+    <view class="friend-banner"><view class="friend-banner-copy"><view class="title">一起发现自然的人</view><text class="sub">邀请朋友，交换主动分享的相遇。</text></view><button class="primary friend-invite-btn" bindtap="toggleInvite">邀请好友</button><view class="friend-banner-leaf" aria-hidden="true"/></view>
     <view wx:if="{{!social.available}}" class="notice spaced">好友功能暂未开放，开放后可以邀请朋友一起记录自然。</view>
     <view class="row spaced"><button class="primary grow" disabled="{{serviceBusy}}" bindtap="connectFriends">{{serviceBusy?'正在连接…':'连接 / 刷新好友'}}</button></view>
 

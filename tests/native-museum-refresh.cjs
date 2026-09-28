@@ -38,6 +38,11 @@ test('capture category uses the existing provider route and cancelling new camer
 test('settings section is reachable rather than silently redirecting to privacy',()=>{
  const p=page('settings',{},{});p.changeSection({currentTarget:{dataset:{section:'settings'}}});assert.equal(p.data.section,'settings');
 });
+test('friends never seed invented people, activity, or simulated social success',()=>{
+ const p=page('friend',{},{}),markup=fs.readFileSync(path.join(root,'native/pages/friend/index.wxml'),'utf8');
+ assert.equal(p.data.suggestions,undefined);assert.equal(p.data.feed,undefined);assert.equal(p.followSuggest,undefined);assert.equal(p.toggleFeedLike,undefined);
+ assert.equal(p.data.friends.length,0);assert.equal(p.data.sharedSpecies.length,0);assert.ok(markup.includes('toggleSpeciesLike'));assert.ok(markup.includes('createFriendInvite'));assert.ok(!/林间漫步|山野小鹿|Ocean|夏天的风|共同兴趣|comments/.test(markup));
+});
 test('export front keeps specimen identity and date without a craft badge or rarity stars',()=>{
  const {render,exportPlan}=require('../native/lib/card-export'),texts=[],fills=[],ctx={setFillStyle:v=>fills.push(v),setFontSize(){},setTextBaseline(){},fillRect(){},save(){},restore(){},beginPath(){},rect(){},clip(){},drawImage(){},measureText:s=>({width:String(s).length*10}),fillText:s=>texts.push(String(s))};
  const card={id:'a',zh:'真实物种',latin:'Species example',finishKey:'numbered',finish:'编号珍藏版',serverCardId:'server',discovery:{status:'verified',number:42},createdAt:1};render(ctx,card,exportPlan(card,'share'),{width:821,height:855},null);
