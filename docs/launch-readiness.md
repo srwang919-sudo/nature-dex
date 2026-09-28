@@ -16,7 +16,7 @@
 
 ## 本地证据
 
-- `npm run quality`：主测试 **306/306**，支付独立测试 **14/14**，无跳过；原生源码/JavaScript/JSON 验证通过。
+- `npm run quality`：主测试 **314/314**，支付独立测试 **14/14**，无跳过；原生源码/JavaScript/JSON 验证通过。
 - 本地保守未压缩主包估算 **1,121,803 bytes / 146 files**；并非微信上传后实际大小，上传包仍须独立核对。
 - 本轮新增回归覆盖默认关闭认领、并发名单、存储失败保卡、删除重试与防复活、隐私按钮/并发/离页。
 - 最后补充缺 fileId 删卡用例独立通过；`git diff --check` 通过；CI 同规则密钥扫描无命中。
@@ -25,6 +25,14 @@
 - 独立微信官方编译器检查：**18 个 WXML、20 个 WXSS 全部退出 0**；这不代表完整开发者工具运行或真机验收。当前电脑锁屏，未取得本轮移动界面截图，UI 视觉仍待验。
 - 根项目及 **15 个云函数（共 16 包）**独立 audit 全部退出 0，已知漏洞数 0；仅复制清单/锁文件至独立临时目录逐一执行 npm ci --ignore-scripts 全部成功，未修改原项目 node_modules。
 - 隐私接口依据：微信官方 [api-typings](https://github.com/wechat-miniprogram/api-typings/blob/master/types/wx/lib.wx.api.d.ts)。真实授权行为仍需在配置好隐私指引的体验版验证。
+
+## 候选证据 · 2026-09-28
+
+- 候选提交 SHA：`7b8ecc74f567aaa06c6defc51fffa6bf5ef38ec3`（HEAD，已推送 origin/main，工作树 clean）。
+- 离线已验证：`git diff --check` 通过；`npm run quality` = 主测试 **314/0** + 支付测试 **14/14** + `build:weapp` PASS；本地 `node_modules` 齐备（主仓与各云函数）。
+- 密钥/令牌模式扫描（`AKID|secretId|secretKey|sk-|PRIVATE KEY|access ?key` 等）**无真实密钥命中**：仅 `cloudfunctions/natureMembership/lib/config.js` 中的正则校验片段；仓库未跟踪 `.env`/`.pem`/`.key`/`credentials` 类文件。
+- 待补（GitHub 经代理 `000/fail` 不可达）：`npm ci` 全量重装可重复验证、16 个云函数 `npm audit --omit=dev --audit-level=moderate`。
+- 结论：候选在**代码/仓库层**证据齐备；云端部署、真实账号/审批/真机验收等发布门仍阻塞（见 USER_LAUNCH_PLAN.md）。
 
 ## 剩余风险与发布门
 
